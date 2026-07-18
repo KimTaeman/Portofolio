@@ -23,15 +23,15 @@ export default function Playground() {
   const scroll = useScroll()
 
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
-  const slideRotationX = 0.35
+  const slideRotationX = -0.35
   const slideSize = { thickness: 0.25, length: 4 }
   const characterHeight = 0.75
 
   const cos = Math.cos(slideRotationX)
   const sin = Math.sin(slideRotationX)
   const localY = slideSize.thickness / 2
-  const topLocalZ = -slideSize.length / 2
-  const bottomLocalZ = slideSize.length / 2
+  const topLocalZ = slideSize.length / 2
+  const bottomLocalZ = -slideSize.length / 2
   const characterYOffset = characterHeight / 2
 
   const topPosition = {
@@ -64,7 +64,7 @@ export default function Playground() {
     <>
       <color attach="background" args={['#FDF6E3']} />
 
-      <group>
+      <group rotation={[0, Math.PI, 0]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[24, 24]} />
           <meshStandardMaterial color="#FDF6E3" />
