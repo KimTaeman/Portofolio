@@ -15,9 +15,14 @@ function App() {
   const [isNight, setIsNight] = useState(false)
   const [outfit, setOutfit] = useState('uniform')
 
-  const handleScrollLock = useCallback(() => {
-    setIsLocked(true)
-    setShowPolaroid(true)
+  const handleScrollLockChange = useCallback((shouldLock) => {
+    setIsLocked(shouldLock)
+    setShowPolaroid(shouldLock)
+  }, [])
+
+  const handlePolaroidClose = useCallback(() => {
+    setIsLocked(false)
+    setShowPolaroid(false)
   }, [])
 
   return (
@@ -32,7 +37,7 @@ function App() {
 
         <ScrollControls pages={4} enabled={!isLocked}>
           <CameraController
-            onScrollLock={handleScrollLock}
+            onScrollLockChange={handleScrollLockChange}
             onOutfitChange={setOutfit}
           />
 
@@ -58,10 +63,7 @@ function App() {
               {isNight ? 'Switch to Day' : 'Switch to Night'}
             </button>
             {showPolaroid && (
-              <PolaroidInteraction
-                setIsLocked={setIsLocked}
-                setShowPolaroid={setShowPolaroid}
-              />
+              <PolaroidInteraction onClose={handlePolaroidClose} />
             )}
           </Scroll>
         </ScrollControls>
