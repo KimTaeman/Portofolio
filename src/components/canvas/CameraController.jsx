@@ -32,6 +32,7 @@ const getSegment = (offset) => {
 export default function CameraController({
   onScrollLockChange = () => {},
   onOutfitChange = () => {},
+  onScrollOffsetChange = () => {},
 }) {
   const scroll = useScroll()
   const isLockZoneActiveRef = useRef(false)
@@ -40,6 +41,7 @@ export default function CameraController({
   useFrame((state) => {
     const { camera } = state
     const offset = scroll.offset
+    onScrollOffsetChange(offset)
 
     const { start, end } = getSegment(offset)
     const range = end.t - start.t

@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* You can also add a quick reset here to prevent weird scrollbars */
 html, body, #root {
