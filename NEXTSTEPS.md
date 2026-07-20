@@ -17,13 +17,14 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - The Summit supports a constrained 180-degree drag view, upward-only tilt, and mobile-safe vertical scrolling.
 - The Mountain project prompt uses a testable trigger/reset range, explicit dismissal, Escape support, and re-arm behavior.
 - The current procedural art pass uses rounded chibi geometry, high-roughness clay materials, warm studio/outdoor lighting, shadows, atmospheric depth, and bold overlay typography.
+- Scene 1 includes an opening wave, seated slide pose, accelerated fall, airborne pose, squash-and-hop landing, reverse-scroll behavior, and transition into the Campus walk.
 - Day/night Summit presentation, distant peaks, clouds, and placeholder city lights are present.
 
 ## Known prototype limitations
 
 - Portfolio name, biography, project details, contact information, and real links are still placeholders or missing.
 - The procedural character and environments are art-direction prototypes, not approved production models.
-- Playground waving, landing, and final summit confidence poses are not yet implemented as distinct animations.
+- The final Summit confidence pose is not yet implemented as a distinct animation.
 - Campus hobby/skill props do not yet open real accessible detail cards.
 - The Mountain Polaroid is still a temporary project prompt rather than a project gallery.
 - The telescope currently has no purposeful contact interaction.
@@ -49,11 +50,12 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - Define documented palette, roughness, scale, and lighting tokens for every scene.
 - Profile whether repeated foliage should use shared geometry/materials or instancing.
 
-### 3. Finish Scene 1 — Playground
+### 3. Scene 1 — Playground (implementation complete; content pending)
 
-- Add the opening wave, controlled slide pose, fall pose, landing squash/hop, and transition into the Campus walk.
-- Refine the slide rails, cliff silhouette, and landing occlusion so the outfit swap reads clearly.
-- Replace placeholder introduction copy after the real name and biography are supplied.
+- [x] Add the opening wave, controlled slide pose, fall pose, landing squash/hop, and transition into the Campus walk.
+- [x] Refine the slide rails, cliff silhouette, and landing occlusion so the outfit swap reads clearly.
+- [ ] Replace placeholder introduction copy after the real name and biography are supplied.
+- [ ] Complete the browser capture/tuning pass listed in Priority 1.
 
 ### 4. Finish Scene 2 — Campus
 

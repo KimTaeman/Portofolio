@@ -32,10 +32,16 @@ export default function Playground() {
       <color attach="background" args={['#FDF6E3']} />
 
       <group rotation={[0, Math.PI, 0]}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <planeGeometry args={[12, 8]} />
+        <RoundedBox
+          args={[12, 0.3, 6.4]}
+          radius={0.12}
+          smoothness={4}
+          position={[0, -0.15, 0]}
+          castShadow
+          receiveShadow
+        >
           <ClayMaterial color="#F8EEDB" />
-        </mesh>
+        </RoundedBox>
 
         <RoundedBox
           args={[1, 0.25, 4]}

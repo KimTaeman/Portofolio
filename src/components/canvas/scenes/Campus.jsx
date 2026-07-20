@@ -45,7 +45,7 @@ export default function Campus({ position = [0, 0, 0] }) {
         <ClayMaterial color="#E9DDC9" />
       </RoundedBox>
 
-      <CherryBlossomTree position={[-8, 0, 0]} />
+      <CherryBlossomTree position={[-7.4, 0, 0.25]} />
       <CherryBlossomTree position={[0, 0, 3]} />
       <CherryBlossomTree position={[7, 0, -3]} />
 

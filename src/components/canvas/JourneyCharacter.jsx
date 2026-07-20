@@ -32,6 +32,7 @@ function ClayMaterial({ color }) {
 
 export default function JourneyCharacter({ outfit = 'school' }) {
   const characterRef = useRef()
+  const poseRef = useRef()
   const leftArmRef = useRef()
   const rightArmRef = useRef()
   const leftLegRef = useRef()
@@ -39,8 +40,17 @@ export default function JourneyCharacter({ outfit = 'school' }) {
   const scroll = useScroll()
   const palette = OUTFIT_PALETTES[outfit] ?? OUTFIT_PALETTES.school
 
-  useFrame(() => {
-    if (!characterRef.current) return
+  useFrame((state) => {
+    if (
+      !characterRef.current ||
+      !poseRef.current ||
+      !leftArmRef.current ||
+      !rightArmRef.current ||
+      !leftLegRef.current ||
+      !rightLegRef.current
+    ) {
+      return
+    }
 
     const offset = scroll.offset
     const { start, end } = getSegment(offset)
@@ -59,25 +69,90 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       progress,
     )
 
-    const isWalking = offset >= 0.2 && offset < 0.5
-    const isHiking = offset >= 0.5 && offset < 0.9
-    const isMoving = isWalking || isHiking
-    const stride = isHiking ? 0.72 : 0.56
-    const walkCycle = Math.sin(offset * 170)
-    const limbSwing = isMoving ? walkCycle * stride : 0
+    let poseRotationX = 0
+    let poseRotationZ = 0
+    let poseScaleX = 1
+    let poseScaleY = 1
+    let poseScaleZ = 1
+    let leftArmX = 0
+    let rightArmX = 0
+    let leftArmZ = -0.08
+    let rightArmZ = 0.08
+    let leftLegX = 0
+    let rightLegX = 0
 
-    leftArmRef.current.rotation.x = limbSwing
-    rightArmRef.current.rotation.x = -limbSwing
-    leftLegRef.current.rotation.x = -limbSwing
-    rightLegRef.current.rotation.x = limbSwing
+    if (offset < 0.03) {
+      rightArmX = Math.sin(state.clock.elapsedTime * 7) * 0.42
+      rightArmZ = 2.42
+      poseRotationZ = Math.sin(state.clock.elapsedTime * 2.4) * 0.025
+    } else if (offset < 0.1) {
+      const slideProgress = THREE.MathUtils.smoothstep(offset, 0.03, 0.1)
+      const waveRelease = THREE.MathUtils.smoothstep(offset, 0.03, 0.06)
+      poseRotationX = THREE.MathUtils.lerp(0, -0.22, slideProgress)
+      leftArmX = THREE.MathUtils.lerp(0, -0.72, slideProgress)
+      rightArmX = THREE.MathUtils.lerp(
+        Math.sin(state.clock.elapsedTime * 7) * 0.42,
+        -0.72,
+        waveRelease,
+      )
+      leftArmZ = THREE.MathUtils.lerp(-0.08, -0.3, slideProgress)
+      rightArmZ = THREE.MathUtils.lerp(2.42, 0.3, waveRelease)
+      leftLegX = THREE.MathUtils.lerp(0, -0.58, slideProgress)
+      rightLegX = THREE.MathUtils.lerp(0, -0.58, slideProgress)
+    } else if (offset < 0.18) {
+      const fallProgress = THREE.MathUtils.smoothstep(offset, 0.1, 0.18)
+      poseRotationX = THREE.MathUtils.lerp(-0.22, 0.16, fallProgress)
+      poseRotationZ = Math.sin(fallProgress * Math.PI) * 0.08
+      leftArmX = THREE.MathUtils.lerp(-0.72, 0.15, fallProgress)
+      rightArmX = THREE.MathUtils.lerp(-0.72, -0.15, fallProgress)
+      leftArmZ = THREE.MathUtils.lerp(-0.3, -2.25, fallProgress)
+      rightArmZ = THREE.MathUtils.lerp(0.3, 2.25, fallProgress)
+      leftLegX = THREE.MathUtils.lerp(-0.58, 0.24, fallProgress)
+      rightLegX = THREE.MathUtils.lerp(-0.58, -0.24, fallProgress)
+    } else if (offset < 0.2) {
+      const landingProgress = THREE.MathUtils.smoothstep(offset, 0.18, 0.2)
+      const impact = (1 - landingProgress) ** 3
+      const hop = Math.sin(landingProgress * Math.PI) * 0.32
 
-    if (isMoving) {
-      characterRef.current.position.y += Math.abs(walkCycle) * 0.045
+      characterRef.current.position.y += hop
+      poseScaleX = 1 + impact * 0.16
+      poseScaleY = 1 - impact * 0.28
+      poseScaleZ = 1 + impact * 0.12
+      poseRotationX = THREE.MathUtils.lerp(0.16, 0, landingProgress)
+      leftArmZ = THREE.MathUtils.lerp(-2.25, -0.08, landingProgress)
+      rightArmZ = THREE.MathUtils.lerp(2.25, 0.08, landingProgress)
+      leftLegX = THREE.MathUtils.lerp(0.38, 0, landingProgress)
+      rightLegX = THREE.MathUtils.lerp(-0.38, 0, landingProgress)
+    } else {
+      const isWalking = offset < 0.5
+      const isHiking = offset >= 0.5 && offset < 0.9
+      const isMoving = isWalking || isHiking
+      const stride = isHiking ? 0.72 : 0.56
+      const motionOffset = isHiking ? offset - 0.5 : offset - 0.2
+      const walkCycle = Math.sin(motionOffset * 170)
+      const limbSwing = isMoving ? walkCycle * stride : 0
+
+      leftArmX = limbSwing
+      rightArmX = -limbSwing
+      leftLegX = -limbSwing
+      rightLegX = limbSwing
+      if (isMoving) {
+        characterRef.current.position.y += Math.abs(walkCycle) * 0.045
+      }
     }
+
+    poseRef.current.rotation.x = poseRotationX
+    poseRef.current.rotation.z = poseRotationZ
+    poseRef.current.scale.set(poseScaleX, poseScaleY, poseScaleZ)
+    leftArmRef.current.rotation.set(leftArmX, 0, leftArmZ)
+    rightArmRef.current.rotation.set(rightArmX, 0, rightArmZ)
+    leftLegRef.current.rotation.x = leftLegX
+    rightLegRef.current.rotation.x = rightLegX
   })
 
   return (
     <group ref={characterRef}>
+      <group ref={poseRef}>
       <RoundedBox
         args={[0.52, 0.58, 0.4]}
         radius={0.12}
@@ -167,6 +242,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       >
         <ClayMaterial color={palette.accent} />
       </RoundedBox>
+      </group>
     </group>
   )
 }
