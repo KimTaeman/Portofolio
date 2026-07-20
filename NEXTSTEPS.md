@@ -25,7 +25,7 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - Portfolio name, biography, project details, contact information, and real links are still placeholders or missing.
 - The procedural character and environments are art-direction prototypes, not approved production models.
 - The final Summit confidence pose is not yet implemented as a distinct animation.
-- Campus hobby/skill props do not yet open real accessible detail cards.
+- Campus detail-card copy uses provisional, non-personal content until approved portfolio details are supplied.
 - The Mountain Polaroid is still a temporary project prompt rather than a project gallery.
 - The telescope currently has no purposeful contact interaction.
 - Summit scenery is procedural and needs a visual-quality pass using approved assets or a confirmed procedural direction.
@@ -57,12 +57,14 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - [ ] Replace placeholder introduction copy after the real name and biography are supplied.
 - [ ] Complete the browser capture/tuning pass listed in Priority 1.
 
-### 4. Finish Scene 2 — Campus
+### 4. Finish Scene 2 — Campus (implementation complete; content pending)
 
-- Build the approved hobby landmarks and technical-skill laptop presentation.
-- Add concise accessible DOM cards with close buttons, focus management, and keyboard support.
-- Refine blossom particles and background props without obscuring the side tracking shot.
-- Confirm the University outfit design and swap timing behind the blossom tree.
+- [x] Add clickable easel, badminton, and technical-laptop landmarks, keeping the side-tracking path clear.
+- [x] Add concise DOM detail cards with a close control, initial focus, Escape dismissal, and backdrop dismissal; lock scrolling while a card is open.
+- [x] Add sparse falling-blossom particles and background trees without filling the character's travel lane.
+- [x] Centralize the University outfit threshold at `17.5%`, placing the transition behind the first blossom tree.
+- [ ] Replace the provisional card copy and example skill labels with approved portfolio information.
+- [ ] Complete the browser capture/tuning pass listed in Priority 1, including Campus landmark hit targets and outfit occlusion.
 
 ### 5. Finish Scene 3 — Mountain projects
 

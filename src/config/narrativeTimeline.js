@@ -89,6 +89,11 @@ export const SUMMIT_LOOK_AROUND = Object.freeze({
   maxPitch: Math.PI / 6,
 })
 
+export const OUTFIT_TRANSITION_OFFSETS = Object.freeze({
+  university: 0.175,
+  hiker: 0.535,
+})
+
 export const MOUNTAIN_INTERACTION_RANGE = Object.freeze({
   triggerStart: 0.59,
   triggerEnd: 0.62,

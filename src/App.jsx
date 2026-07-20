@@ -10,6 +10,7 @@ import Mountain from './components/canvas/scenes/Mountain'
 import Summit from './components/canvas/scenes/Summit'
 import UIOverlay from './components/ui/overlays/UIOverlay'
 import PolaroidInteraction from './components/ui/overlays/PolaroidInteraction'
+import CampusDetailCard from './components/ui/overlays/CampusDetailCard'
 import {
   CAMERA_KEYFRAMES,
   SCENES,
@@ -25,12 +26,23 @@ function App() {
   const [isNight, setIsNight] = useState(false)
   const [outfit, setOutfit] = useState('school')
   const [scrollOffset, setScrollOffset] = useState(0)
+  const [campusDetailId, setCampusDetailId] = useState(null)
 
   const handlePolaroidOpen = useCallback(() => {
     setIsLocked(true)
   }, [])
 
   const handlePolaroidClose = useCallback(() => {
+    setIsLocked(false)
+  }, [])
+
+  const handleCampusSelect = useCallback((detailId) => {
+    setCampusDetailId(detailId)
+    setIsLocked(true)
+  }, [])
+
+  const handleCampusClose = useCallback(() => {
+    setCampusDetailId(null)
     setIsLocked(false)
   }, [])
 
@@ -92,7 +104,10 @@ function App() {
             <Playground />
 
             {/* Scene 2: The Campus Path (Skills & Hobbies) */}
-            <Campus position={scenePosition('campus')} />
+            <Campus
+              position={scenePosition('campus')}
+              onSelect={handleCampusSelect}
+            />
 
             {/* Scene 3: The Mountain Base (Experience) */}
             <Mountain position={scenePosition('mountain')} />
@@ -119,6 +134,10 @@ function App() {
           isOpen={isLocked}
           onOpen={handlePolaroidOpen}
           onClose={handlePolaroidClose}
+        />
+        <CampusDetailCard
+          detailId={campusDetailId}
+          onClose={handleCampusClose}
         />
       </div>
     </div>

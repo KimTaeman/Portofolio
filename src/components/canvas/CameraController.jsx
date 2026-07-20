@@ -4,7 +4,7 @@ import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import {
   CAMERA_KEYFRAMES,
-  SCENE_RANGES,
+  OUTFIT_TRANSITION_OFFSETS,
   SUMMIT_LOOK_AROUND,
 } from '../../config/narrativeTimeline'
 
@@ -195,8 +195,10 @@ export default function CameraController({
     }
 
     let nextOutfit = 'school'
-    if (offset >= 0.535) nextOutfit = 'hiker'
-    else if (offset >= SCENE_RANGES.campus.start - 0.03) nextOutfit = 'university'
+    if (offset >= OUTFIT_TRANSITION_OFFSETS.hiker) nextOutfit = 'hiker'
+    else if (offset >= OUTFIT_TRANSITION_OFFSETS.university) {
+      nextOutfit = 'university'
+    }
     if (nextOutfit !== outfitRef.current) {
       outfitRef.current = nextOutfit
       onOutfitChange(nextOutfit)
