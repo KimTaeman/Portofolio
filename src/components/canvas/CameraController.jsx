@@ -1,21 +1,26 @@
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useRef, useState } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
+import {
+  CAMERA_KEYFRAMES,
+  SCENE_RANGES,
+  SUMMIT_LOOK_AROUND,
+} from '../../config/narrativeTimeline'
 
-const CAMERA_STOPS = [
-  { t: 0.0, position: new THREE.Vector3(0, 2.2, 11), target: new THREE.Vector3(-2, 1, -1.5), fov: 50 },
-  { t: 0.25, position: new THREE.Vector3(-12, 2, 30), target: new THREE.Vector3(-2, 1, 30), fov: 50 },
-  { t: 0.5, position: new THREE.Vector3(-4, 2, 30), target: new THREE.Vector3(4, 1, 30), fov: 50 },
-  { t: 0.7, position: new THREE.Vector3(-1.5, 2.6, 58), target: new THREE.Vector3(0, 4.8, 64), fov: 50 },
-  { t: 1.0, position: new THREE.Vector3(0, 14.5, 90), target: new THREE.Vector3(0, 1.2, 90), fov: 52 },
-]
+const CAMERA_STOPS = CAMERA_KEYFRAMES.map(({ t, position, target, fov }) => ({
+  t,
+  position: new THREE.Vector3(...position),
+  target: new THREE.Vector3(...target),
+  fov,
+}))
 
 const desiredCameraPosition = new THREE.Vector3()
 const desiredLookTarget = new THREE.Vector3()
 const desiredQuaternion = new THREE.Quaternion()
 const lookAtMatrix = new THREE.Matrix4()
 const worldUp = new THREE.Vector3(0, 1, 0)
+const lookDirection = new THREE.Vector3()
 
 const getSegment = (offset) => {
   for (let i = 0; i < CAMERA_STOPS.length - 1; i += 1) {
@@ -30,15 +35,127 @@ const getSegment = (offset) => {
 }
 
 export default function CameraController({
-  onScrollLockChange = () => {},
   onOutfitChange = () => {},
   onScrollOffsetChange = () => {},
 }) {
   const scroll = useScroll()
-  const isLockZoneActiveRef = useRef(false)
-  const outfitRef = useRef('uniform')
+  const { events, gl } = useThree()
+  const outfitRef = useRef('school')
+  const [isLookAroundActive, setIsLookAroundActive] = useState(false)
+  const isLookAroundActiveRef = useRef(false)
+  const interactionElementRef = useRef(null)
+  const lookYawRef = useRef(0)
+  const lookPitchRef = useRef(0)
+  const pointerRef = useRef({ x: 0, y: 0 })
+  const dragRef = useRef({ isDragging: false, pointerId: null, x: 0, y: 0 })
 
-  useFrame((state) => {
+  useEffect(() => {
+    const eventElement = events.connected || gl.domElement
+    interactionElementRef.current = eventElement
+    const originalCursor = eventElement.style.cursor
+    const originalTouchAction = eventElement.style.touchAction
+
+    const handlePointerDown = (event) => {
+      if (!isLookAroundActiveRef.current) return
+      if (event.pointerType === 'mouse' && event.button !== 0) return
+
+      if (event.pointerType !== 'touch') event.preventDefault()
+      dragRef.current = {
+        isDragging: true,
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+      }
+      eventElement.setPointerCapture(event.pointerId)
+      eventElement.style.cursor = 'grabbing'
+    }
+
+    const handlePointerMove = (event) => {
+      const bounds = eventElement.getBoundingClientRect()
+      pointerRef.current.x = THREE.MathUtils.clamp(
+        ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+        -1,
+        1,
+      )
+      pointerRef.current.y = THREE.MathUtils.clamp(
+        -(((event.clientY - bounds.top) / bounds.height) * 2 - 1),
+        -1,
+        1,
+      )
+
+      const drag = dragRef.current
+      if (!drag.isDragging || drag.pointerId !== event.pointerId) return
+
+      if (event.pointerType !== 'touch') event.preventDefault()
+      const deltaX = event.clientX - drag.x
+      const deltaY = event.clientY - drag.y
+      drag.x = event.clientX
+      drag.y = event.clientY
+
+      lookYawRef.current = THREE.MathUtils.clamp(
+        lookYawRef.current - deltaX * 0.005,
+        SUMMIT_LOOK_AROUND.minYaw,
+        SUMMIT_LOOK_AROUND.maxYaw,
+      )
+      lookPitchRef.current = THREE.MathUtils.clamp(
+        lookPitchRef.current - deltaY * 0.004,
+        SUMMIT_LOOK_AROUND.minPitch,
+        SUMMIT_LOOK_AROUND.maxPitch,
+      )
+    }
+
+    const handlePointerLeave = () => {
+      if (dragRef.current.isDragging) return
+      pointerRef.current.x = 0
+      pointerRef.current.y = 0
+    }
+
+    const handlePointerUp = (event) => {
+      if (dragRef.current.pointerId !== event.pointerId) return
+      dragRef.current.isDragging = false
+      dragRef.current.pointerId = null
+      eventElement.style.cursor = isLookAroundActiveRef.current
+        ? 'grab'
+        : originalCursor
+      if (eventElement.hasPointerCapture(event.pointerId)) {
+        eventElement.releasePointerCapture(event.pointerId)
+      }
+    }
+
+    eventElement.addEventListener('pointerdown', handlePointerDown)
+    eventElement.addEventListener('pointermove', handlePointerMove)
+    eventElement.addEventListener('pointerup', handlePointerUp)
+    eventElement.addEventListener('pointercancel', handlePointerUp)
+    eventElement.addEventListener('pointerleave', handlePointerLeave)
+
+    return () => {
+      eventElement.removeEventListener('pointerdown', handlePointerDown)
+      eventElement.removeEventListener('pointermove', handlePointerMove)
+      eventElement.removeEventListener('pointerup', handlePointerUp)
+      eventElement.removeEventListener('pointercancel', handlePointerUp)
+      eventElement.removeEventListener('pointerleave', handlePointerLeave)
+      eventElement.style.cursor = originalCursor
+      eventElement.style.touchAction = originalTouchAction
+      if (interactionElementRef.current === eventElement) {
+        interactionElementRef.current = null
+      }
+    }
+  }, [events.connected, gl])
+
+  useEffect(() => {
+    const eventElement = interactionElementRef.current
+    if (!eventElement) return undefined
+
+    eventElement.style.cursor = isLookAroundActive ? 'grab' : ''
+    eventElement.style.touchAction = isLookAroundActive ? 'pan-y' : ''
+
+    return () => {
+      eventElement.style.cursor = ''
+      eventElement.style.touchAction = ''
+    }
+  }, [events.connected, gl, isLookAroundActive])
+
+  useFrame((state, delta) => {
     const { camera } = state
     const offset = scroll.offset
     onScrollOffsetChange(offset)
@@ -50,23 +167,48 @@ export default function CameraController({
     desiredLookTarget.copy(start.target).lerp(end.target, segmentT)
     const desiredFov = THREE.MathUtils.lerp(start.fov, end.fov, segmentT)
 
-    const nextOutfit = offset >= 0.55 ? 'hiker' : 'uniform'
+    const isLookAroundActive = offset >= SUMMIT_LOOK_AROUND.start
+    if (isLookAroundActive !== isLookAroundActiveRef.current) {
+      isLookAroundActiveRef.current = isLookAroundActive
+      setIsLookAroundActive(isLookAroundActive)
+
+      if (!isLookAroundActive) {
+        dragRef.current.isDragging = false
+        lookYawRef.current = 0
+        lookPitchRef.current = 0
+      }
+    }
+
+    if (isLookAroundActive) {
+      const cosPitch = Math.cos(lookPitchRef.current)
+      lookDirection.set(
+        Math.sin(lookYawRef.current) * cosPitch,
+        Math.sin(lookPitchRef.current),
+        Math.cos(lookYawRef.current) * cosPitch,
+      )
+      desiredLookTarget
+        .copy(desiredCameraPosition)
+        .addScaledVector(lookDirection, 30)
+    } else {
+      desiredCameraPosition.x += pointerRef.current.x * 0.32
+      desiredCameraPosition.y += pointerRef.current.y * 0.18
+    }
+
+    let nextOutfit = 'school'
+    if (offset >= 0.535) nextOutfit = 'hiker'
+    else if (offset >= SCENE_RANGES.campus.start - 0.03) nextOutfit = 'university'
     if (nextOutfit !== outfitRef.current) {
       outfitRef.current = nextOutfit
       onOutfitChange(nextOutfit)
     }
 
-    const inLockZone = offset >= 0.595 && offset <= 0.605
-    if (inLockZone !== isLockZoneActiveRef.current) {
-      isLockZoneActiveRef.current = inLockZone
-      onScrollLockChange(inLockZone)
-    }
-
-    camera.position.lerp(desiredCameraPosition, 0.12)
+    const positionDamping = 1 - Math.exp(-7 * delta)
+    const rotationDamping = 1 - Math.exp(-8 * delta)
+    camera.position.lerp(desiredCameraPosition, positionDamping)
     lookAtMatrix.lookAt(camera.position, desiredLookTarget, worldUp)
     desiredQuaternion.setFromRotationMatrix(lookAtMatrix)
-    camera.quaternion.slerp(desiredQuaternion, 0.12)
-    camera.fov = THREE.MathUtils.lerp(camera.fov, desiredFov, 0.2)
+    camera.quaternion.slerp(desiredQuaternion, rotationDamping)
+    camera.fov = THREE.MathUtils.damp(camera.fov, desiredFov, 9, delta)
     camera.updateProjectionMatrix()
   })
 

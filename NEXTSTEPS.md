@@ -2,86 +2,108 @@
 
 ## Current status
 
-The project has a functional prototype foundation. `npm run lint` and `npm run build` both pass as of this review (the production build reports a JavaScript bundle-size warning only).
+The project is a functional continuous-scrollytelling prototype. The character now travels through a vertically and spatially connected Playground, Campus, Mountain, and Summit rather than jumping between isolated scene stops.
 
-## Completed milestones
+`npm run lint` and `npm run build` pass. The production build still reports a JavaScript bundle-size warning.
 
-- Vite, React, Tailwind CSS, React Three Fiber, Drei, and Framer Motion are installed and configured.
-- A full-viewport R3F canvas uses four pages of scroll-driven navigation.
-- The four narrative locations are represented by separate canvas scene components: Playground, Campus, Mountain, and Summit.
-- Camera movement interpolates between defined position, look-target, and field-of-view stops in both scroll directions.
-- Initial scene behaviors exist: a playground slide animation, uniform-to-hiker state change, a Mountain interaction lock zone with a polaroid prompt, and a day/night summit toggle.
-- A dedicated `UIOverlay` component contains draft copy, scene selection, opacity ranges, and Framer Motion transitions.
+## Completed foundation
 
-## Task 1 — Fix the missing 2D UI text overlay
+- Vite, React 19, Tailwind CSS, React Three Fiber, Drei, and Framer Motion are configured.
+- The 2D overlay is mounted in a root-level fixed layer above the canvas with pointer-event passthrough.
+- One shared `narrativeTimeline.js` defines scene ranges, character keyframes, camera keyframes, overlay timing, the Mountain interaction range, and Summit look-around limits.
+- Scene ranges match the concept document: Playground `0–20%`, Campus `20–50%`, Mountain `50–70%`, and Summit `70–100%`.
+- A single `JourneyCharacter` slides, falls into Campus, walks left-to-right, changes outfits, hikes the Mountain, and reaches the Summit at `90%`.
+- Camera staging includes the Playground swoop, Campus side tracking shot, rear Mountain follow, continued Summit climb, and final rear-view panorama.
+- The Summit supports a constrained 180-degree drag view, upward-only tilt, and mobile-safe vertical scrolling.
+- The Mountain project prompt uses a testable trigger/reset range, explicit dismissal, Escape support, and re-arm behavior.
+- The current procedural art pass uses rounded chibi geometry, high-roughness clay materials, warm studio/outdoor lighting, shadows, atmospheric depth, and bold overlay typography.
+- Day/night Summit presentation, distant peaks, clouds, and placeholder city lights are present.
 
-**Priority: immediate. Do this before additional feature work.**
+## Known prototype limitations
 
-- Reproduce the issue in the browser and inspect whether `UIOverlay` is mounted and receiving changing `scrollOffset` values.
-- Correct its stacking/positioning context so the text is visibly rendered above the WebGL canvas at every relevant scroll position. Keep 2D UI in a root-level fixed container, outside the transformed `Scroll` HTML content.
-- Verify all four text states appear and fade in/out at their intended scroll ranges on desktop and mobile widths.
-- Preserve pointer-event passthrough so the overlay does not block canvas scrolling or scene interactions.
+- Portfolio name, biography, project details, contact information, and real links are still placeholders or missing.
+- The procedural character and environments are art-direction prototypes, not approved production models.
+- Playground waving, landing, and final summit confidence poses are not yet implemented as distinct animations.
+- Campus hobby/skill props do not yet open real accessible detail cards.
+- The Mountain Polaroid is still a temporary project prompt rather than a project gallery.
+- The telescope currently has no purposeful contact interaction.
+- Summit scenery is procedural and needs a visual-quality pass using approved assets or a confirmed procedural direction.
+- Reduced-motion behavior and a complete keyboard interaction pass are still outstanding.
+- `scrollOffset` is currently mirrored into React state frequently for the DOM overlay and should be profiled.
+- The production JavaScript bundle is over Vite's default warning threshold.
+- A full browser/device visual regression pass has not been documented yet.
 
-**Done when:** the first scene’s text is visible on load and each scene’s text reliably transitions as the user scrolls forward and backward.
+## Immediate next priorities
 
-## Remaining technical roadmap
+### 1. Visual regression and motion tuning
 
-### 2. Align the narrative timeline
+- Run the experience in supported desktop and mobile browsers.
+- Record or capture the key beats at `0%`, `10%`, `20%`, `46%`, `50%`, `60%`, `70%`, and `90%`.
+- Tune clipping, character scale, camera lag, tracking composition, and reverse-scroll transitions using those captures.
+- Verify Summit mouse drag, touch horizontal exploration, upward tilt, and vertical-scroll escape behavior.
 
-- Map each scene’s physical placement to its camera stop and overlay range.
-- Tune camera positions, look targets, and timing so each location enters frame cleanly.
-- Replace the current narrow interaction lock zone with an intentional, testable trigger range and exit behavior.
+### 2. Consolidate reusable canvas primitives
 
-### 3. Establish reusable scene primitives
+- Extract the repeated clay material configuration into a reusable primitive or shared material strategy.
+- Extract repeated rounded trail steps, foliage clusters, and shadow flags where this reduces duplication.
+- Define documented palette, roughness, scale, and lighting tokens for every scene.
+- Profile whether repeated foliage should use shared geometry/materials or instancing.
 
-- Extract repeated material/geometry choices into small reusable canvas components where it improves consistency.
-- Add a shared ground/path treatment so transitions between locations feel continuous.
-- Define a lightweight palette, lighting rules, and scale conventions for all four scenes.
+### 3. Finish Scene 1 — Playground
 
-### 4. Finish Scene 1 — Playground introduction
+- Add the opening wave, controlled slide pose, fall pose, landing squash/hop, and transition into the Campus walk.
+- Refine the slide rails, cliff silhouette, and landing occlusion so the outfit swap reads clearly.
+- Replace placeholder introduction copy after the real name and biography are supplied.
 
-- Refine the opening composition and slide animation for a clear first impression.
-- Replace the placeholder character block with the chosen character asset or a deliberately styled low-poly version.
-- Finalize the introduction copy and its placement against the scene.
+### 4. Finish Scene 2 — Campus
 
-### 5. Finish Scene 2 — Campus skills and hobbies
+- Build the approved hobby landmarks and technical-skill laptop presentation.
+- Add concise accessible DOM cards with close buttons, focus management, and keyboard support.
+- Refine blossom particles and background props without obscuring the side tracking shot.
+- Confirm the University outfit design and swap timing behind the blossom tree.
 
-- Turn the campus placeholders into visual skill/hobby landmarks.
-- Add concise, accessible UI content for each selected skill or hobby.
-- Add only the interactions needed to reveal that content, then verify they work with scrolling.
+### 5. Finish Scene 3 — Mountain projects
 
-### 6. Finish Scene 3 — Mountain experience
+- Supply real project/experience content and approved imagery.
+- Replace the temporary prompt with an accessible Polaroid/project gallery.
+- Add the retro-camera pull/flash beat at approximately `60%`.
+- Verify dismissal, reverse entry, repeated entry, and scroll re-arming with pointer and keyboard input.
+- Refine the boulder occlusion and Hiker outfit transition.
 
-- Define the actual experience/project content shown by the mountain path and polaroid.
-- Replace the temporary polaroid prompt with a styled, accessible project detail card.
-- Finalize the outfit transition and ensure the scroll lock can always be dismissed with pointer and keyboard input.
+### 6. Finish Scene 4 — Summit and contact
 
-### 7. Finish Scene 4 — Summit/contact
+- Refine the final climb and confident rear-facing summit pose.
+- Decide whether the procedural vista is final or should be replaced with optimized production assets.
+- Turn the telescope into an accessible contact interaction or remove it.
+- Add real contact calls to action and links.
+- Polish day/night differences, including stars, lights, and contrast.
 
-- Refine the summit environment and day/night presentation.
-- Make the telescope a purposeful interaction or remove it if it does not support the story.
-- Add final contact calls to action with real, keyboard-accessible links.
+### 7. Production assets and loading
 
-### 8. Add production assets and loading behavior
+- Inventory and approve character variants, environment models, project imagery, icons, and audio.
+- Put approved 3D assets in `public/models/`, optimize them, and load them with `useGLTF`.
+- Add Suspense/loading and error states plus preloading for critical assets.
+- Compress geometry and textures before integration and document attribution/licenses.
 
-- Inventory the models, textures, icons, and portfolio imagery needed for the approved design.
-- Place approved 3D assets under `public/models/` and load them with `useGLTF`.
-- Add loading/error handling and preloading for large assets; optimize model and texture sizes before integration.
+### 8. Accessibility, responsiveness, and performance
 
-### 9. Polish motion, performance, and responsiveness
+- Add `prefers-reduced-motion` behavior for parallax, camera damping, and procedural limb motion.
+- Complete focus, keyboard, screen-reader, contrast, and pointer-target checks.
+- Test portrait phones, landscape phones, tablets, laptops, and wide desktop displays.
+- Profile render-loop work, React updates, shadows, geometry counts, and draw calls.
+- Code-split noncritical UI/assets and address the production bundle warning.
 
-- Audit `useFrame` callbacks and avoid unnecessary React state updates during animation.
-- Test camera and UI composition at mobile, tablet, and desktop breakpoints.
-- Add reduced-motion behavior and ensure color contrast, focus states, and semantic controls meet accessibility expectations.
-- Address the current production bundle-size warning after the content and asset approach are finalized.
+### 9. Validate and ship
 
-### 10. Validate and ship
+- Perform forward/backward scroll regression across all scene and interaction boundaries.
+- Test current Chrome, Firefox, Safari, and Edge on representative desktop and mobile devices.
+- Run lint/build checks from a clean checkout.
+- Configure production deployment, metadata, analytics/privacy decisions, and error monitoring.
 
-- Perform a forward/backward scroll regression pass, including every interaction and overlay transition.
-- Run lint and production build; fix any new warnings or errors.
-- Test the deployed build on supported browsers and devices, then configure the production deployment.
+## Decisions and content still needed
 
-## Project decisions still needed
-
-- The `concept-document.md` file is empty, so final visual direction, portfolio copy, real projects, links, and asset selections still need to be supplied or approved before the corresponding implementation tasks begin.
-- The current project uses React 19, while the written requirements state React 18+. Confirm whether React 19 is intentional before making dependency changes.
+- Real portfolio name, biography, skills, hobbies, projects, experience, contact details, and links.
+- Whether the procedural character/environment style is the final production direction or a placeholder for GLTF assets.
+- Approved project imagery and asset licenses.
+- Final telescope/contact behavior.
+- Whether React 19 is intentionally retained; no dependency change should be made without confirmation.

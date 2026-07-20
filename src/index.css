@@ -8,3 +8,15 @@ html, body, #root {
   height: 100%;
   overflow: hidden;
 }
+
+body {
+  background: #f8eedb;
+  color: #18213d;
+  font-family: Inter, "Avenir Next", "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+}

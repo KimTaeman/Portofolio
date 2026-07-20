@@ -1,0 +1,172 @@
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { RoundedBox, useScroll } from '@react-three/drei'
+import * as THREE from 'three'
+import { CHARACTER_KEYFRAMES } from '../../config/narrativeTimeline'
+
+const currentPosition = new THREE.Vector3()
+const nextPosition = new THREE.Vector3()
+
+const OUTFIT_PALETTES = {
+  school: { jacket: '#8BAFC0', trousers: '#25314F', accent: '#F4E8D0' },
+  university: { jacket: '#596B91', trousers: '#252D48', accent: '#E9A9A2' },
+  hiker: { jacket: '#73845D', trousers: '#3E4A40', accent: '#E9A45D' },
+}
+
+const getSegment = (offset) => {
+  for (let index = 0; index < CHARACTER_KEYFRAMES.length - 1; index += 1) {
+    const start = CHARACTER_KEYFRAMES[index]
+    const end = CHARACTER_KEYFRAMES[index + 1]
+    if (offset <= end.t) return { start, end }
+  }
+
+  return {
+    start: CHARACTER_KEYFRAMES[CHARACTER_KEYFRAMES.length - 2],
+    end: CHARACTER_KEYFRAMES[CHARACTER_KEYFRAMES.length - 1],
+  }
+}
+
+function ClayMaterial({ color }) {
+  return <meshStandardMaterial color={color} roughness={0.86} metalness={0} />
+}
+
+export default function JourneyCharacter({ outfit = 'school' }) {
+  const characterRef = useRef()
+  const leftArmRef = useRef()
+  const rightArmRef = useRef()
+  const leftLegRef = useRef()
+  const rightLegRef = useRef()
+  const scroll = useScroll()
+  const palette = OUTFIT_PALETTES[outfit] ?? OUTFIT_PALETTES.school
+
+  useFrame(() => {
+    if (!characterRef.current) return
+
+    const offset = scroll.offset
+    const { start, end } = getSegment(offset)
+    const range = end.t - start.t
+    let progress = range
+      ? THREE.MathUtils.clamp((offset - start.t) / range, 0, 1)
+      : 0
+    if (start.t === 0.1 && end.t === 0.18) progress *= progress
+
+    currentPosition.fromArray(start.position)
+    nextPosition.fromArray(end.position)
+    characterRef.current.position.copy(currentPosition.lerp(nextPosition, progress))
+    characterRef.current.rotation.y = THREE.MathUtils.lerp(
+      start.rotationY,
+      end.rotationY,
+      progress,
+    )
+
+    const isWalking = offset >= 0.2 && offset < 0.5
+    const isHiking = offset >= 0.5 && offset < 0.9
+    const isMoving = isWalking || isHiking
+    const stride = isHiking ? 0.72 : 0.56
+    const walkCycle = Math.sin(offset * 170)
+    const limbSwing = isMoving ? walkCycle * stride : 0
+
+    leftArmRef.current.rotation.x = limbSwing
+    rightArmRef.current.rotation.x = -limbSwing
+    leftLegRef.current.rotation.x = -limbSwing
+    rightLegRef.current.rotation.x = limbSwing
+
+    if (isMoving) {
+      characterRef.current.position.y += Math.abs(walkCycle) * 0.045
+    }
+  })
+
+  return (
+    <group ref={characterRef}>
+      <RoundedBox
+        args={[0.52, 0.58, 0.4]}
+        radius={0.12}
+        smoothness={4}
+        position={[0, 0.57, 0]}
+        castShadow
+      >
+        <ClayMaterial color={palette.jacket} />
+      </RoundedBox>
+
+      <mesh position={[0, 1.03, 0]} castShadow>
+        <sphereGeometry args={[0.31, 24, 24]} />
+        <ClayMaterial color="#F2C9A5" />
+      </mesh>
+      <mesh position={[0, 1.14, -0.05]} scale={[0.34, 0.24, 0.31]} castShadow>
+        <sphereGeometry args={[1, 24, 24]} />
+        <ClayMaterial color="#6B4D3A" />
+      </mesh>
+      <mesh position={[-0.1, 1.06, 0.285]} castShadow>
+        <sphereGeometry args={[0.028, 12, 12]} />
+        <ClayMaterial color="#18213D" />
+      </mesh>
+      <mesh position={[0.1, 1.06, 0.285]} castShadow>
+        <sphereGeometry args={[0.028, 12, 12]} />
+        <ClayMaterial color="#18213D" />
+      </mesh>
+
+      <group ref={leftArmRef} position={[-0.31, 0.76, 0]} rotation={[0, 0, -0.08]}>
+        <mesh position={[0, -0.2, 0]} castShadow>
+          <capsuleGeometry args={[0.065, 0.32, 6, 12]} />
+          <ClayMaterial color={palette.jacket} />
+        </mesh>
+        <mesh position={[0, -0.41, 0]} castShadow>
+          <sphereGeometry args={[0.075, 14, 14]} />
+          <ClayMaterial color="#F2C9A5" />
+        </mesh>
+      </group>
+      <group ref={rightArmRef} position={[0.31, 0.76, 0]} rotation={[0, 0, 0.08]}>
+        <mesh position={[0, -0.2, 0]} castShadow>
+          <capsuleGeometry args={[0.065, 0.32, 6, 12]} />
+          <ClayMaterial color={palette.jacket} />
+        </mesh>
+        <mesh position={[0, -0.41, 0]} castShadow>
+          <sphereGeometry args={[0.075, 14, 14]} />
+          <ClayMaterial color="#F2C9A5" />
+        </mesh>
+      </group>
+
+      <group ref={leftLegRef} position={[-0.13, 0.31, 0]}>
+        <mesh position={[0, -0.17, 0]} castShadow>
+          <capsuleGeometry args={[0.08, 0.25, 6, 12]} />
+          <ClayMaterial color={palette.trousers} />
+        </mesh>
+        <RoundedBox
+          args={[0.18, 0.11, 0.28]}
+          radius={0.045}
+          smoothness={3}
+          position={[0, -0.37, 0.06]}
+          castShadow
+        >
+          <ClayMaterial color="#F7F1E7" />
+        </RoundedBox>
+      </group>
+      <group ref={rightLegRef} position={[0.13, 0.31, 0]}>
+        <mesh position={[0, -0.17, 0]} castShadow>
+          <capsuleGeometry args={[0.08, 0.25, 6, 12]} />
+          <ClayMaterial color={palette.trousers} />
+        </mesh>
+        <RoundedBox
+          args={[0.18, 0.11, 0.28]}
+          radius={0.045}
+          smoothness={3}
+          position={[0, -0.37, 0.06]}
+          castShadow
+        >
+          <ClayMaterial color="#F7F1E7" />
+        </RoundedBox>
+      </group>
+
+      <RoundedBox
+        args={[0.31, 0.38, 0.16]}
+        radius={0.07}
+        smoothness={4}
+        position={[0, 0.58, -0.27]}
+        visible={outfit === 'hiker'}
+        castShadow
+      >
+        <ClayMaterial color={palette.accent} />
+      </RoundedBox>
+    </group>
+  )
+}

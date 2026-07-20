@@ -1,93 +1,73 @@
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
-import { useScroll } from '@react-three/drei'
-import * as THREE from 'three'
+import { RoundedBox } from '@react-three/drei'
+
+function ClayMaterial({ color }) {
+  return <meshStandardMaterial color={color} roughness={0.9} metalness={0} />
+}
 
 function GumdropTree({ position }) {
   return (
     <group position={position}>
-      <mesh position={[0, 0.4, 0]}>
+      <mesh position={[0, 0.4, 0]} castShadow>
         <cylinderGeometry args={[0.15, 0.2, 0.8, 16]} />
-        <meshStandardMaterial color="#8B5E3C" />
+        <ClayMaterial color="#8B6348" />
       </mesh>
-      <mesh position={[0, 1.2, 0]}>
-        <sphereGeometry args={[0.6, 24, 24]} />
-        <meshStandardMaterial color="#77DD77" />
+      <mesh position={[0, 1.15, 0]} scale={[0.72, 0.62, 0.68]} castShadow>
+        <sphereGeometry args={[1, 24, 24]} />
+        <ClayMaterial color="#7FCB7B" />
+      </mesh>
+      <mesh position={[0.34, 1.28, 0.05]} scale={0.42} castShadow>
+        <sphereGeometry args={[1, 20, 20]} />
+        <ClayMaterial color="#91DB84" />
       </mesh>
     </group>
   )
 }
 
 export default function Playground() {
-  const characterRef = useRef()
-  const scroll = useScroll()
-
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
   const slideRotationX = -0.35
-  const slideSize = { thickness: 0.25, length: 4 }
-  const characterHeight = 0.75
-
-  const cos = Math.cos(slideRotationX)
-  const sin = Math.sin(slideRotationX)
-  const localY = slideSize.thickness / 2
-  const topLocalZ = slideSize.length / 2
-  const bottomLocalZ = -slideSize.length / 2
-  const characterYOffset = characterHeight / 2
-
-  const topPosition = {
-    y: slidePosition.y + (localY * cos - topLocalZ * sin) + characterYOffset,
-    z: slidePosition.z + (localY * sin + topLocalZ * cos),
-  }
-  const bottomPosition = {
-    y: slidePosition.y + (localY * cos - bottomLocalZ * sin) + characterYOffset,
-    z: slidePosition.z + (localY * sin + bottomLocalZ * cos),
-  }
-
-  useFrame(() => {
-    if (!characterRef.current) return
-
-    const progress = scroll.range(0, 0.15)
-    characterRef.current.position.x = slidePosition.x
-    characterRef.current.position.y = THREE.MathUtils.lerp(
-      topPosition.y,
-      bottomPosition.y,
-      progress,
-    )
-    characterRef.current.position.z = THREE.MathUtils.lerp(
-      topPosition.z,
-      bottomPosition.z,
-      progress,
-    )
-  })
 
   return (
     <>
       <color attach="background" args={['#FDF6E3']} />
 
       <group rotation={[0, Math.PI, 0]}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[24, 24]} />
-          <meshStandardMaterial color="#FDF6E3" />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <planeGeometry args={[12, 8]} />
+          <ClayMaterial color="#F8EEDB" />
         </mesh>
 
-        <mesh
+        <RoundedBox
+          args={[1, 0.25, 4]}
+          radius={0.12}
+          smoothness={5}
           position={[slidePosition.x, slidePosition.y, slidePosition.z]}
           rotation={[slideRotationX, 0, 0]}
+          castShadow
+          receiveShadow
         >
-          <boxGeometry args={[1, 0.25, 4]} />
-          <meshStandardMaterial color="#FFB380" />
+          <ClayMaterial color="#F39A55" />
+        </RoundedBox>
+
+        <mesh
+          position={[-2.48, 1.42, -1.5]}
+          rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
+          castShadow
+        >
+          <cylinderGeometry args={[0.055, 0.055, 4, 12]} />
+          <ClayMaterial color="#F6C078" />
+        </mesh>
+        <mesh
+          position={[-1.52, 1.42, -1.5]}
+          rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
+          castShadow
+        >
+          <cylinderGeometry args={[0.055, 0.055, 4, 12]} />
+          <ClayMaterial color="#F6C078" />
         </mesh>
 
         <GumdropTree position={[2.4, 0, -2.2]} />
         <GumdropTree position={[3.7, 0, 0.7]} />
-
-        <mesh
-          ref={characterRef}
-          position={[slidePosition.x, topPosition.y, topPosition.z]}
-        >
-          <boxGeometry args={[0.45, 0.75, 0.45]} />
-          <meshStandardMaterial color="#AEC6CF" />
-        </mesh>
       </group>
     </>
   )
