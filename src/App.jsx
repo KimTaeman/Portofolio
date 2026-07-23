@@ -20,6 +20,7 @@ import {
 const scenePosition = (sceneId) =>
   SCENES.find((scene) => scene.id === sceneId).position
 const initialCamera = CAMERA_KEYFRAMES[0]
+const playgroundEnd = SCENES.find((scene) => scene.id === 'playground').end
 
 function App() {
   const [isLocked, setIsLocked] = useState(false)
@@ -62,35 +63,7 @@ function App() {
         >
           <fog
             attach="fog"
-            args={[isNight ? '#1E2A44' : '#F4E8D0', 32, 115]}
-          />
-          <ambientLight intensity={isNight ? 0.18 : 0.3} />
-          <hemisphereLight
-            args={[
-              isNight ? '#7182A8' : '#FFF4D6',
-              isNight ? '#151A29' : '#B98B61',
-              isNight ? 0.65 : 1.35,
-            ]}
-          />
-          <directionalLight
-            castShadow
-            position={[18, 28, 16]}
-            intensity={isNight ? 0.75 : 2.2}
-            color={isNight ? '#91A7D3' : '#FFF2D2'}
-            shadow-mapSize={[1024, 1024]}
-            shadow-camera-near={1}
-            shadow-camera-far={120}
-            shadow-camera-left={-45}
-            shadow-camera-right={45}
-            shadow-camera-top={45}
-            shadow-camera-bottom={-45}
-            shadow-bias={-0.0002}
-            shadow-normalBias={0.03}
-          />
-          <directionalLight
-            position={[-14, 10, -8]}
-            intensity={isNight ? 0.25 : 0.55}
-            color={isNight ? '#6C72A8' : '#FFD1C2'}
+            args={[isNight ? '#1E1B4B' : '#E8F4FA', 32, 115]}
           />
 
           <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
@@ -101,7 +74,10 @@ function App() {
             <JourneyCharacter outfit={outfit} />
 
             {/* Scene 1: The Playground (Introduction) */}
-            <Playground />
+            <Playground
+              isNight={isNight}
+              castDirectionalShadow={scrollOffset >= playgroundEnd}
+            />
 
             {/* Scene 2: The Campus Path (Skills & Hobbies) */}
             <Campus

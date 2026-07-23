@@ -1,17 +1,14 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { RoundedBox, useScroll } from '@react-three/drei'
+import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
+import Character from './Character'
 import { CHARACTER_KEYFRAMES } from '../../config/narrativeTimeline'
 
 const currentPosition = new THREE.Vector3()
 const nextPosition = new THREE.Vector3()
-
-const OUTFIT_PALETTES = {
-  school: { jacket: '#8BAFC0', trousers: '#25314F', accent: '#F4E8D0' },
-  university: { jacket: '#596B91', trousers: '#252D48', accent: '#E9A9A2' },
-  hiker: { jacket: '#73845D', trousers: '#3E4A40', accent: '#E9A45D' },
-}
+const SEATED_POSE_Y = -0.42
+const SEATED_LEG_ROTATION_X = -1.22
 
 const getSegment = (offset) => {
   for (let index = 0; index < CHARACTER_KEYFRAMES.length - 1; index += 1) {
@@ -26,10 +23,6 @@ const getSegment = (offset) => {
   }
 }
 
-function ClayMaterial({ color }) {
-  return <meshStandardMaterial color={color} roughness={0.86} metalness={0} />
-}
-
 export default function JourneyCharacter({ outfit = 'school' }) {
   const characterRef = useRef()
   const poseRef = useRef()
@@ -38,7 +31,6 @@ export default function JourneyCharacter({ outfit = 'school' }) {
   const leftLegRef = useRef()
   const rightLegRef = useRef()
   const scroll = useScroll()
-  const palette = OUTFIT_PALETTES[outfit] ?? OUTFIT_PALETTES.school
 
   useFrame((state) => {
     if (
@@ -71,6 +63,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
 
     let poseRotationX = 0
     let poseRotationZ = 0
+    let posePositionY = 0
     let poseScaleX = 1
     let poseScaleY = 1
     let poseScaleZ = 1
@@ -78,16 +71,20 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     let rightArmX = 0
     let leftArmZ = -0.08
     let rightArmZ = 0.08
-    let leftLegX = 0
-    let rightLegX = 0
+    let leftLegX
+    let rightLegX
 
     if (offset < 0.03) {
+      posePositionY = SEATED_POSE_Y
+      leftLegX = SEATED_LEG_ROTATION_X
+      rightLegX = SEATED_LEG_ROTATION_X
       rightArmX = Math.sin(state.clock.elapsedTime * 7) * 0.42
       rightArmZ = 2.42
       poseRotationZ = Math.sin(state.clock.elapsedTime * 2.4) * 0.025
     } else if (offset < 0.1) {
       const slideProgress = THREE.MathUtils.smoothstep(offset, 0.03, 0.1)
       const waveRelease = THREE.MathUtils.smoothstep(offset, 0.03, 0.06)
+      posePositionY = SEATED_POSE_Y
       poseRotationX = THREE.MathUtils.lerp(0, -0.22, slideProgress)
       leftArmX = THREE.MathUtils.lerp(0, -0.72, slideProgress)
       rightArmX = THREE.MathUtils.lerp(
@@ -97,18 +94,27 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       )
       leftArmZ = THREE.MathUtils.lerp(-0.08, -0.3, slideProgress)
       rightArmZ = THREE.MathUtils.lerp(2.42, 0.3, waveRelease)
-      leftLegX = THREE.MathUtils.lerp(0, -0.58, slideProgress)
-      rightLegX = THREE.MathUtils.lerp(0, -0.58, slideProgress)
+      leftLegX = THREE.MathUtils.lerp(
+        SEATED_LEG_ROTATION_X,
+        -1.05,
+        slideProgress,
+      )
+      rightLegX = leftLegX
     } else if (offset < 0.18) {
       const fallProgress = THREE.MathUtils.smoothstep(offset, 0.1, 0.18)
+      posePositionY = THREE.MathUtils.lerp(
+        SEATED_POSE_Y,
+        0,
+        fallProgress,
+      )
       poseRotationX = THREE.MathUtils.lerp(-0.22, 0.16, fallProgress)
       poseRotationZ = Math.sin(fallProgress * Math.PI) * 0.08
       leftArmX = THREE.MathUtils.lerp(-0.72, 0.15, fallProgress)
       rightArmX = THREE.MathUtils.lerp(-0.72, -0.15, fallProgress)
       leftArmZ = THREE.MathUtils.lerp(-0.3, -2.25, fallProgress)
       rightArmZ = THREE.MathUtils.lerp(0.3, 2.25, fallProgress)
-      leftLegX = THREE.MathUtils.lerp(-0.58, 0.24, fallProgress)
-      rightLegX = THREE.MathUtils.lerp(-0.58, -0.24, fallProgress)
+      leftLegX = THREE.MathUtils.lerp(-1.05, 0.24, fallProgress)
+      rightLegX = THREE.MathUtils.lerp(-1.05, -0.24, fallProgress)
     } else if (offset < 0.2) {
       const landingProgress = THREE.MathUtils.smoothstep(offset, 0.18, 0.2)
       const impact = (1 - landingProgress) ** 3
@@ -143,6 +149,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
 
     poseRef.current.rotation.x = poseRotationX
     poseRef.current.rotation.z = poseRotationZ
+    poseRef.current.position.y = posePositionY
     poseRef.current.scale.set(poseScaleX, poseScaleY, poseScaleZ)
     leftArmRef.current.rotation.set(leftArmX, 0, leftArmZ)
     rightArmRef.current.rotation.set(rightArmX, 0, rightArmZ)
@@ -153,95 +160,16 @@ export default function JourneyCharacter({ outfit = 'school' }) {
   return (
     <group ref={characterRef}>
       <group ref={poseRef}>
-      <RoundedBox
-        args={[0.52, 0.58, 0.4]}
-        radius={0.12}
-        smoothness={4}
-        position={[0, 0.57, 0]}
-        castShadow
-      >
-        <ClayMaterial color={palette.jacket} />
-      </RoundedBox>
-
-      <mesh position={[0, 1.03, 0]} castShadow>
-        <sphereGeometry args={[0.31, 24, 24]} />
-        <ClayMaterial color="#F2C9A5" />
-      </mesh>
-      <mesh position={[0, 1.14, -0.05]} scale={[0.34, 0.24, 0.31]} castShadow>
-        <sphereGeometry args={[1, 24, 24]} />
-        <ClayMaterial color="#6B4D3A" />
-      </mesh>
-      <mesh position={[-0.1, 1.06, 0.285]} castShadow>
-        <sphereGeometry args={[0.028, 12, 12]} />
-        <ClayMaterial color="#18213D" />
-      </mesh>
-      <mesh position={[0.1, 1.06, 0.285]} castShadow>
-        <sphereGeometry args={[0.028, 12, 12]} />
-        <ClayMaterial color="#18213D" />
-      </mesh>
-
-      <group ref={leftArmRef} position={[-0.31, 0.76, 0]} rotation={[0, 0, -0.08]}>
-        <mesh position={[0, -0.2, 0]} castShadow>
-          <capsuleGeometry args={[0.065, 0.32, 6, 12]} />
-          <ClayMaterial color={palette.jacket} />
-        </mesh>
-        <mesh position={[0, -0.41, 0]} castShadow>
-          <sphereGeometry args={[0.075, 14, 14]} />
-          <ClayMaterial color="#F2C9A5" />
-        </mesh>
-      </group>
-      <group ref={rightArmRef} position={[0.31, 0.76, 0]} rotation={[0, 0, 0.08]}>
-        <mesh position={[0, -0.2, 0]} castShadow>
-          <capsuleGeometry args={[0.065, 0.32, 6, 12]} />
-          <ClayMaterial color={palette.jacket} />
-        </mesh>
-        <mesh position={[0, -0.41, 0]} castShadow>
-          <sphereGeometry args={[0.075, 14, 14]} />
-          <ClayMaterial color="#F2C9A5" />
-        </mesh>
-      </group>
-
-      <group ref={leftLegRef} position={[-0.13, 0.31, 0]}>
-        <mesh position={[0, -0.17, 0]} castShadow>
-          <capsuleGeometry args={[0.08, 0.25, 6, 12]} />
-          <ClayMaterial color={palette.trousers} />
-        </mesh>
-        <RoundedBox
-          args={[0.18, 0.11, 0.28]}
-          radius={0.045}
-          smoothness={3}
-          position={[0, -0.37, 0.06]}
-          castShadow
-        >
-          <ClayMaterial color="#F7F1E7" />
-        </RoundedBox>
-      </group>
-      <group ref={rightLegRef} position={[0.13, 0.31, 0]}>
-        <mesh position={[0, -0.17, 0]} castShadow>
-          <capsuleGeometry args={[0.08, 0.25, 6, 12]} />
-          <ClayMaterial color={palette.trousers} />
-        </mesh>
-        <RoundedBox
-          args={[0.18, 0.11, 0.28]}
-          radius={0.045}
-          smoothness={3}
-          position={[0, -0.37, 0.06]}
-          castShadow
-        >
-          <ClayMaterial color="#F7F1E7" />
-        </RoundedBox>
-      </group>
-
-      <RoundedBox
-        args={[0.31, 0.38, 0.16]}
-        radius={0.07}
-        smoothness={4}
-        position={[0, 0.58, -0.27]}
-        visible={outfit === 'hiker'}
-        castShadow
-      >
-        <ClayMaterial color={palette.accent} />
-      </RoundedBox>
+        <Character
+          scale={0.38}
+          userData={{ outfit }}
+          partRefs={{
+            leftArm: leftArmRef,
+            rightArm: rightArmRef,
+            leftLeg: leftLegRef,
+            rightLeg: rightLegRef,
+          }}
+        />
       </group>
     </group>
   )

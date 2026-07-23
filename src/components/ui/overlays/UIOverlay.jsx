@@ -1,19 +1,28 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   SCENES,
   SCENE_RANGES,
   SUMMIT_LOOK_AROUND,
 } from '../../../config/narrativeTimeline'
 
-const SCENE_TEXT = {
-  playground: "Hi, I'm [Your Name]! Welcome to my world. I'm a developer who believes every great project starts with curiosity.",
-  campus: "I spent my time learning, growing, and building my foundation.",
-  mountain: "I put my skills to the test. Here's what I've built and where I've been.",
-  summit: "Ready to explore the next peak. Let's build something amazing together.",
+const SCENE_CONTENT = {
+  playground: {
+    headline: "Hi, I'm [Your Name]! Welcome to my world.",
+    body: "I'm a developer who believes every great project starts with curiosity.",
+  },
+  campus: {
+    headline: 'I spent my time learning, growing, and building my foundation.',
+  },
+  mountain: {
+    headline: "I put my skills to the test. Here's what I've built and where I've been.",
+  },
+  summit: {
+    headline: "Ready to explore the next peak. Let's build something amazing together.",
+  },
 }
 
 const SCENE_LABELS = {
-  playground: '01 · Curiosity',
+  playground: '01 CURIOSITY',
   campus: '02 · Learning',
   mountain: '03 · Experience',
   summit: '04 · The next peak',
@@ -46,25 +55,44 @@ const getSceneOpacity = (scene, offset) => {
 export default function UIOverlay({ scrollOffset = 0 }) {
   const activeScene = getActiveScene(scrollOffset)
   const opacity = getSceneOpacity(activeScene, scrollOffset)
+  const prefersReducedMotion = useReducedMotion()
+  const content = SCENE_CONTENT[activeScene]
+  const entranceTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 1, ease: [0.22, 1, 0.36, 1] }
 
   return (
-    <div className="flex h-full w-full items-center justify-start p-6 md:p-12">
-      <div className="w-full max-w-2xl">
+    <div className="relative z-10 h-full w-full">
+      <div className="absolute left-[5%] top-1/2 w-[min(450px,90vw)] -translate-y-1/2">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeScene}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="max-w-xl"
+            exit={{ opacity: 0, y: -12 }}
+            transition={entranceTransition}
           >
-            <p className="mb-4 text-[0.65rem] font-extrabold uppercase tracking-[0.24em] text-[#E88C47] md:text-xs">
+            <p className="mb-4 text-left text-[0.68rem] font-bold uppercase tracking-[0.25em] text-[#E88C47] md:text-xs">
               {SCENE_LABELS[activeScene]}
             </p>
-            <p className="text-left text-3xl font-black leading-[1.02] tracking-[-0.045em] text-[#18213D] drop-shadow-[0_2px_0_rgba(255,255,255,0.55)] md:text-6xl">
-              {SCENE_TEXT[activeScene]}
-            </p>
+            <h1
+              className="text-left text-[clamp(2.5rem,4vw,3rem)] font-extrabold leading-[1.1] tracking-[-0.035em] text-[#1E293B]"
+              style={{
+                textShadow: '0 2px 10px rgba(255, 255, 255, 0.5)',
+              }}
+            >
+              {content.headline}
+            </h1>
+            {content.body && (
+              <p
+                className="mt-5 max-w-[420px] text-left text-lg font-medium leading-relaxed text-[#475569] md:text-xl"
+                style={{
+                  textShadow: '0 2px 10px rgba(255, 255, 255, 0.5)',
+                }}
+              >
+                {content.body}
+              </p>
+            )}
           </motion.div>
         </AnimatePresence>
 

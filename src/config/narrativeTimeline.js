@@ -65,7 +65,7 @@ export const CHARACTER_KEYFRAMES = [
 ]
 
 export const CAMERA_KEYFRAMES = [
-  { t: 0, position: [0, 3, 13], target: [2, 1.35, 1], fov: 48 },
+  { t: 0, position: [1.5, 2.5, 6], target: [2, 1.55, 0.5], fov: 40 },
   { t: 0.1, position: [6, 2.5, 10], target: [2, 0.9, 3.42], fov: 48 },
   { t: 0.18, position: [7, -7, 12], target: [2, -9, 3.42], fov: 50 },
   { t: 0.23, position: [3.85, -7, 12], target: [3.85, -9.4, 3.42], fov: 48 },

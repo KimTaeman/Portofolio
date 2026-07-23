@@ -62,7 +62,7 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - [x] Add clickable easel, badminton, and technical-laptop landmarks, keeping the side-tracking path clear.
 - [x] Add concise DOM detail cards with a close control, initial focus, Escape dismissal, and backdrop dismissal; lock scrolling while a card is open.
 - [x] Add sparse falling-blossom particles and background trees without filling the character's travel lane.
-- [x] Centralize the University outfit threshold at `17.5%`, placing the transition behind the first blossom tree.
+- [x] Centralize the University outfit threshold at `20%`, placing the transition behind the first Campus blossom tree at the Scene 1 boundary.
 - [ ] Replace the provisional card copy and example skill labels with approved portfolio information.
 - [ ] Complete the browser capture/tuning pass listed in Priority 1, including Campus landmark hit targets and outfit occlusion.
 
