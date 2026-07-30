@@ -3,7 +3,12 @@ import { useFrame } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import Character from './Character'
-import { CHARACTER_KEYFRAMES } from '../../config/narrativeTimeline'
+import {
+  CAMPUS_PATH,
+  CHARACTER_KEYFRAMES,
+  getNearestCampusProximity,
+  PLAYGROUND_MOTION_OFFSETS,
+} from '../../config/narrativeTimeline'
 
 const currentPosition = new THREE.Vector3()
 const nextPosition = new THREE.Vector3()
@@ -26,16 +31,18 @@ const getSegment = (offset) => {
 export default function JourneyCharacter({ outfit = 'school' }) {
   const characterRef = useRef()
   const poseRef = useRef()
+  const headRef = useRef()
   const leftArmRef = useRef()
   const rightArmRef = useRef()
   const leftLegRef = useRef()
   const rightLegRef = useRef()
   const scroll = useScroll()
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (
       !characterRef.current ||
       !poseRef.current ||
+      !headRef.current ||
       !leftArmRef.current ||
       !rightArmRef.current ||
       !leftLegRef.current ||
@@ -50,7 +57,12 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     let progress = range
       ? THREE.MathUtils.clamp((offset - start.t) / range, 0, 1)
       : 0
-    if (start.t === 0.1 && end.t === 0.18) progress *= progress
+    if (
+      start.t === PLAYGROUND_MOTION_OFFSETS.slideEnd &&
+      end.t === PLAYGROUND_MOTION_OFFSETS.groundContact
+    ) {
+      progress = THREE.MathUtils.smootherstep(progress, 0, 1)
+    }
 
     currentPosition.fromArray(start.position)
     nextPosition.fromArray(end.position)
@@ -74,16 +86,24 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     let leftLegX
     let rightLegX
 
-    if (offset < 0.03) {
+    if (offset < PLAYGROUND_MOTION_OFFSETS.waveEnd) {
       posePositionY = SEATED_POSE_Y
       leftLegX = SEATED_LEG_ROTATION_X
       rightLegX = SEATED_LEG_ROTATION_X
       rightArmX = Math.sin(state.clock.elapsedTime * 7) * 0.42
       rightArmZ = 2.42
       poseRotationZ = Math.sin(state.clock.elapsedTime * 2.4) * 0.025
-    } else if (offset < 0.1) {
-      const slideProgress = THREE.MathUtils.smoothstep(offset, 0.03, 0.1)
-      const waveRelease = THREE.MathUtils.smoothstep(offset, 0.03, 0.06)
+    } else if (offset < PLAYGROUND_MOTION_OFFSETS.slideEnd) {
+      const slideProgress = THREE.MathUtils.smoothstep(
+        offset,
+        PLAYGROUND_MOTION_OFFSETS.waveEnd,
+        PLAYGROUND_MOTION_OFFSETS.slideEnd,
+      )
+      const waveRelease = THREE.MathUtils.smoothstep(
+        offset,
+        PLAYGROUND_MOTION_OFFSETS.waveEnd,
+        0.055,
+      )
       posePositionY = SEATED_POSE_Y
       poseRotationX = THREE.MathUtils.lerp(0, -0.22, slideProgress)
       leftArmX = THREE.MathUtils.lerp(0, -0.72, slideProgress)
@@ -100,8 +120,12 @@ export default function JourneyCharacter({ outfit = 'school' }) {
         slideProgress,
       )
       rightLegX = leftLegX
-    } else if (offset < 0.18) {
-      const fallProgress = THREE.MathUtils.smoothstep(offset, 0.1, 0.18)
+    } else if (offset < PLAYGROUND_MOTION_OFFSETS.groundContact) {
+      const fallProgress = THREE.MathUtils.smootherstep(
+        offset,
+        PLAYGROUND_MOTION_OFFSETS.slideEnd,
+        PLAYGROUND_MOTION_OFFSETS.groundContact,
+      )
       posePositionY = THREE.MathUtils.lerp(
         SEATED_POSE_Y,
         0,
@@ -115,12 +139,15 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       rightArmZ = THREE.MathUtils.lerp(0.3, 2.25, fallProgress)
       leftLegX = THREE.MathUtils.lerp(-1.05, 0.24, fallProgress)
       rightLegX = THREE.MathUtils.lerp(-1.05, -0.24, fallProgress)
-    } else if (offset < 0.2) {
-      const landingProgress = THREE.MathUtils.smoothstep(offset, 0.18, 0.2)
+    } else if (offset < PLAYGROUND_MOTION_OFFSETS.landingEnd) {
+      const landingProgress = THREE.MathUtils.smoothstep(
+        offset,
+        PLAYGROUND_MOTION_OFFSETS.groundContact,
+        PLAYGROUND_MOTION_OFFSETS.landingEnd,
+      )
       const impact = (1 - landingProgress) ** 3
-      const hop = Math.sin(landingProgress * Math.PI) * 0.32
 
-      characterRef.current.position.y += hop
+      characterRef.current.position.y = CAMPUS_PATH.groundY
       poseScaleX = 1 + impact * 0.16
       poseScaleY = 1 - impact * 0.28
       poseScaleZ = 1 + impact * 0.12
@@ -133,9 +160,9 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       const isWalking = offset < 0.5
       const isHiking = offset >= 0.5 && offset < 0.9
       const isMoving = isWalking || isHiking
-      const stride = isHiking ? 0.72 : 0.56
+      const stride = isHiking ? 0.72 : 0.38
       const motionOffset = isHiking ? offset - 0.5 : offset - 0.2
-      const walkCycle = Math.sin(motionOffset * 170)
+      const walkCycle = Math.sin(motionOffset * (isHiking ? 170 : 52))
       const limbSwing = isMoving ? walkCycle * stride : 0
 
       leftArmX = limbSwing
@@ -149,6 +176,19 @@ export default function JourneyCharacter({ outfit = 'school' }) {
 
     poseRef.current.rotation.x = poseRotationX
     poseRef.current.rotation.z = poseRotationZ
+    const landmarkProximity = getNearestCampusProximity(offset)
+    poseRef.current.rotation.y = THREE.MathUtils.damp(
+      poseRef.current.rotation.y,
+      landmarkProximity * 0.12,
+      7,
+      delta,
+    )
+    headRef.current.rotation.y = THREE.MathUtils.damp(
+      headRef.current.rotation.y,
+      landmarkProximity * 0.34,
+      9,
+      delta,
+    )
     poseRef.current.position.y = posePositionY
     poseRef.current.scale.set(poseScaleX, poseScaleY, poseScaleZ)
     leftArmRef.current.rotation.set(leftArmX, 0, leftArmZ)
@@ -161,9 +201,11 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     <group ref={characterRef}>
       <group ref={poseRef}>
         <Character
+          outfit={outfit}
           scale={0.38}
           userData={{ outfit }}
           partRefs={{
+            head: headRef,
             leftArm: leftArmRef,
             rightArm: rightArmRef,
             leftLeg: leftLegRef,

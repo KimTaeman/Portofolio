@@ -11,8 +11,10 @@ import Summit from './components/canvas/scenes/Summit'
 import UIOverlay from './components/ui/overlays/UIOverlay'
 import PolaroidInteraction from './components/ui/overlays/PolaroidInteraction'
 import CampusDetailCard from './components/ui/overlays/CampusDetailCard'
+import CampusProximityOverlay from './components/ui/overlays/CampusProximityOverlay'
 import {
   CAMERA_KEYFRAMES,
+  getCharacterOutfit,
   SCENES,
   SCROLL_PAGES,
 } from './config/narrativeTimeline'
@@ -25,9 +27,9 @@ const playgroundEnd = SCENES.find((scene) => scene.id === 'playground').end
 function App() {
   const [isLocked, setIsLocked] = useState(false)
   const [isNight, setIsNight] = useState(false)
-  const [outfit, setOutfit] = useState('school')
   const [scrollOffset, setScrollOffset] = useState(0)
   const [campusDetailId, setCampusDetailId] = useState(null)
+  const outfit = getCharacterOutfit(scrollOffset)
 
   const handlePolaroidOpen = useCallback(() => {
     setIsLocked(true)
@@ -67,10 +69,7 @@ function App() {
           />
 
           <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
-            <CameraController
-              onOutfitChange={setOutfit}
-              onScrollOffsetChange={setScrollOffset}
-            />
+            <CameraController onScrollOffsetChange={setScrollOffset} />
             <JourneyCharacter outfit={outfit} />
 
             {/* Scene 1: The Playground (Introduction) */}
@@ -82,6 +81,7 @@ function App() {
             {/* Scene 2: The Campus Path (Skills & Hobbies) */}
             <Campus
               position={scenePosition('campus')}
+              isNight={isNight}
               onSelect={handleCampusSelect}
             />
 
@@ -96,6 +96,7 @@ function App() {
 
       <div className="pointer-events-none fixed inset-0 z-10">
         <UIOverlay scrollOffset={scrollOffset} />
+        <CampusProximityOverlay scrollOffset={scrollOffset} />
 
         <button
           type="button"

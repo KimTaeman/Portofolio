@@ -3,8 +3,9 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import {
+  CAMPUS_CAMERA_TRACKING,
   CAMERA_KEYFRAMES,
-  OUTFIT_TRANSITION_OFFSETS,
+  getNearestCampusProximity,
   SUMMIT_LOOK_AROUND,
 } from '../../config/narrativeTimeline'
 
@@ -34,13 +35,9 @@ const getSegment = (offset) => {
   }
 }
 
-export default function CameraController({
-  onOutfitChange = () => {},
-  onScrollOffsetChange = () => {},
-}) {
+export default function CameraController({ onScrollOffsetChange = () => {} }) {
   const scroll = useScroll()
   const { events, gl } = useThree()
-  const outfitRef = useRef('school')
   const [isLookAroundActive, setIsLookAroundActive] = useState(false)
   const isLookAroundActiveRef = useRef(false)
   const interactionElementRef = useRef(null)
@@ -192,21 +189,18 @@ export default function CameraController({
     } else {
       desiredCameraPosition.x += pointerRef.current.x * 0.32
       desiredCameraPosition.y += pointerRef.current.y * 0.18
-    }
-
-    let nextOutfit = 'school'
-    if (offset >= OUTFIT_TRANSITION_OFFSETS.hiker) nextOutfit = 'hiker'
-    else if (offset >= OUTFIT_TRANSITION_OFFSETS.university) {
-      nextOutfit = 'university'
-    }
-    if (nextOutfit !== outfitRef.current) {
-      outfitRef.current = nextOutfit
-      onOutfitChange(nextOutfit)
+      desiredCameraPosition.z -= getNearestCampusProximity(offset) * 0.65
     }
 
     const positionDamping = 1 - Math.exp(-7 * delta)
     const rotationDamping = 1 - Math.exp(-8 * delta)
     camera.position.lerp(desiredCameraPosition, positionDamping)
+    if (
+      offset >= CAMPUS_CAMERA_TRACKING.start &&
+      offset <= CAMPUS_CAMERA_TRACKING.end
+    ) {
+      camera.position.x = desiredCameraPosition.x
+    }
     lookAtMatrix.lookAt(camera.position, desiredLookTarget, worldUp)
     desiredQuaternion.setFromRotationMatrix(lookAtMatrix)
     camera.quaternion.slerp(desiredQuaternion, rotationDamping)

@@ -9,6 +9,11 @@ import {
 
 const CHARACTER_COLORS = Object.freeze({
   navy: '#34495E',
+  universityNavy: '#111111',
+  belt: '#1A1A1A',
+  buckle: '#C0C0C0',
+  sneakers: '#FAFAFA',
+  sneakerSole: '#E8E8E8',
   white: '#FFFFFF',
   hair: '#17171D',
   shoes: '#8B5A2B',
@@ -29,35 +34,67 @@ function ClayMaterial({ color }) {
   )
 }
 
-const Character = forwardRef(function Character(
-  {
-    partRefs = {},
-    position = [0, 0, 0],
-    rotation = [0, 0, 0],
-    scale = 1,
-    ...props
-  },
-  ref,
-) {
-  const {
-    head,
-    torso,
-    leftArm,
-    rightArm,
-    leftLeg,
-    rightLeg,
-  } = partRefs
-  const colors = CHARACTER_COLORS
+function SchoolArm({ armRef, name, position, rotation, colors }) {
+  return (
+    <group ref={armRef} name={name} position={position} rotation={rotation}>
+      <Capsule
+        args={[0.15, 0.48, 8, 16]}
+        position={[0, -0.33, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.white} />
+      </Capsule>
+      <Sphere
+        args={[0.17, 20, 16]}
+        position={[0, -0.71, 0.02]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Sphere>
+    </group>
+  )
+}
+
+function SchoolLeg({ legRef, name, position, colors }) {
+  return (
+    <group ref={legRef} name={name} position={position}>
+      <Capsule
+        args={[0.13, 0.26, 8, 16]}
+        position={[0, -0.25, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Capsule>
+      <Capsule
+        args={[0.14, 0.34, 8, 16]}
+        position={[0, -0.65, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.white} />
+      </Capsule>
+      <RoundedBox
+        args={[0.4, 0.25, 0.64]}
+        radius={0.11}
+        smoothness={5}
+        position={[0, -1, 0.11]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.shoes} />
+      </RoundedBox>
+    </group>
+  )
+}
+
+function SchoolUniform({ partRefs, colors }) {
+  const { torso, leftArm, rightArm, leftLeg, rightLeg } = partRefs
 
   return (
-    <group
-      ref={ref}
-      name="character"
-      position={position}
-      rotation={rotation}
-      scale={scale}
-      {...props}
-    >
+    <group name="schoolUniform">
       <group ref={torso} name="torso">
         <Cylinder
           args={[0.16, 0.16, 0.22, 24]}
@@ -67,7 +104,6 @@ const Character = forwardRef(function Character(
         >
           <ClayMaterial color={colors.skin} />
         </Cylinder>
-
         <Capsule
           args={[0.42, 0.18, 8, 20]}
           scale={[1.1, 1, 0.65]}
@@ -143,111 +179,232 @@ const Character = forwardRef(function Character(
         </RoundedBox>
       </group>
 
-      <group
-        ref={leftArm}
+      <SchoolArm
+        armRef={leftArm}
         name="leftArm"
         position={[-0.57, 2.22, 0]}
         rotation={[0, 0, -0.12]}
-      >
-        <Capsule
-          args={[0.15, 0.48, 8, 16]}
-          position={[0, -0.33, 0]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.white} />
-        </Capsule>
-        <Sphere
-          args={[0.17, 20, 16]}
-          position={[0, -0.71, 0.02]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.skin} />
-        </Sphere>
-      </group>
-
-      <group
-        ref={rightArm}
+        colors={colors}
+      />
+      <SchoolArm
+        armRef={rightArm}
         name="rightArm"
         position={[0.57, 2.22, 0]}
         rotation={[0, 0, 0.12]}
+        colors={colors}
+      />
+      <SchoolLeg
+        legRef={leftLeg}
+        name="leftLeg"
+        position={[-0.24, 1.15, 0]}
+        colors={colors}
+      />
+      <SchoolLeg
+        legRef={rightLeg}
+        name="rightLeg"
+        position={[0.24, 1.15, 0]}
+        colors={colors}
+      />
+    </group>
+  )
+}
+
+function UniversityArm({ armRef, name, position, rotation, colors }) {
+  return (
+    <group ref={armRef} name={name} position={position} rotation={rotation}>
+      <Capsule
+        args={[0.16, 0.14, 8, 16]}
+        position={[0, -0.14, 0]}
+        castShadow
+        receiveShadow
       >
+        <ClayMaterial color={colors.white} />
+      </Capsule>
+      <Capsule
+        args={[0.135, 0.26, 8, 16]}
+        position={[0, -0.47, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Capsule>
+      <Sphere
+        args={[0.16, 20, 16]}
+        position={[0, -0.72, 0.02]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Sphere>
+    </group>
+  )
+}
+
+function UniversityLeg({ legRef, name, position, colors }) {
+  return (
+    <group ref={legRef} name={name} position={position}>
+      <Capsule
+        args={[0.135, 0.45, 8, 16]}
+        position={[0, -0.42, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Capsule>
+      <Capsule
+        args={[0.14, 0.13, 8, 16]}
+        position={[0, -0.76, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.white} />
+      </Capsule>
+      <RoundedBox
+        args={[0.42, 0.25, 0.68]}
+        radius={0.12}
+        smoothness={5}
+        position={[0, -1, 0.13]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.sneakers} />
+      </RoundedBox>
+      <RoundedBox
+        args={[0.43, 0.075, 0.7]}
+        radius={0.03}
+        smoothness={4}
+        position={[0, -1.1, 0.13]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.sneakerSole} />
+      </RoundedBox>
+    </group>
+  )
+}
+
+function UniversityUniform({ partRefs, colors }) {
+  const { torso, leftArm, rightArm, leftLeg, rightLeg } = partRefs
+
+  return (
+    <group name="universityUniform">
+      <group ref={torso} name="torso">
+        <Cylinder
+          args={[0.16, 0.16, 0.22, 24]}
+          position={[0, 2.48, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.skin} />
+        </Cylinder>
         <Capsule
-          args={[0.15, 0.48, 8, 16]}
-          position={[0, -0.33, 0]}
+          args={[0.42, 0.18, 8, 20]}
+          scale={[1.1, 1, 0.65]}
+          position={[0, 2.02, 0]}
           castShadow
           receiveShadow
         >
           <ClayMaterial color={colors.white} />
         </Capsule>
-        <Sphere
-          args={[0.17, 20, 16]}
-          position={[0, -0.71, 0.02]}
+
+        {[2.2, 2.05, 1.9].map((buttonY) => (
+          <Sphere
+            key={buttonY}
+            args={[0.035, 12, 10]}
+            position={[0, buttonY, 0.31]}
+            castShadow
+          >
+            <ClayMaterial color={colors.buckle} />
+          </Sphere>
+        ))}
+
+        <Cylinder
+          args={[0.47, 0.49, 0.085, 32]}
+          position={[0, 1.69, 0]}
           castShadow
           receiveShadow
         >
-          <ClayMaterial color={colors.skin} />
-        </Sphere>
+          <ClayMaterial color={colors.belt} />
+        </Cylinder>
+        <RoundedBox
+          args={[0.17, 0.12, 0.075]}
+          radius={0.025}
+          smoothness={4}
+          position={[0, 1.69, 0.5]}
+          castShadow
+        >
+          <ClayMaterial color={colors.buckle} />
+        </RoundedBox>
+
+        <Cylinder
+          args={[0.45, 0.66, 0.76, 32]}
+          position={[0, 1.34, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.universityNavy} />
+        </Cylinder>
       </group>
 
-      <group ref={leftLeg} name="leftLeg" position={[-0.24, 1.15, 0]}>
-        <Capsule
-          args={[0.13, 0.26, 8, 16]}
-          position={[0, -0.25, 0]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.skin} />
-        </Capsule>
-        <Capsule
-          args={[0.14, 0.34, 8, 16]}
-          position={[0, -0.65, 0]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.white} />
-        </Capsule>
-        <RoundedBox
-          args={[0.4, 0.25, 0.64]}
-          radius={0.11}
-          smoothness={5}
-          position={[0, -1, 0.11]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.shoes} />
-        </RoundedBox>
-      </group>
+      <UniversityArm
+        armRef={leftArm}
+        name="leftArm"
+        position={[-0.57, 2.22, 0]}
+        rotation={[0, 0, -0.12]}
+        colors={colors}
+      />
+      <UniversityArm
+        armRef={rightArm}
+        name="rightArm"
+        position={[0.57, 2.22, 0]}
+        rotation={[0, 0, 0.12]}
+        colors={colors}
+      />
+      <UniversityLeg
+        legRef={leftLeg}
+        name="leftLeg"
+        position={[-0.24, 1.15, 0]}
+        colors={colors}
+      />
+      <UniversityLeg
+        legRef={rightLeg}
+        name="rightLeg"
+        position={[0.24, 1.15, 0]}
+        colors={colors}
+      />
+    </group>
+  )
+}
 
-      <group ref={rightLeg} name="rightLeg" position={[0.24, 1.15, 0]}>
-        <Capsule
-          args={[0.13, 0.26, 8, 16]}
-          position={[0, -0.25, 0]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.skin} />
-        </Capsule>
-        <Capsule
-          args={[0.14, 0.34, 8, 16]}
-          position={[0, -0.65, 0]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.white} />
-        </Capsule>
-        <RoundedBox
-          args={[0.4, 0.25, 0.64]}
-          radius={0.11}
-          smoothness={5}
-          position={[0, -1, 0.11]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={colors.shoes} />
-        </RoundedBox>
-      </group>
+const Character = forwardRef(function Character(
+  {
+    outfit = 'school',
+    partRefs = {},
+    position = [0, 0, 0],
+    rotation = [0, 0, 0],
+    scale = 1,
+    ...props
+  },
+  ref,
+) {
+  const { head } = partRefs
+  const colors = CHARACTER_COLORS
+  const isSchoolUniform = outfit === 'school'
+
+  return (
+    <group
+      ref={ref}
+      name="character"
+      position={position}
+      rotation={rotation}
+      scale={scale}
+      {...props}
+    >
+      {isSchoolUniform ? (
+        <SchoolUniform partRefs={partRefs} colors={colors} />
+      ) : (
+        <UniversityUniform partRefs={partRefs} colors={colors} />
+      )}
 
       <group ref={head} name="head" position={[0, 3.04, 0]}>
         <Sphere

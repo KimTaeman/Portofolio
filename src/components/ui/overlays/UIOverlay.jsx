@@ -64,12 +64,16 @@ export default function UIOverlay({ scrollOffset = 0 }) {
   return (
     <div className="relative z-10 h-full w-full">
       <div className="absolute left-[5%] top-1/2 w-[min(450px,90vw)] -translate-y-1/2">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="sync">
           <motion.div
             key={activeScene}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
+            exit={{
+              opacity: 0,
+              y: -12,
+              transition: { duration: 0 },
+            }}
             transition={entranceTransition}
           >
             <p className="mb-4 text-left text-[0.68rem] font-bold uppercase tracking-[0.25em] text-[#E88C47] md:text-xs">
