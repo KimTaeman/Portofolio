@@ -1,6 +1,12 @@
 import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Cylinder, RoundedBox, Sphere, useCursor } from '@react-three/drei'
+import {
+  Cone,
+  Cylinder,
+  RoundedBox,
+  Sphere,
+  useCursor,
+} from '@react-three/drei'
 import * as THREE from 'three'
 import {
   MOUNTAIN_PROJECT_MARKERS,
@@ -46,6 +52,23 @@ const FOOTHILL_BUSHES = Object.freeze([
   [-3, 20],
   [3.1, 12],
   [-2.8, 4.5],
+])
+
+const RIGHT_PINE_TREES = Object.freeze([
+  [4.6, 38, 0.82],
+  [6.7, 32, 1.04],
+  [5.1, 26, 0.9],
+  [7.2, 19.5, 1.14],
+  [4.9, 12.5, 0.96],
+  [6.8, 5.5, 1.08],
+])
+
+const RIGHT_BOULDERS = Object.freeze([
+  [7.6, 35, 0.82],
+  [4.4, 30, 1.08],
+  [7.8, 23, 1.32],
+  [5.2, 16, 0.9],
+  [7.4, 9, 1.18],
 ])
 
 function ClayMaterial({ color, emissive = '#000000', emissiveIntensity = 0 }) {
@@ -114,6 +137,37 @@ function FoothillBush({ position }) {
         >
           <ClayMaterial color="#8FBC8F" />
         </Sphere>
+      ))}
+    </group>
+  )
+}
+
+function FoothillPineTree({ position, scale }) {
+  return (
+    <group name="foothillPineTree" position={position} scale={scale}>
+      <Cylinder
+        args={[0.16, 0.23, 1.4, 16]}
+        position={[0, 0.7, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color="#73513A" />
+      </Cylinder>
+      {[
+        [1.08, 1.75, 1.45],
+        [0.87, 1.5, 2.15],
+        [0.66, 1.22, 2.77],
+      ].map(([radius, height, y], index) => (
+        <Cone
+          key={`${radius}-${y}`}
+          args={[radius, height, 24]}
+          position={[0, y, 0]}
+          rotation={[0, index * 0.24, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color="#4E6E5D" />
+        </Cone>
       ))}
     </group>
   )
@@ -223,7 +277,7 @@ export default function Mountain({
 
         <Sphere
           args={[1, 32, 24]}
-          position={[0, 17.85, -34]}
+          position={[0, 19.55, -34]}
           scale={[5.5, 0.3, 6.5]}
           castShadow
           receiveShadow
@@ -296,6 +350,30 @@ export default function Mountain({
         {FOOTHILL_BUSHES.map(([x, z]) => (
           <FoothillBush key={`${x}-${z}`} position={[x, 0, z]} />
         ))}
+
+        <group name="rightPathForestFrame">
+          {RIGHT_PINE_TREES.map(([x, z, scale]) => (
+            <FoothillPineTree
+              key={`${x}-${z}`}
+              position={[x, 0, z]}
+              scale={scale}
+            />
+          ))}
+
+          {RIGHT_BOULDERS.map(([x, z, scale], index) => (
+            <Sphere
+              key={`${x}-${z}`}
+              args={[1, 20, 16]}
+              position={[x, scale * 0.42, z]}
+              scale={[scale * 1.2, scale * 0.72, scale]}
+              rotation={[0.08, index * 0.53, -0.05]}
+              castShadow
+              receiveShadow
+            >
+              <ClayMaterial color="#AFAFAF" />
+            </Sphere>
+          ))}
+        </group>
       </group>
 
       <group name="projectMarkers">

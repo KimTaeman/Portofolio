@@ -224,7 +224,7 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     const isMountainClimb =
       offset >= MOUNTAIN_PATH.start && offset <= MOUNTAIN_PATH.end
     const positionDamping =
-      1 - Math.exp(-(isMountainClimb ? 3.1 : 7) * delta)
+      isMountainClimb ? 0.05 : 1 - Math.exp(-7 * delta)
     const rotationDamping =
       1 - Math.exp(-(isMountainClimb ? 4.2 : 8) * delta)
     camera.position.lerp(desiredCameraPosition, positionDamping)
@@ -234,9 +234,13 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     ) {
       camera.position.x = desiredCameraPosition.x
     }
-    lookAtMatrix.lookAt(camera.position, desiredLookTarget, worldUp)
-    desiredQuaternion.setFromRotationMatrix(lookAtMatrix)
-    camera.quaternion.slerp(desiredQuaternion, rotationDamping)
+    if (isMountainClimb) {
+      camera.lookAt(desiredLookTarget)
+    } else {
+      lookAtMatrix.lookAt(camera.position, desiredLookTarget, worldUp)
+      desiredQuaternion.setFromRotationMatrix(lookAtMatrix)
+      camera.quaternion.slerp(desiredQuaternion, rotationDamping)
+    }
     camera.fov = THREE.MathUtils.damp(camera.fov, desiredFov, 9, delta)
     camera.updateProjectionMatrix()
   })

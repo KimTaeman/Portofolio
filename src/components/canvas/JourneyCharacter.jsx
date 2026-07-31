@@ -10,6 +10,7 @@ import {
   getNearestCampusProximity,
   MOUNTAIN_PATH,
   PLAYGROUND_MOTION_OFFSETS,
+  SUMMIT_LOOK_AROUND,
 } from '../../config/narrativeTimeline'
 
 const currentPosition = new THREE.Vector3()
@@ -164,7 +165,8 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       rightLegX = THREE.MathUtils.lerp(-0.38, 0, landingProgress)
     } else {
       const isWalking = offset < 0.5
-      const isHiking = offset >= 0.5 && offset < 0.9
+      const isHiking =
+        offset >= MOUNTAIN_PATH.start && offset < SUMMIT_LOOK_AROUND.start
       const isMoving = isWalking || isHiking
       const stride = isHiking ? 0.72 : 0.38
       const motionOffset = isHiking ? offset - 0.5 : offset - 0.2
@@ -175,8 +177,10 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       rightArmX = -limbSwing
       leftLegX = -limbSwing
       rightLegX = limbSwing
-      if (isMoving) {
+      if (isWalking) {
         characterRef.current.position.y += Math.abs(walkCycle) * 0.045
+      } else if (isHiking) {
+        posePositionY = Math.abs(walkCycle) * 0.045
       }
     }
 

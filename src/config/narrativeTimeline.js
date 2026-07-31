@@ -16,28 +16,44 @@ export const MOUNTAIN_CORNER = Object.freeze({
   z: CAMPUS_PATH.characterZ,
 })
 
+export const MOUNTAIN_ORIGIN_Z = -40
+export const MOUNTAIN_CHARACTER_FOOT_OFFSET = 0.16
+export const MOUNTAIN_CLIMB_CLEARANCE = 1.5
+export const MOUNTAIN_CHARACTER_GROUND_OFFSET = 1.2
+
+const MOUNTAIN_APPROACH_START = 0.5
+const MOUNTAIN_APPROACH_END = 0.674
+const MOUNTAIN_CLIMB_START = 0.68
+const MOUNTAIN_CLIMB_END = 0.82
+const MOUNTAIN_FINAL_SURFACE_HEIGHT = 18.35
+
 export const MOUNTAIN_SUMMIT = Object.freeze({
-  y: CAMPUS_PATH.groundY + 18,
+  y:
+    CAMPUS_PATH.groundY +
+    MOUNTAIN_FINAL_SURFACE_HEIGHT +
+    MOUNTAIN_CLIMB_CLEARANCE +
+    MOUNTAIN_CHARACTER_GROUND_OFFSET,
   z: -77,
 })
 
-export const MOUNTAIN_ORIGIN_Z = -40
-export const MOUNTAIN_CHARACTER_FOOT_OFFSET = 0.16
-
 const APPROACH_STONE_COUNT = 19
 const APPROACH_LOCAL_Z = MOUNTAIN_CORNER.z - MOUNTAIN_ORIGIN_Z
+const CLIMB_BASE_TOP =
+  0.48 + MOUNTAIN_CLIMB_CLEARANCE
 
 const APPROACH_TRAIL_STONES = Array.from(
   { length: APPROACH_STONE_COUNT },
   (_, index) => {
     const progress = index / (APPROACH_STONE_COUNT - 1)
+    const foothillRise = progress ** 4
     return Object.freeze({
-      t: 0.5 + progress * 0.058,
+      t:
+        MOUNTAIN_APPROACH_START +
+        progress * (MOUNTAIN_APPROACH_END - MOUNTAIN_APPROACH_START),
       x: Math.sin(progress * Math.PI * 4) * 0.55,
       topY:
         MOUNTAIN_CHARACTER_FOOT_OFFSET +
-        progress * 0.1 +
-        Math.sin(progress * Math.PI) * 0.04,
+        (CLIMB_BASE_TOP - MOUNTAIN_CHARACTER_FOOT_OFFSET) * foothillRise,
       z: APPROACH_LOCAL_Z * (1 - progress) + 1.5 * progress,
       rotationY: Math.sin(index * 1.7) * 0.18,
       scale: 0.84 + (index % 4) * 0.055,
@@ -68,11 +84,14 @@ const CLIMB_TRAIL_PROFILE = [
 ]
 
 const CLIMB_TRAIL_STONES = CLIMB_TRAIL_PROFILE.map(
-  ([x, topY, z, rotationY, scale], index) =>
+  ([x, surfaceY, z, rotationY, scale], index) =>
     Object.freeze({
-      t: 0.56 + (index / (CLIMB_TRAIL_PROFILE.length - 1)) * 0.14,
+      t:
+        MOUNTAIN_CLIMB_START +
+        (index / (CLIMB_TRAIL_PROFILE.length - 1)) *
+          (MOUNTAIN_CLIMB_END - MOUNTAIN_CLIMB_START),
       x,
-      topY,
+      topY: surfaceY + MOUNTAIN_CLIMB_CLEARANCE,
       z,
       rotationY,
       scale,
@@ -137,12 +156,12 @@ export const SCENES = [
   {
     id: 'mountain',
     start: 0.5,
-    end: 0.7,
+    end: MOUNTAIN_CLIMB_END,
     position: [MOUNTAIN_CORNER.x, MOUNTAIN_CORNER.y, MOUNTAIN_ORIGIN_Z],
   },
   {
     id: 'summit',
-    start: 0.7,
+    start: MOUNTAIN_CLIMB_END,
     end: 1,
     position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y, MOUNTAIN_SUMMIT.z],
   },
@@ -168,41 +187,41 @@ export const SCENE_RANGES = Object.fromEntries(
 export const MOUNTAIN_PATH = Object.freeze({
   start: SCENE_RANGES.mountain.start,
   end: SCENE_RANGES.mountain.end,
-  slopeStart: 0.56,
+  slopeStart: MOUNTAIN_CLIMB_START,
   originZ: MOUNTAIN_ORIGIN_Z,
   cameraTransitionStart: SCENE_RANGES.mountain.start,
   cameraTransitionEnd: 0.53,
   climbHeight: 18,
-  cameraHeight: 1,
-  cameraDistance: 6,
-  lookHeight: 11,
-  lookAhead: 18,
+  cameraHeight: 1.5,
+  cameraDistance: 8,
+  lookHeight: 6,
+  lookAhead: 15,
 })
 
 export const MOUNTAIN_PROJECT_MARKERS = Object.freeze([
   Object.freeze({
     id: 'csfd',
-    triggerOffset: 0.605,
+    triggerOffset: 0.725,
     revealRadius: 0.018,
-    position: [2.2, 5.4, -9.8],
+    position: [2.2, 6.9, -9.8],
     accent: '#FFD15C',
     eyebrow: 'Project 01',
     text: 'CSFD - Full-stack React & Express application.',
   }),
   Object.freeze({
     id: 'unishare',
-    triggerOffset: 0.645,
+    triggerOffset: 0.765,
     revealRadius: 0.018,
-    position: [3.2, 11.2, -18.6],
+    position: [3.2, 12.7, -18.6],
     accent: '#77DD77',
     eyebrow: 'Project 02',
     text: 'UniShare - Cross-platform Flutter community platform.',
   }),
   Object.freeze({
     id: 'leadership',
-    triggerOffset: 0.678,
+    triggerOffset: 0.798,
     revealRadius: 0.016,
-    position: [-3, 15.8, -25.8],
+    position: [-3, 17.3, -25.8],
     accent: '#FFB380',
     eyebrow: 'Community',
     text: 'FOSSASIA & NGO Leadership.',
@@ -233,57 +252,61 @@ export const CHARACTER_KEYFRAMES = [
     rotationY: Math.PI,
   },
   {
-    t: 0.55,
+    t: 0.65,
     position: [CAMPUS_PATH.endX, CAMPUS_PATH.groundY, -34],
     rotationY: Math.PI,
   },
   {
-    t: 0.56,
-    position: [CAMPUS_PATH.endX, CAMPUS_PATH.groundY, MOUNTAIN_ORIGIN_Z],
+    t: MOUNTAIN_CLIMB_START,
+    position: [
+      CAMPUS_PATH.endX,
+      CAMPUS_PATH.groundY + CLIMB_BASE_TOP + MOUNTAIN_CHARACTER_GROUND_OFFSET,
+      MOUNTAIN_ORIGIN_Z,
+    ],
     rotationY: Math.PI,
   },
   {
-    t: 0.6,
-    position: [CAMPUS_PATH.endX - 1.1, -7.2, -46],
+    t: 0.72,
+    position: [CAMPUS_PATH.endX - 1.1, -5.7, -46],
     rotationY: 3.44,
   },
   {
-    t: 0.635,
-    position: [CAMPUS_PATH.endX + 1.2, -3.8, -52],
+    t: 0.755,
+    position: [CAMPUS_PATH.endX + 1.2, -2.3, -52],
     rotationY: 2.6,
   },
   {
-    t: 0.67,
-    position: [CAMPUS_PATH.endX + 1.3, 0.4, -58],
+    t: 0.79,
+    position: [CAMPUS_PATH.endX + 1.3, 1.9, -58],
     rotationY: 3.02,
   },
   {
-    t: 0.7,
+    t: MOUNTAIN_CLIMB_END,
     position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y, -70],
     rotationY: Math.PI,
   },
   {
-    t: 0.74,
+    t: 0.85,
     position: [CAMPUS_PATH.endX - 1.2, MOUNTAIN_SUMMIT.y, -72],
     rotationY: 3.08,
   },
   {
-    t: 0.78,
+    t: 0.88,
     position: [CAMPUS_PATH.endX + 1.3, MOUNTAIN_SUMMIT.y + 0.1, -74],
     rotationY: 2.45,
   },
   {
-    t: 0.82,
+    t: 0.91,
     position: [CAMPUS_PATH.endX - 1.2, MOUNTAIN_SUMMIT.y + 0.2, -75.5],
     rotationY: 3.93,
   },
   {
-    t: 0.86,
+    t: 0.94,
     position: [CAMPUS_PATH.endX + 1, MOUNTAIN_SUMMIT.y + 0.2, -76.5],
     rotationY: 2.51,
   },
   {
-    t: 0.9,
+    t: 0.96,
     position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.2, MOUNTAIN_SUMMIT.z],
     rotationY: Math.PI,
   },
@@ -324,37 +347,37 @@ export const CAMERA_KEYFRAMES = [
     fov: 48,
   },
   {
-    t: 0.58,
+    t: 0.72,
     position: [CAMPUS_PATH.endX - 0.55, -7.6, -37],
     target: [CAMPUS_PATH.endX - 0.55, -0.6, -58],
     fov: 48,
   },
   {
-    t: 0.66,
+    t: 0.79,
     position: [CAMPUS_PATH.endX + 1.25, -0.7, -50.3],
     target: [CAMPUS_PATH.endX + 1.25, 6.3, -71.3],
     fov: 49,
   },
   {
-    t: 0.7,
+    t: MOUNTAIN_CLIMB_END,
     position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1, -64],
     target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 8, -85],
     fov: 50,
   },
   {
-    t: 0.78,
+    t: 0.88,
     position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 3, -67],
     target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.5, -84],
     fov: 52,
   },
   {
-    t: 0.86,
+    t: 0.94,
     position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 4, -70],
     target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1, -90],
     fov: 53,
   },
   {
-    t: 0.9,
+    t: 0.96,
     position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -70.5],
     target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -95],
     fov: 55,
@@ -368,7 +391,7 @@ export const CAMERA_KEYFRAMES = [
 ]
 
 export const SUMMIT_LOOK_AROUND = Object.freeze({
-  start: 0.9,
+  start: 0.96,
   minYaw: -Math.PI / 2,
   maxYaw: Math.PI / 2,
   minPitch: 0,
@@ -436,6 +459,35 @@ export const getCharacterPositionAtOffset = (offset, target) => {
   return target.set(...finalPosition)
 }
 
+const smootherStep = (value) =>
+  value * value * value * (value * (value * 6 - 15) + 10)
+
+export const getMountainTrailHeightAtZ = (worldZ) => {
+  const localZ = worldZ - MOUNTAIN_ORIGIN_Z
+
+  for (let index = 0; index < MOUNTAIN_TRAIL_STONES.length - 1; index += 1) {
+    const start = MOUNTAIN_TRAIL_STONES[index]
+    const end = MOUNTAIN_TRAIL_STONES[index + 1]
+    if (localZ > start.z || localZ < end.z) continue
+
+    const zRange = start.z - end.z
+    const zProgress = zRange
+      ? Math.max(0, Math.min(1, (start.z - localZ) / zRange))
+      : 0
+    return (
+      MOUNTAIN_CORNER.y +
+      start.topY +
+      (end.topY - start.topY) * smootherStep(zProgress)
+    )
+  }
+
+  const endpoint =
+    localZ >= MOUNTAIN_TRAIL_STONES[0].z
+      ? MOUNTAIN_TRAIL_STONES[0]
+      : MOUNTAIN_TRAIL_STONES.at(-1)
+  return MOUNTAIN_CORNER.y + endpoint.topY
+}
+
 export const getMountainTrailPositionAtOffset = (offset, target) => {
   for (let index = 0; index < MOUNTAIN_TRAIL_STONES.length - 1; index += 1) {
     const start = MOUNTAIN_TRAIL_STONES[index]
@@ -446,17 +498,30 @@ export const getMountainTrailPositionAtOffset = (offset, target) => {
     const progress = range
       ? Math.max(0, Math.min(1, (offset - start.t) / range))
       : 0
+    const worldZ =
+      MOUNTAIN_ORIGIN_Z +
+      start.z +
+      (end.z - start.z) * progress
+    const calculatedHeight = getMountainTrailHeightAtZ(worldZ)
+    const clearanceProgress = Math.max(
+      0,
+      Math.min(
+        1,
+        (offset - MOUNTAIN_APPROACH_START) /
+          (MOUNTAIN_CLIMB_START - MOUNTAIN_APPROACH_START),
+      ),
+    )
+    const characterGroundOffset =
+      -MOUNTAIN_CHARACTER_FOOT_OFFSET +
+      (MOUNTAIN_CHARACTER_GROUND_OFFSET +
+        MOUNTAIN_CHARACTER_FOOT_OFFSET) *
+        smootherStep(clearanceProgress)
     target.set(
       MOUNTAIN_CORNER.x +
         start.x +
         (end.x - start.x) * progress,
-      MOUNTAIN_CORNER.y +
-        start.topY +
-        (end.topY - start.topY) * progress -
-        MOUNTAIN_CHARACTER_FOOT_OFFSET,
-      MOUNTAIN_ORIGIN_Z +
-        start.z +
-        (end.z - start.z) * progress,
+      calculatedHeight + characterGroundOffset,
+      worldZ,
     )
     return target
   }
@@ -465,8 +530,8 @@ export const getMountainTrailPositionAtOffset = (offset, target) => {
   return target.set(
     MOUNTAIN_CORNER.x + finalStone.x,
     MOUNTAIN_CORNER.y +
-      finalStone.topY -
-      MOUNTAIN_CHARACTER_FOOT_OFFSET,
+      finalStone.topY +
+      MOUNTAIN_CHARACTER_GROUND_OFFSET,
     MOUNTAIN_ORIGIN_Z + finalStone.z,
   )
 }
