@@ -22,6 +22,68 @@ export const MOUNTAIN_SUMMIT = Object.freeze({
 })
 
 export const MOUNTAIN_ORIGIN_Z = -40
+export const MOUNTAIN_CHARACTER_FOOT_OFFSET = 0.16
+
+const APPROACH_STONE_COUNT = 19
+const APPROACH_LOCAL_Z = MOUNTAIN_CORNER.z - MOUNTAIN_ORIGIN_Z
+
+const APPROACH_TRAIL_STONES = Array.from(
+  { length: APPROACH_STONE_COUNT },
+  (_, index) => {
+    const progress = index / (APPROACH_STONE_COUNT - 1)
+    return Object.freeze({
+      t: 0.5 + progress * 0.058,
+      x: Math.sin(progress * Math.PI * 4) * 0.55,
+      topY:
+        MOUNTAIN_CHARACTER_FOOT_OFFSET +
+        progress * 0.1 +
+        Math.sin(progress * Math.PI) * 0.04,
+      z: APPROACH_LOCAL_Z * (1 - progress) + 1.5 * progress,
+      rotationY: Math.sin(index * 1.7) * 0.18,
+      scale: 0.84 + (index % 4) * 0.055,
+      phase: 'approach',
+    })
+  },
+)
+
+const CLIMB_TRAIL_PROFILE = [
+  [0, 0.48, 0, 0.08, 0.95],
+  [-0.3, 1.3, -1.8, -0.15, 0.88],
+  [-0.7, 2.15, -3.6, 0.18, 1.05],
+  [-1.1, 3.05, -5.4, -0.12, 0.9],
+  [-0.8, 4.05, -7.2, 0.22, 1],
+  [-0.2, 5.15, -9, -0.16, 0.86],
+  [0.6, 6.25, -10.8, 0.18, 1.02],
+  [1.2, 7.45, -12.6, -0.08, 0.91],
+  [1.6, 8.65, -14.4, 0.15, 1.05],
+  [1.7, 9.85, -16.2, -0.2, 0.88],
+  [1.3, 11.05, -18, 0.13, 1],
+  [0.7, 12.25, -19.8, -0.1, 0.92],
+  [-0.1, 13.45, -21.6, 0.2, 1.04],
+  [-0.7, 14.65, -23.4, -0.15, 0.9],
+  [-1, 15.65, -25.2, 0.1, 1],
+  [-1.1, 16.65, -27, -0.18, 0.9],
+  [-0.8, 17.55, -28.8, 0.14, 1.03],
+  [0, 18.35, -30.2, -0.1, 0.92],
+]
+
+const CLIMB_TRAIL_STONES = CLIMB_TRAIL_PROFILE.map(
+  ([x, topY, z, rotationY, scale], index) =>
+    Object.freeze({
+      t: 0.56 + (index / (CLIMB_TRAIL_PROFILE.length - 1)) * 0.14,
+      x,
+      topY,
+      z,
+      rotationY,
+      scale,
+      phase: 'climb',
+    }),
+)
+
+export const MOUNTAIN_TRAIL_STONES = Object.freeze([
+  ...APPROACH_TRAIL_STONES,
+  ...CLIMB_TRAIL_STONES,
+])
 
 export const CAMPUS_LANDMARKS = Object.freeze([
   Object.freeze({
@@ -113,8 +175,8 @@ export const MOUNTAIN_PATH = Object.freeze({
   climbHeight: 18,
   cameraHeight: 1,
   cameraDistance: 6,
-  lookHeight: 8,
-  lookAhead: 15,
+  lookHeight: 11,
+  lookAhead: 18,
 })
 
 export const MOUNTAIN_PROJECT_MARKERS = Object.freeze([
@@ -122,7 +184,7 @@ export const MOUNTAIN_PROJECT_MARKERS = Object.freeze([
     id: 'csfd',
     triggerOffset: 0.605,
     revealRadius: 0.018,
-    position: [0.55, 3.2, -7],
+    position: [2.2, 5.4, -9.8],
     accent: '#FFD15C',
     eyebrow: 'Project 01',
     text: 'CSFD - Full-stack React & Express application.',
@@ -131,7 +193,7 @@ export const MOUNTAIN_PROJECT_MARKERS = Object.freeze([
     id: 'unishare',
     triggerOffset: 0.645,
     revealRadius: 0.018,
-    position: [2.75, 7.9, -15],
+    position: [3.2, 11.2, -18.6],
     accent: '#77DD77',
     eyebrow: 'Project 02',
     text: 'UniShare - Cross-platform Flutter community platform.',
@@ -140,7 +202,7 @@ export const MOUNTAIN_PROJECT_MARKERS = Object.freeze([
     id: 'leadership',
     triggerOffset: 0.678,
     revealRadius: 0.016,
-    position: [-1.4, 13.5, -24.2],
+    position: [-3, 15.8, -25.8],
     accent: '#FFB380',
     eyebrow: 'Community',
     text: 'FOSSASIA & NGO Leadership.',
@@ -348,6 +410,10 @@ export const getCharacterXAtOffset = (offset) => {
 }
 
 export const getCharacterPositionAtOffset = (offset, target) => {
+  if (offset >= MOUNTAIN_PATH.start && offset <= MOUNTAIN_PATH.end) {
+    return getMountainTrailPositionAtOffset(offset, target)
+  }
+
   for (let index = 0; index < CHARACTER_KEYFRAMES.length - 1; index += 1) {
     const start = CHARACTER_KEYFRAMES[index]
     const end = CHARACTER_KEYFRAMES[index + 1]
@@ -368,6 +434,41 @@ export const getCharacterPositionAtOffset = (offset, target) => {
   const finalPosition =
     CHARACTER_KEYFRAMES[CHARACTER_KEYFRAMES.length - 1].position
   return target.set(...finalPosition)
+}
+
+export const getMountainTrailPositionAtOffset = (offset, target) => {
+  for (let index = 0; index < MOUNTAIN_TRAIL_STONES.length - 1; index += 1) {
+    const start = MOUNTAIN_TRAIL_STONES[index]
+    const end = MOUNTAIN_TRAIL_STONES[index + 1]
+    if (offset > end.t) continue
+
+    const range = end.t - start.t
+    const progress = range
+      ? Math.max(0, Math.min(1, (offset - start.t) / range))
+      : 0
+    target.set(
+      MOUNTAIN_CORNER.x +
+        start.x +
+        (end.x - start.x) * progress,
+      MOUNTAIN_CORNER.y +
+        start.topY +
+        (end.topY - start.topY) * progress -
+        MOUNTAIN_CHARACTER_FOOT_OFFSET,
+      MOUNTAIN_ORIGIN_Z +
+        start.z +
+        (end.z - start.z) * progress,
+    )
+    return target
+  }
+
+  const finalStone = MOUNTAIN_TRAIL_STONES.at(-1)
+  return target.set(
+    MOUNTAIN_CORNER.x + finalStone.x,
+    MOUNTAIN_CORNER.y +
+      finalStone.topY -
+      MOUNTAIN_CHARACTER_FOOT_OFFSET,
+    MOUNTAIN_ORIGIN_Z + finalStone.z,
+  )
 }
 
 export const getCampusLandmarkProximity = (offset, landmark) => {

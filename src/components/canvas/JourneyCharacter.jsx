@@ -6,6 +6,7 @@ import Character from './Character'
 import {
   CAMPUS_PATH,
   CHARACTER_KEYFRAMES,
+  getMountainTrailPositionAtOffset,
   getNearestCampusProximity,
   MOUNTAIN_PATH,
   PLAYGROUND_MOTION_OFFSETS,
@@ -68,6 +69,10 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     currentPosition.fromArray(start.position)
     nextPosition.fromArray(end.position)
     characterRef.current.position.copy(currentPosition.lerp(nextPosition, progress))
+    if (offset >= MOUNTAIN_PATH.start && offset <= MOUNTAIN_PATH.end) {
+      getMountainTrailPositionAtOffset(offset, currentPosition)
+      characterRef.current.position.copy(currentPosition)
+    }
     const isApproachingMountainTurn =
       end.t === MOUNTAIN_PATH.start && offset < MOUNTAIN_PATH.start
     characterRef.current.rotation.y = isApproachingMountainTurn
