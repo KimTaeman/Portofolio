@@ -417,23 +417,38 @@ function SwingSet() {
 
 export default function Playground({
   isNight = false,
+  isSunset = false,
   castDirectionalShadow = false,
 }) {
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
   const slideRotationX = -0.35
-  const skyColor = isNight ? '#1E1B4B' : '#E8F4FA'
+  const skyColor = isNight
+    ? '#1E1B4B'
+    : isSunset
+      ? '#FFE5D9'
+      : '#E8F4FA'
+  const ambientColor = isNight
+    ? '#312E81'
+    : isSunset
+      ? '#E6E6FA'
+      : '#FFFFFF'
+  const directionalColor = isNight
+    ? '#818CF8'
+    : isSunset
+      ? '#FFB347'
+      : '#FFF9E6'
 
   return (
     <>
       <color attach="background" args={[skyColor]} />
       <ambientLight
-        color={isNight ? '#312E81' : '#FFFFFF'}
-        intensity={isNight ? 0.6 : 1.35}
+        color={ambientColor}
+        intensity={isNight ? 0.6 : isSunset ? 0.8 : 1.35}
       />
       <directionalLight
-        color={isNight ? '#818CF8' : '#FFF9E6'}
-        intensity={isNight ? 0.5 : 1.9}
-        position={[5, 10, 5]}
+        color={directionalColor}
+        intensity={isNight ? 0.5 : isSunset ? 1.5 : 1.9}
+        position={isSunset ? [10, 5, 5] : [5, 10, 5]}
         castShadow={castDirectionalShadow}
         shadow-mapSize={[1024, 1024]}
         shadow-camera-near={1}

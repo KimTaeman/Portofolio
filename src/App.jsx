@@ -9,12 +9,15 @@ import Campus from './components/canvas/scenes/Campus'
 import Mountain from './components/canvas/scenes/Mountain'
 import Summit from './components/canvas/scenes/Summit'
 import UIOverlay from './components/ui/overlays/UIOverlay'
-import PolaroidInteraction from './components/ui/overlays/PolaroidInteraction'
 import CampusDetailCard from './components/ui/overlays/CampusDetailCard'
 import CampusProximityOverlay from './components/ui/overlays/CampusProximityOverlay'
+import MountainProjectOverlay from './components/ui/overlays/MountainProjectOverlay'
 import {
+  CAMPUS_PATH,
   CAMERA_KEYFRAMES,
   getCharacterOutfit,
+  MOUNTAIN_PATH,
+  SCENE_RANGES,
   SCENES,
   SCROLL_PAGES,
 } from './config/narrativeTimeline'
@@ -24,20 +27,49 @@ const scenePosition = (sceneId) =>
 const initialCamera = CAMERA_KEYFRAMES[0]
 const playgroundEnd = SCENES.find((scene) => scene.id === 'playground').end
 
+function InfiniteGround({
+  isNight = false,
+  isSunset = false,
+  visible = true,
+}) {
+  return (
+    <mesh
+      name="infiniteWorldGround"
+      position={[CAMPUS_PATH.centerX, CAMPUS_PATH.groundY - 1, -24]}
+      receiveShadow
+      visible={visible}
+    >
+      <boxGeometry args={[150, 2, 150]} />
+      <meshStandardMaterial
+        color={isNight ? '#25254D' : isSunset ? '#D9C5A4' : '#EAF4D3'}
+        roughness={1}
+        metalness={0}
+      />
+    </mesh>
+  )
+}
+
 function App() {
   const [isLocked, setIsLocked] = useState(false)
   const [isNight, setIsNight] = useState(false)
   const [scrollOffset, setScrollOffset] = useState(0)
   const [campusDetailId, setCampusDetailId] = useState(null)
+  const [mountainMarkerId, setMountainMarkerId] = useState(null)
   const outfit = getCharacterOutfit(scrollOffset)
-
-  const handlePolaroidOpen = useCallback(() => {
-    setIsLocked(true)
-  }, [])
-
-  const handlePolaroidClose = useCallback(() => {
-    setIsLocked(false)
-  }, [])
+  const isSunset =
+    !isNight &&
+    scrollOffset >= SCENE_RANGES.campus.start &&
+    scrollOffset < SCENE_RANGES.summit.start
+  const skyColor = isNight
+    ? '#1E1B4B'
+    : isSunset
+      ? '#FFE5D9'
+      : '#E8F4FA'
+  const activeMountainMarkerId =
+    scrollOffset >= SCENE_RANGES.mountain.start &&
+    scrollOffset <= SCENE_RANGES.mountain.end
+      ? mountainMarkerId
+      : null
 
   const handleCampusSelect = useCallback((detailId) => {
     setCampusDetailId(detailId)
@@ -63,9 +95,11 @@ function App() {
             gl.toneMappingExposure = 1.05
           }}
         >
-          <fog
-            attach="fog"
-            args={[isNight ? '#1E1B4B' : '#E8F4FA', 32, 115]}
+          <fog attach="fog" args={[skyColor, 20, 100]} />
+          <InfiniteGround
+            isNight={isNight}
+            isSunset={isSunset}
+            visible={scrollOffset < MOUNTAIN_PATH.slopeStart}
           />
 
           <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
@@ -75,6 +109,7 @@ function App() {
             {/* Scene 1: The Playground (Introduction) */}
             <Playground
               isNight={isNight}
+              isSunset={isSunset}
               castDirectionalShadow={scrollOffset >= playgroundEnd}
             />
 
@@ -86,7 +121,10 @@ function App() {
             />
 
             {/* Scene 3: The Mountain Base (Experience) */}
-            <Mountain position={scenePosition('mountain')} />
+            <Mountain
+              position={scenePosition('mountain')}
+              onMarkerSelect={setMountainMarkerId}
+            />
 
             {/* Scene 4: The Summit (Future & Contact) */}
             <Summit position={scenePosition('summit')} isNight={isNight} />
@@ -97,21 +135,20 @@ function App() {
       <div className="pointer-events-none fixed inset-0 z-10">
         <UIOverlay scrollOffset={scrollOffset} />
         <CampusProximityOverlay scrollOffset={scrollOffset} />
+        <MountainProjectOverlay
+          scrollOffset={scrollOffset}
+          selectedMarkerId={activeMountainMarkerId}
+          onClose={() => setMountainMarkerId(null)}
+        />
 
         <button
           type="button"
           onClick={() => setIsNight((prev) => !prev)}
-          className="pointer-events-auto fixed right-6 top-6 rounded-full border border-white/70 bg-white/80 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-[#18213d] shadow-[0_12px_32px_rgba(92,65,35,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white"
+          className="pointer-events-auto fixed right-6 top-6 rounded-full border border-white/70 bg-white/80 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#4A3B32] shadow-[0_12px_32px_rgba(92,65,35,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white"
         >
           {isNight ? 'Switch to Day' : 'Switch to Night'}
         </button>
 
-        <PolaroidInteraction
-          scrollOffset={scrollOffset}
-          isOpen={isLocked}
-          onOpen={handlePolaroidOpen}
-          onClose={handlePolaroidClose}
-        />
         <CampusDetailCard
           detailId={campusDetailId}
           onClose={handleCampusClose}

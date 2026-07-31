@@ -5,10 +5,23 @@ export const CAMPUS_PATH = Object.freeze({
   groundY: -10,
   characterZ: 3.42,
   walkStart: 0.2,
-  walkEnd: 0.46,
+  walkEnd: 0.48,
   startX: 2,
-  endX: 14,
+  endX: 19,
 })
+
+export const MOUNTAIN_CORNER = Object.freeze({
+  x: CAMPUS_PATH.endX,
+  y: CAMPUS_PATH.groundY,
+  z: CAMPUS_PATH.characterZ,
+})
+
+export const MOUNTAIN_SUMMIT = Object.freeze({
+  y: CAMPUS_PATH.groundY + 18,
+  z: -77,
+})
+
+export const MOUNTAIN_ORIGIN_Z = -40
 
 export const CAMPUS_LANDMARKS = Object.freeze([
   Object.freeze({
@@ -63,13 +76,13 @@ export const SCENES = [
     id: 'mountain',
     start: 0.5,
     end: 0.7,
-    position: [CAMPUS_PATH.endX, CAMPUS_PATH.groundY, 18],
+    position: [MOUNTAIN_CORNER.x, MOUNTAIN_CORNER.y, MOUNTAIN_ORIGIN_Z],
   },
   {
     id: 'summit',
     start: 0.7,
     end: 1,
-    position: [CAMPUS_PATH.endX, -2, 34],
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y, MOUNTAIN_SUMMIT.z],
   },
 ]
 
@@ -89,6 +102,50 @@ export const SCENE_RANGES = Object.fromEntries(
     },
   ]),
 )
+
+export const MOUNTAIN_PATH = Object.freeze({
+  start: SCENE_RANGES.mountain.start,
+  end: SCENE_RANGES.mountain.end,
+  slopeStart: 0.56,
+  originZ: MOUNTAIN_ORIGIN_Z,
+  cameraTransitionStart: SCENE_RANGES.mountain.start,
+  cameraTransitionEnd: 0.53,
+  climbHeight: 18,
+  cameraHeight: 1,
+  cameraDistance: 6,
+  lookHeight: 8,
+  lookAhead: 15,
+})
+
+export const MOUNTAIN_PROJECT_MARKERS = Object.freeze([
+  Object.freeze({
+    id: 'csfd',
+    triggerOffset: 0.605,
+    revealRadius: 0.018,
+    position: [0.55, 3.2, -7],
+    accent: '#FFD15C',
+    eyebrow: 'Project 01',
+    text: 'CSFD - Full-stack React & Express application.',
+  }),
+  Object.freeze({
+    id: 'unishare',
+    triggerOffset: 0.645,
+    revealRadius: 0.018,
+    position: [2.75, 7.9, -15],
+    accent: '#77DD77',
+    eyebrow: 'Project 02',
+    text: 'UniShare - Cross-platform Flutter community platform.',
+  }),
+  Object.freeze({
+    id: 'leadership',
+    triggerOffset: 0.678,
+    revealRadius: 0.016,
+    position: [-1.4, 13.5, -24.2],
+    accent: '#FFB380',
+    eyebrow: 'Community',
+    text: 'FOSSASIA & NGO Leadership.',
+  }),
+])
 
 export const CHARACTER_KEYFRAMES = [
   { t: 0, position: [2, 2.28, -0.34], rotationY: 0 },
@@ -110,20 +167,69 @@ export const CHARACTER_KEYFRAMES = [
   },
   {
     t: 0.5,
-    position: [CAMPUS_PATH.endX, CAMPUS_PATH.groundY, 6],
-    rotationY: 0,
+    position: [MOUNTAIN_CORNER.x, MOUNTAIN_CORNER.y, MOUNTAIN_CORNER.z],
+    rotationY: Math.PI,
   },
-  { t: 0.53, position: [11.8, -9.67, 12], rotationY: -0.35 },
-  { t: 0.57, position: [15.9, -9.17, 14.2], rotationY: 1.08 },
-  { t: 0.61, position: [12.5, -8.67, 16.5], rotationY: -0.97 },
-  { t: 0.66, position: [15.2, -8.17, 18.8], rotationY: 0.87 },
-  { t: 0.7, position: [15.2, -7.7, 20], rotationY: 0 },
-  { t: 0.74, position: [12.8, -6.4, 23], rotationY: -0.69 },
-  { t: 0.78, position: [15.3, -5.2, 25.5], rotationY: 0.79 },
-  { t: 0.82, position: [12.8, -4, 28], rotationY: -0.79 },
-  { t: 0.86, position: [15, -2.7, 31], rotationY: 0.63 },
-  { t: 0.9, position: [14, -1.2, 34], rotationY: 0 },
-  { t: 1, position: [14, -1.2, 34], rotationY: 0 },
+  {
+    t: 0.55,
+    position: [CAMPUS_PATH.endX, CAMPUS_PATH.groundY, -34],
+    rotationY: Math.PI,
+  },
+  {
+    t: 0.56,
+    position: [CAMPUS_PATH.endX, CAMPUS_PATH.groundY, MOUNTAIN_ORIGIN_Z],
+    rotationY: Math.PI,
+  },
+  {
+    t: 0.6,
+    position: [CAMPUS_PATH.endX - 1.1, -7.2, -46],
+    rotationY: 3.44,
+  },
+  {
+    t: 0.635,
+    position: [CAMPUS_PATH.endX + 1.2, -3.8, -52],
+    rotationY: 2.6,
+  },
+  {
+    t: 0.67,
+    position: [CAMPUS_PATH.endX + 1.3, 0.4, -58],
+    rotationY: 3.02,
+  },
+  {
+    t: 0.7,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y, -70],
+    rotationY: Math.PI,
+  },
+  {
+    t: 0.74,
+    position: [CAMPUS_PATH.endX - 1.2, MOUNTAIN_SUMMIT.y, -72],
+    rotationY: 3.08,
+  },
+  {
+    t: 0.78,
+    position: [CAMPUS_PATH.endX + 1.3, MOUNTAIN_SUMMIT.y + 0.1, -74],
+    rotationY: 2.45,
+  },
+  {
+    t: 0.82,
+    position: [CAMPUS_PATH.endX - 1.2, MOUNTAIN_SUMMIT.y + 0.2, -75.5],
+    rotationY: 3.93,
+  },
+  {
+    t: 0.86,
+    position: [CAMPUS_PATH.endX + 1, MOUNTAIN_SUMMIT.y + 0.2, -76.5],
+    rotationY: 2.51,
+  },
+  {
+    t: 0.9,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.2, MOUNTAIN_SUMMIT.z],
+    rotationY: Math.PI,
+  },
+  {
+    t: 1,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.2, MOUNTAIN_SUMMIT.z],
+    rotationY: Math.PI,
+  },
 ]
 
 export const CAMERA_KEYFRAMES = [
@@ -131,16 +237,72 @@ export const CAMERA_KEYFRAMES = [
   { t: 0.08, position: [6, 2.5, 10], target: [2, 0.9, 3.42], fov: 48 },
   { t: 0.19, position: [3.6, -7, 12], target: [3.6, -9.4, 3.42], fov: 48 },
   { t: 0.2, position: [3.6, -7, 12], target: [3.6, -9.4, 3.42], fov: 48 },
-  { t: 0.46, position: [15.6, -7, 12], target: [15.6, -9.4, 3.42], fov: 48 },
-  { t: 0.48, position: [15.6, -7, 12], target: [15.6, -9.4, 3.42], fov: 48 },
-  { t: 0.5, position: [14, -7, -1], target: [14, -9, 7], fov: 50 },
-  { t: 0.58, position: [14, -6, 5], target: [14, -7.5, 15], fov: 50 },
-  { t: 0.66, position: [14, -4.8, 9], target: [14, -6, 19], fov: 52 },
-  { t: 0.7, position: [14, -3, 10], target: [14, -4, 24], fov: 52 },
-  { t: 0.78, position: [14, -1.2, 16], target: [14, -3.5, 28], fov: 52 },
-  { t: 0.86, position: [14, 0.8, 23], target: [14, -1.5, 34], fov: 53 },
-  { t: 0.9, position: [14, 0.4, 27.5], target: [14, 0.4, 50], fov: 55 },
-  { t: 1, position: [14, 0.4, 27.5], target: [14, 0.4, 50], fov: 55 },
+  {
+    t: 0.46,
+    position: [CAMPUS_PATH.endX + 0.4, -7, 12],
+    target: [CAMPUS_PATH.endX + 0.4, -9.4, 3.42],
+    fov: 48,
+  },
+  {
+    t: 0.48,
+    position: [CAMPUS_PATH.endX + 1.6, -7, 12],
+    target: [CAMPUS_PATH.endX + 1.6, -9.4, 3.42],
+    fov: 48,
+  },
+  {
+    t: 0.5,
+    position: [CAMPUS_PATH.endX + 1.6, -7, 12],
+    target: [CAMPUS_PATH.endX, -9.4, 3.42],
+    fov: 48,
+  },
+  {
+    t: 0.53,
+    position: [CAMPUS_PATH.endX, -9, -13],
+    target: [CAMPUS_PATH.endX, -2, -34],
+    fov: 48,
+  },
+  {
+    t: 0.58,
+    position: [CAMPUS_PATH.endX - 0.55, -7.6, -37],
+    target: [CAMPUS_PATH.endX - 0.55, -0.6, -58],
+    fov: 48,
+  },
+  {
+    t: 0.66,
+    position: [CAMPUS_PATH.endX + 1.25, -0.7, -50.3],
+    target: [CAMPUS_PATH.endX + 1.25, 6.3, -71.3],
+    fov: 49,
+  },
+  {
+    t: 0.7,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1, -64],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 8, -85],
+    fov: 50,
+  },
+  {
+    t: 0.78,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 3, -67],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.5, -84],
+    fov: 52,
+  },
+  {
+    t: 0.86,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 4, -70],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1, -90],
+    fov: 53,
+  },
+  {
+    t: 0.9,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -70.5],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -95],
+    fov: 55,
+  },
+  {
+    t: 1,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -70.5],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -95],
+    fov: 55,
+  },
 ]
 
 export const SUMMIT_LOOK_AROUND = Object.freeze({
@@ -160,7 +322,7 @@ export const PLAYGROUND_MOTION_OFFSETS = Object.freeze({
 
 export const OUTFIT_TRANSITION_OFFSETS = Object.freeze({
   university: PLAYGROUND_MOTION_OFFSETS.groundContact,
-  hiker: 0.535,
+  hiker: SCENE_RANGES.mountain.start,
 })
 
 export const getCharacterOutfit = (offset) => {
@@ -185,6 +347,29 @@ export const getCharacterXAtOffset = (offset) => {
   return CHARACTER_KEYFRAMES[CHARACTER_KEYFRAMES.length - 1].position[0]
 }
 
+export const getCharacterPositionAtOffset = (offset, target) => {
+  for (let index = 0; index < CHARACTER_KEYFRAMES.length - 1; index += 1) {
+    const start = CHARACTER_KEYFRAMES[index]
+    const end = CHARACTER_KEYFRAMES[index + 1]
+    if (offset > end.t) continue
+
+    const range = end.t - start.t
+    const progress = range
+      ? Math.max(0, Math.min(1, (offset - start.t) / range))
+      : 0
+    target.set(
+      start.position[0] + (end.position[0] - start.position[0]) * progress,
+      start.position[1] + (end.position[1] - start.position[1]) * progress,
+      start.position[2] + (end.position[2] - start.position[2]) * progress,
+    )
+    return target
+  }
+
+  const finalPosition =
+    CHARACTER_KEYFRAMES[CHARACTER_KEYFRAMES.length - 1].position
+  return target.set(...finalPosition)
+}
+
 export const getCampusLandmarkProximity = (offset, landmark) => {
   if (offset < CAMPUS_PATH.walkStart || offset > CAMPUS_PATH.walkEnd) return 0
 
@@ -202,6 +387,17 @@ export const getNearestCampusProximity = (offset) => {
     strength = Math.max(strength, getCampusLandmarkProximity(offset, landmark))
   }
   return strength
+}
+
+export const getMountainMarkerProximity = (offset, marker) => {
+  if (offset < MOUNTAIN_PATH.start || offset > MOUNTAIN_PATH.end) return 0
+
+  const distance = Math.abs(offset - marker.triggerOffset)
+  const linearStrength = Math.max(
+    0,
+    Math.min(1, 1 - distance / marker.revealRadius),
+  )
+  return linearStrength * linearStrength * (3 - 2 * linearStrength)
 }
 
 export const CAMPUS_CAMERA_TRACKING = Object.freeze({

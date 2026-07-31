@@ -23,9 +23,9 @@ const SCENE_CONTENT = {
 
 const SCENE_LABELS = {
   playground: '01 CURIOSITY',
-  campus: '02 · Learning',
-  mountain: '03 · Experience',
-  summit: '04 · The next peak',
+  campus: '02 LEARNING',
+  mountain: '03 EXPERIENCE',
+  summit: '04 THE NEXT PEAK',
 }
 
 const getActiveScene = (offset) => {
@@ -63,7 +63,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
 
   return (
     <div className="relative z-10 h-full w-full">
-      <div className="absolute left-[5%] top-1/2 w-[min(450px,90vw)] -translate-y-1/2">
+      <div className="absolute left-[5%] top-1/2 w-[min(350px,90vw)] -translate-y-1/2">
         <AnimatePresence mode="sync">
           <motion.div
             key={activeScene}
@@ -76,11 +76,11 @@ export default function UIOverlay({ scrollOffset = 0 }) {
             }}
             transition={entranceTransition}
           >
-            <p className="mb-4 text-left text-[0.68rem] font-bold uppercase tracking-[0.25em] text-[#E88C47] md:text-xs">
+            <p className="mb-4 text-left text-xs font-semibold uppercase tracking-[0.15em] text-[#E07A5F]">
               {SCENE_LABELS[activeScene]}
             </p>
             <h1
-              className="text-left text-[clamp(2.5rem,4vw,3rem)] font-extrabold leading-[1.1] tracking-[-0.035em] text-[#1E293B]"
+              className="text-left font-serif text-[clamp(1.9rem,3.2vw,2.25rem)] font-semibold leading-[1.18] tracking-[-0.02em] text-[#4A3B32]"
               style={{
                 textShadow: '0 2px 10px rgba(255, 255, 255, 0.5)',
               }}
@@ -89,7 +89,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
             </h1>
             {content.body && (
               <p
-                className="mt-5 max-w-[420px] text-left text-lg font-medium leading-relaxed text-[#475569] md:text-xl"
+                className="mt-5 max-w-[330px] text-left text-base font-normal leading-relaxed text-[#5F4B40]"
                 style={{
                   textShadow: '0 2px 10px rgba(255, 255, 255, 0.5)',
                 }}
@@ -107,7 +107,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 0.75, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
-                className="mt-6 inline-flex rounded-full border border-white/70 bg-white/70 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#29324C] shadow-[0_10px_30px_rgba(72,52,36,0.12)] backdrop-blur-md md:text-sm"
+                className="mt-6 inline-flex rounded-full border border-white/70 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#4A3B32] shadow-[0_10px_30px_rgba(72,52,36,0.12)] backdrop-blur-md md:text-sm"
               >
                 Drag to explore the 180° view. Drag upward to look at the sky.
               </motion.p>

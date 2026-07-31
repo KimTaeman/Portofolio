@@ -22,6 +22,10 @@ const CHARACTER_COLORS = Object.freeze({
   glasses: '#FFFFFF',
   collar: '#AEC6CF',
   bow: '#FF6B6B',
+  hikerOrange: '#FFB380',
+  hikerTan: '#D2B48C',
+  backpack: '#77DD77',
+  backpackFlap: '#FDF6E3',
 })
 
 function ClayMaterial({ color }) {
@@ -376,6 +380,184 @@ function UniversityUniform({ partRefs, colors }) {
   )
 }
 
+function HikerArm({ armRef, name, position, rotation, colors }) {
+  return (
+    <group ref={armRef} name={name} position={position} rotation={rotation}>
+      <Capsule
+        args={[0.17, 0.15, 8, 16]}
+        position={[0, -0.14, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.hikerOrange} />
+      </Capsule>
+      <Capsule
+        args={[0.14, 0.28, 8, 16]}
+        position={[0, -0.48, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Capsule>
+      <Sphere
+        args={[0.16, 20, 16]}
+        position={[0, -0.73, 0.02]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Sphere>
+    </group>
+  )
+}
+
+function HikerLeg({ legRef, name, position, colors }) {
+  return (
+    <group ref={legRef} name={name} position={position}>
+      <Cylinder
+        args={[0.22, 0.2, 0.42, 24]}
+        position={[0, -0.18, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.hikerTan} />
+      </Cylinder>
+      <Capsule
+        args={[0.14, 0.28, 8, 16]}
+        position={[0, -0.52, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.skin} />
+      </Capsule>
+      <RoundedBox
+        args={[0.45, 0.34, 0.72]}
+        radius={0.13}
+        smoothness={5}
+        position={[0, -0.91, 0.14]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.shoes} />
+      </RoundedBox>
+      <RoundedBox
+        args={[0.46, 0.1, 0.74]}
+        radius={0.04}
+        smoothness={4}
+        position={[0, -1.08, 0.14]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color={colors.belt} />
+      </RoundedBox>
+    </group>
+  )
+}
+
+function HikerUniform({ partRefs, colors }) {
+  const { torso, leftArm, rightArm, leftLeg, rightLeg } = partRefs
+
+  return (
+    <group name="hikerUniform">
+      <group ref={torso} name="torso">
+        <Cylinder
+          args={[0.16, 0.16, 0.22, 24]}
+          position={[0, 2.48, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.skin} />
+        </Cylinder>
+
+        <Cylinder
+          args={[0.43, 0.5, 0.72, 32]}
+          position={[0, 2.02, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.hikerOrange} />
+        </Cylinder>
+        <Torus
+          args={[0.18, 0.045, 12, 28]}
+          position={[0, 2.39, 0.03]}
+          rotation={[Math.PI / 2, 0, 0]}
+          castShadow
+        >
+          <ClayMaterial color={colors.hikerOrange} />
+        </Torus>
+
+        <RoundedBox
+          args={[0.78, 0.77, 0.3]}
+          radius={0.16}
+          smoothness={5}
+          position={[0, 2.02, -0.43]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.backpack} />
+        </RoundedBox>
+        <RoundedBox
+          args={[0.65, 0.22, 0.34]}
+          radius={0.1}
+          smoothness={5}
+          position={[0, 2.27, -0.59]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.backpackFlap} />
+        </RoundedBox>
+        <RoundedBox
+          args={[0.22, 0.11, 0.12]}
+          radius={0.04}
+          smoothness={4}
+          position={[0, 1.8, -0.61]}
+          castShadow
+        >
+          <ClayMaterial color={colors.backpackFlap} />
+        </RoundedBox>
+        {[-0.35, 0.35].map((strapX) => (
+          <Capsule
+            key={strapX}
+            args={[0.045, 0.52, 8, 12]}
+            position={[strapX, 2.02, 0.3]}
+            rotation={[0, 0, strapX < 0 ? -0.08 : 0.08]}
+            castShadow
+          >
+            <ClayMaterial color={colors.backpack} />
+          </Capsule>
+        ))}
+      </group>
+
+      <HikerArm
+        armRef={leftArm}
+        name="leftArm"
+        position={[-0.57, 2.22, 0]}
+        rotation={[0, 0, -0.12]}
+        colors={colors}
+      />
+      <HikerArm
+        armRef={rightArm}
+        name="rightArm"
+        position={[0.57, 2.22, 0]}
+        rotation={[0, 0, 0.12]}
+        colors={colors}
+      />
+      <HikerLeg
+        legRef={leftLeg}
+        name="leftLeg"
+        position={[-0.24, 1.55, 0]}
+        colors={colors}
+      />
+      <HikerLeg
+        legRef={rightLeg}
+        name="rightLeg"
+        position={[0.24, 1.55, 0]}
+        colors={colors}
+      />
+    </group>
+  )
+}
+
 const Character = forwardRef(function Character(
   {
     outfit = 'school',
@@ -389,7 +571,6 @@ const Character = forwardRef(function Character(
 ) {
   const { head } = partRefs
   const colors = CHARACTER_COLORS
-  const isSchoolUniform = outfit === 'school'
 
   return (
     <group
@@ -400,10 +581,12 @@ const Character = forwardRef(function Character(
       scale={scale}
       {...props}
     >
-      {isSchoolUniform ? (
+      {outfit === 'school' ? (
         <SchoolUniform partRefs={partRefs} colors={colors} />
-      ) : (
+      ) : outfit === 'university' ? (
         <UniversityUniform partRefs={partRefs} colors={colors} />
+      ) : (
+        <HikerUniform partRefs={partRefs} colors={colors} />
       )}
 
       <group ref={head} name="head" position={[0, 3.04, 0]}>

@@ -39,7 +39,7 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
     <AnimatePresence>
       {detail && (
         <motion.div
-          className="pointer-events-auto fixed inset-0 z-20 flex items-center justify-center bg-[#18213d]/20 p-5 backdrop-blur-sm"
+          className="pointer-events-auto fixed inset-0 z-20 flex items-center justify-center bg-[#4A3B32]/20 p-5 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -50,7 +50,7 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
             aria-modal="true"
             aria-labelledby="campus-detail-title"
             aria-describedby="campus-detail-description"
-            className="w-full max-w-md rounded-[2rem] border border-white/80 bg-[#fffaf0] p-7 text-[#18213d] shadow-[0_24px_80px_rgba(24,33,61,0.28)] md:p-9"
+            className="w-full max-w-md rounded-[2rem] border border-white/80 bg-[#FFF9F4] p-7 text-[#4A3B32] shadow-[0_24px_80px_rgba(74,59,50,0.28)] md:p-9"
             initial={{ opacity: 0, scale: 0.94, y: 18 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -58,14 +58,14 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-5">
-              <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.2em] text-[#e88c47]">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#E07A5F]">
                 {detail.eyebrow}
               </p>
               <button
                 ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
-                className="-mr-2 -mt-2 grid size-10 shrink-0 place-items-center rounded-full border border-[#18213d]/10 bg-white text-lg font-bold transition hover:bg-[#18213d] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#e88c47] focus:ring-offset-2"
+                className="-mr-2 -mt-2 grid size-10 shrink-0 place-items-center rounded-full border border-[#4A3B32]/10 bg-white text-lg font-semibold transition hover:bg-[#4A3B32] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#E07A5F] focus:ring-offset-2"
                 aria-label="Close Campus detail"
               >
                 ×
@@ -73,13 +73,13 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
             </div>
             <h2
               id="campus-detail-title"
-              className="mt-7 text-4xl font-black leading-none tracking-[-0.045em]"
+              className="mt-7 font-serif text-3xl font-semibold leading-tight tracking-[-0.025em]"
             >
               {detail.title}
             </h2>
             <p
               id="campus-detail-description"
-              className="mt-5 text-base leading-relaxed text-[#4d5874]"
+              className="mt-5 text-base leading-relaxed text-[#5F4B40]"
             >
               {detail.body}
             </p>
@@ -88,7 +88,7 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
                 {['Frontend systems', 'Interactive 3D', 'Accessible UI'].map((skill) => (
                   <span
                     key={skill}
-                    className="rounded-full bg-[#e9ddc9] px-3 py-1.5 text-xs font-bold text-[#29324c]"
+                    className="rounded-full bg-[#E9DDC9] px-3 py-1.5 text-xs font-semibold text-[#4A3B32]"
                   >
                     {skill}
                   </span>

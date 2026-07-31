@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { RoundedBox, useCursor, useScroll } from '@react-three/drei'
 import {
   CAMPUS_LANDMARKS,
+  CAMPUS_PATH,
   getCampusLandmarkProximity,
 } from '../../../config/narrativeTimeline'
 
@@ -12,23 +13,32 @@ const pseudoRandom = (index, salt) => {
 }
 
 const TREE_X_POSITIONS = [
-  -11, -9.25, -7.5, -5.75, -4, -2.25, -0.5, 1.25, 3, 4.75, 6.5, 8.25,
-  10,
+  -11, -9.25, -7.5, -5.75, -4, -2.25, -0.5, 1.25, 3, 8.25, 10,
 ]
 
-const CHERRY_TREE_LAYOUT = TREE_X_POSITIONS.map((x, index) => [
-  x,
-  0,
-  -3.8 - pseudoRandom(index, 7) * 3.8,
-  0.76 + pseudoRandom(index, 8) * 0.3,
-  index % 3,
-])
+const TURN_CORNER_LOCAL_X = CAMPUS_PATH.endX - CAMPUS_PATH.centerX
+const isInsideTurnClearance = (x, z) =>
+  Math.abs(x - TURN_CORNER_LOCAL_X) < 3 &&
+  z < 0.75 &&
+  z > -8.5
 
-const LAMP_X_POSITIONS = [-10, -6, -2, 2, 6, 10]
+const CHERRY_TREE_LAYOUT = TREE_X_POSITIONS.map((x, index) => {
+  const z = -4.5 - pseudoRandom(index, 7) * 3
+  return [
+    x,
+    0,
+    z,
+    0.88 + pseudoRandom(index, 8) * 0.22,
+    index % 3,
+    0.12 + pseudoRandom(index, 10) * 0.06,
+  ]
+}).filter(([x, , z]) => !isInsideTurnClearance(x, z))
+
+const LAMP_X_POSITIONS = [-10, -6, -2, 2, 10]
 const LAMP_LAYOUT = LAMP_X_POSITIONS.map((x, index) => [
   x,
   -3.1 - pseudoRandom(index, 9) * 0.7,
-])
+]).filter(([x, z]) => !isInsideTurnClearance(x, z))
 
 const EASEL_LANDMARK = CAMPUS_LANDMARKS.find(({ id }) => id === 'easel')
 const BADMINTON_LANDMARK = CAMPUS_LANDMARKS.find(
@@ -62,7 +72,7 @@ function ClayMaterial({
   )
 }
 
-function CherryBlossomTree({ position, scale, variant }) {
+function CherryBlossomTree({ position, scale, variant, canopyLean }) {
   const palette =
     variant === 1
       ? ['#FFC0CB', '#FFB7C5']
@@ -77,7 +87,10 @@ function CherryBlossomTree({ position, scale, variant }) {
         <ClayMaterial color="#8B5A4A" />
       </mesh>
 
-      <group name="cloudCanopy">
+      <group
+        name="cloudCanopy"
+        rotation={[canopyLean, (variant - 1) * 0.055, variant % 2 ? -0.035 : 0.035]}
+      >
         <mesh position={[0, 2.12, 0]} scale={[1.08, 0.76, 0.9]} castShadow>
           <sphereGeometry args={[1, 20, 18]} />
           <ClayMaterial color={palette[0]} />
@@ -402,12 +415,13 @@ export default function Campus({
         <ClayMaterial color={isNight ? '#9A8790' : '#F9EDE3'} />
       </RoundedBox>
 
-      {CHERRY_TREE_LAYOUT.map(([x, y, z, scale, variant]) => (
+      {CHERRY_TREE_LAYOUT.map(([x, y, z, scale, variant, canopyLean]) => (
         <CherryBlossomTree
           key={`${x}-${z}`}
           position={[x, y, z]}
           scale={scale}
           variant={variant}
+          canopyLean={canopyLean}
         />
       ))}
 

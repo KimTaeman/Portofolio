@@ -7,6 +7,7 @@ import {
   CAMPUS_PATH,
   CHARACTER_KEYFRAMES,
   getNearestCampusProximity,
+  MOUNTAIN_PATH,
   PLAYGROUND_MOTION_OFFSETS,
 } from '../../config/narrativeTimeline'
 
@@ -67,11 +68,11 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     currentPosition.fromArray(start.position)
     nextPosition.fromArray(end.position)
     characterRef.current.position.copy(currentPosition.lerp(nextPosition, progress))
-    characterRef.current.rotation.y = THREE.MathUtils.lerp(
-      start.rotationY,
-      end.rotationY,
-      progress,
-    )
+    const isApproachingMountainTurn =
+      end.t === MOUNTAIN_PATH.start && offset < MOUNTAIN_PATH.start
+    characterRef.current.rotation.y = isApproachingMountainTurn
+      ? start.rotationY
+      : THREE.MathUtils.lerp(start.rotationY, end.rotationY, progress)
 
     let poseRotationX = 0
     let poseRotationZ = 0
