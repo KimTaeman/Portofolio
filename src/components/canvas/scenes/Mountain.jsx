@@ -195,30 +195,24 @@ const TRAIL_FOUNDATION_LAYOUT = Object.freeze(
 const TRANSITION_HILL_LAYOUT = Object.freeze(
   [
     {
-      progress: 0.14,
-      x: 0,
-      scale: [12, 2, 45],
-      pitch: -0.014,
-      yaw: 0.05,
-      topOffset: 0.274,
+      progress: 0.5,
+      x: -11.2,
+      scale: [7.5, 2.2, 75],
+      pitch: -0.03,
+      yaw: 0,
+      roll: -0.025,
+      topOffset: -0.2,
     },
     {
-      progress: 0.54,
-      x: 0.65,
-      scale: [11.5, 5.2, 32],
-      pitch: 0,
-      yaw: -0.1,
-      topOffset: -0.42,
+      progress: 0.5,
+      x: 11.2,
+      scale: [7.8, 2.65, 75],
+      pitch: -0.03,
+      yaw: 0,
+      roll: 0.025,
+      topOffset: -0.28,
     },
-    {
-      progress: 0.87,
-      x: -0.35,
-      scale: [12.5, 5.6, 29],
-      pitch: 0,
-      yaw: 0.16,
-      topOffset: -0.42,
-    },
-  ].map(({ progress, x, scale, pitch, yaw, topOffset }) => {
+  ].map(({ progress, x, scale, pitch, yaw, roll, topOffset }) => {
     const surfaceY = getMountainTransitionTopY(progress) + topOffset
     return Object.freeze({
       position: [
@@ -230,7 +224,7 @@ const TRANSITION_HILL_LAYOUT = Object.freeze(
             progress,
       ],
       scale,
-      rotation: [pitch, yaw, 0],
+      rotation: [pitch, yaw, roll],
     })
   }),
 )
@@ -381,8 +375,15 @@ const TRANSITION_TREE_LAYOUT = Object.freeze(
     )
     const stone = MOUNTAIN_TRANSITION_STONES[stoneIndex]
     const side = index % 2 ? 1 : -1
-    const scale = getTreeScale(index, 101)
-    const x = side * (4.6 + (index % 4) * 0.85)
+    const transitionProgress =
+      stoneIndex / (MOUNTAIN_TRANSITION_STONES.length - 1)
+    const arrivalScale = THREE.MathUtils.lerp(
+      0.48,
+      1,
+      THREE.MathUtils.smoothstep(transitionProgress, 0, 0.42),
+    )
+    const scale = getTreeScale(index, 101) * arrivalScale
+    const x = side * (5.8 + (index % 4) * 0.85)
     const z = stone.z + Math.sin(index * 1.41) * 1.1
     const terrainSurfaceY = sampleTerrainSurfaceY(
       TRANSITION_TERRAIN_SAMPLE_MESHES,
@@ -632,18 +633,8 @@ function LowPolyPine({ position, scale }) {
 }
 
 function TransitionCorridor() {
-  const corridorRef = useRef()
-  const scroll = useScroll()
-
-  useFrame(() => {
-    if (!corridorRef.current) return
-    corridorRef.current.visible =
-      scroll.offset >= MOUNTAIN_PATH.start - 0.04 &&
-      scroll.offset <= MOUNTAIN_PATH.trailStart + 0.04
-  })
-
   return (
-    <group ref={corridorRef} name="sceneTransitionForestTrail" visible={false}>
+    <group name="sceneTransitionForestTrail">
       <group name="organicTransitionHills">
         {TRANSITION_HILL_LAYOUT.map((hill, index) => (
           <Dodecahedron

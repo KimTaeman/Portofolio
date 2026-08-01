@@ -49,11 +49,13 @@ const isInsideLandingClearance = (x, z) =>
 
 const CHERRY_TREE_LAYOUT = TREE_X_POSITIONS.map((x, index) => {
   const z = index === 9 ? -4 : -4.25 - pseudoRandom(index, 7) * 1.8
+  const turnDistance = Math.max(0, TURN_CORNER_LOCAL_X - x)
+  const canopyTaper = THREE.MathUtils.clamp(turnDistance / 5, 0.48, 1)
   return [
     x,
     0,
     z,
-    0.86 + pseudoRandom(index, 8) * 0.3,
+    (0.86 + pseudoRandom(index, 8) * 0.3) * canopyTaper,
     index % 3,
     -0.08 + pseudoRandom(index, 10) * 0.16,
   ]

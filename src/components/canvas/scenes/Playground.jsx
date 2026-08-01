@@ -53,7 +53,9 @@ const PLATEAU_TERRAIN = Object.freeze([
 ])
 
 const BACKGROUND_MOUNTAIN = Object.freeze({
-  position: [2, -10.9, -42],
+  // Playground is elevated by 20 units, so this resolves to the requested
+  // world-space backdrop position of [-50, -10, -80].
+  position: [-50, -30, -80],
   radius: 24,
   height: 38,
   color: '#688F4E',
@@ -96,9 +98,9 @@ const TREE_LAYOUT = [
 ]
 
 const CLOUD_LAYOUT = [
-  { position: [-10, 16, -34], scale: 1.05, speed: 0.07, phase: 1.4 },
-  { position: [12, 8, -38], scale: 1.25, speed: 0.055, phase: 4.8 },
-  { position: [-7, -1, -31], scale: 0.9, speed: 0.08, phase: 8.2 },
+  { position: [-38, 10, -64], scale: 1.05, speed: 0.07, phase: 1.4 },
+  { position: [-58, 1, -72], scale: 1.25, speed: 0.055, phase: 4.8 },
+  { position: [-28, 18, -82], scale: 0.9, speed: 0.08, phase: 8.2 },
   { position: [-18, 30, -58], scale: 1.8, speed: 0.08, phase: 0 },
   { position: [-2, 34, -86], scale: 2.2, speed: 0.055, phase: 3.5 },
   { position: [18, 28, -52], scale: 1.5, speed: 0.09, phase: 7 },

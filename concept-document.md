@@ -16,7 +16,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Scene 1: The Playground (Introduction)
 * **Scroll Range:** `0% - 20%`
-* **The World:** A high, faceted spring-green playground plateau with a sharply defined launch edge. One broad, distant low-poly mountain and three small drifting cloud clusters frame the fall without entering the foreground air or lower Campus staging plane. Colorful stepping stones cross the plateau beside a detailed orange slide, thick wooden swings, layered pine trees, wildflowers, and scattered rocks. The deep vista keeps the later mountains, waterfall, balloons, and sunset readable through atmospheric fog.
+* **The World:** A high, faceted spring-green playground plateau with a sharply defined launch edge. One broad low-poly mountain sits far off-axis at the left horizon, with three small drifting cloud clusters around it; none enters the foreground air, Campus staging plane, or later walking route. Colorful stepping stones cross the plateau beside a detailed orange slide, thick wooden swings, layered pine trees, wildflowers, and scattered rocks. The deep vista keeps the later mountains, waterfall, balloons, and sunset readable through atmospheric fog.
 * **Character & Action:**
   * **Start (0%):** Character is a stylized "chibi" figure in a **school uniform**, sitting at the top of the slide, waving.
   * **Action (0% - 8%):** On scroll, the character stops waving and **slides down** toward the plateau edge. The camera performs a dynamic swoop to follow.
@@ -30,7 +30,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Scene 2: The Campus Path (Skills & Hobbies)
 * **Scroll Range:** `20% - 50%`
-* **The World:** A manicured green university campus with a raised, structured light-stone path, densely clustered low-poly **cherry blossom trees**, and an instanced field of gently falling faceted petals. Its shared grass material and overlapping approach hill create a seamless physical handoff into the mountain trail.
+* **The World:** A manicured green university campus with a raised, structured light-stone path, densely clustered low-poly **cherry blossom trees**, and an instanced field of gently falling faceted petals. Blossoms taper in scale near the exit, where the path physically overlaps the first pink Mountain stone at the same surface height.
 * **Character & Action:** Character is in a **university uniform**, walking or lightly jogging along the path with a focused, steady pace. Camera follows in a smooth tracking shot.
 * **Interactions:**
   * **Hobbies (Fun):** An interactive easel and paint stool form the Creative Practice zone, while a blossom-tree badminton racket and grounded shuttlecock form the Life Beyond Code zone. Clicking them opens small 2D cards with personal details.
@@ -43,7 +43,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 ### Scene 3: The Adventure Trail (Experience & Projects)
 * **Scroll Range:** `50% - 82%`
 * **The World & Character:**
-  * **World:** Overlapping faceted hills and a continuous curved stepping-stone corridor descend organically from Campus into a solid low-poly valley built around a winding S-curve trail. Deep cliff masses meet an earthy valley floor, while a confined canyon river receives the layered chasm waterfall below the suspension bridge. The route passes surface-grounded, scale-varied pine and alpine-flower flora and climbs through floating project balloons toward the summit.
+  * **World:** Two wide, flattened faceted hills flank—without occupying—the continuous pink-and-white stepping-stone corridor from Campus, forming an open rolling valley. Small pines appear along its protected outer edges and grow toward full scale as the route enters the solid low-poly S-curve valley. Deep cliff masses meet an earthy valley floor, while a confined canyon river receives the layered chasm waterfall below the suspension bridge. The route passes surface-grounded pine and alpine-flower flora and climbs through floating project balloons toward the summit.
   * **Morph 2:** Model swaps from University Uniform to **Hiker/Explorer Outfit** behind a large boulder.
   * **Camera:** Trails behind the character, follows the curve tangent, and looks ahead toward the chasm so the path and bridge remain readable.
 * **Project Presentation:** Six small hot-air balloons float alternately beside the trail. Each balloon carries one world-space project card that fades in only while the character passes it. The first two introduce CSFD and UniShare; the remaining cards are content placeholders until final portfolio data is supplied.
@@ -117,7 +117,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 - [ ] **Set Up Project Structure:** Create folder hierarchy (`/components/Scenes`, `/components/UI`, `/models`).
 
 ### Phase 4: Development
-- [x] **Scene 1 (The Slide):** Build the elevated low-poly playground plateau, continuous cliff/path handoff, scroll-linked parabolic fall, tracking camera, landing-petal burst, and text transition.
+- [x] **Scene 1 (The Slide):** Build the elevated low-poly playground plateau, off-axis scenic backdrop, scroll-linked parabolic fall, tracking camera, landing-petal burst, and text transition.
 - [x] **Scene 2 (Path & Hobbies):** Animate the camera along the low-poly spring campus, build the model swap behind the blossom trees, and add the clickable creative, badminton, and command-center props.
 - [x] **Scene 3 (Adventure Trail):** Build the isolated S-curve path, waterfall chasm, suspension bridge, dense low-poly flora, trailing camera, and six proximity-driven project balloons.
 - [x] **Scene 4 (Summit & Contact):** Animate the summit reveal, multi-phase character performance, Day/Night presentation, 360-degree orbit, and minimizable contact HUD.
