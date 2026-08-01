@@ -11,7 +11,6 @@ import Summit from './components/canvas/scenes/Summit'
 import UIOverlay from './components/ui/overlays/UIOverlay'
 import CampusDetailCard from './components/ui/overlays/CampusDetailCard'
 import CampusProximityOverlay from './components/ui/overlays/CampusProximityOverlay'
-import MountainProjectOverlay from './components/ui/overlays/MountainProjectOverlay'
 import {
   CAMPUS_PATH,
   CAMERA_KEYFRAMES,
@@ -54,7 +53,6 @@ function App() {
   const [isNight, setIsNight] = useState(false)
   const [scrollOffset, setScrollOffset] = useState(0)
   const [campusDetailId, setCampusDetailId] = useState(null)
-  const [mountainMarkerId, setMountainMarkerId] = useState(null)
   const outfit = getCharacterOutfit(scrollOffset)
   const isSummitActive = scrollOffset >= SCENE_RANGES.summit.start
   const isSunset =
@@ -65,11 +63,6 @@ function App() {
     : isSunset
       ? '#FFE5D9'
       : '#E8F4FA'
-  const activeMountainMarkerId =
-    scrollOffset >= SCENE_RANGES.mountain.start &&
-    scrollOffset <= SCENE_RANGES.mountain.end
-      ? mountainMarkerId
-      : null
 
   const handleCampusSelect = useCallback((detailId) => {
     setCampusDetailId(detailId)
@@ -85,7 +78,11 @@ function App() {
     <div className="relative isolate h-screen w-screen overflow-hidden bg-[#FDF6E3]">
       <div className="absolute inset-0 z-0">
         <Canvas
-          camera={{ position: initialCamera.position, fov: initialCamera.fov }}
+          camera={{
+            position: initialCamera.position,
+            fov: initialCamera.fov,
+            far: 1000,
+          }}
           dpr={[1, 1.5]}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           shadows
@@ -95,11 +92,11 @@ function App() {
             gl.toneMappingExposure = 1.05
           }}
         >
-          <fog attach="fog" args={[skyColor, 20, 100]} />
+          <fog attach="fog" args={[skyColor, 100, 500]} />
           <InfiniteGround
             isNight={isNight}
             isSunset={isSunset}
-            visible={scrollOffset < MOUNTAIN_PATH.slopeStart}
+            visible={scrollOffset < MOUNTAIN_PATH.start}
           />
 
           <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
@@ -121,11 +118,8 @@ function App() {
               onSelect={handleCampusSelect}
             />
 
-            {/* Scene 3: The Mountain Base (Experience) */}
-            <Mountain
-              position={scenePosition('mountain')}
-              onMarkerSelect={setMountainMarkerId}
-            />
+            {/* Scene 3: The Adventure Trail (Experience) */}
+            <Mountain position={scenePosition('mountain')} />
 
             {/* Scene 4: The Summit (Future & Contact) */}
             <Summit
@@ -140,11 +134,6 @@ function App() {
       <div className="pointer-events-none fixed inset-0 z-10">
         <UIOverlay scrollOffset={scrollOffset} />
         <CampusProximityOverlay scrollOffset={scrollOffset} />
-        <MountainProjectOverlay
-          scrollOffset={scrollOffset}
-          selectedMarkerId={activeMountainMarkerId}
-          onClose={() => setMountainMarkerId(null)}
-        />
 
         <button
           type="button"

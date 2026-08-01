@@ -10,12 +10,12 @@ The project is a functional continuous-scrollytelling prototype. The character n
 
 - Vite, React 19, Tailwind CSS, React Three Fiber, Drei, and Framer Motion are configured.
 - The 2D overlay is mounted in a root-level fixed layer above the canvas with pointer-event passthrough.
-- One shared `narrativeTimeline.js` defines scene ranges, character keyframes, camera keyframes, overlay timing, the Mountain interaction range, and Summit look-around limits.
-- Scene ranges match the concept document: Playground `0–20%`, Campus `20–50%`, Mountain `50–70%`, and Summit `70–100%`.
+- One shared `narrativeTimeline.js` defines scene ranges, character keyframes, the Mountain S-curve/bridge profile, camera keyframes, overlay timing, and Summit look-around limits.
+- Scene ranges match the concept document: Playground `0–20%`, Campus `20–50%`, Mountain `50–82%`, and Summit `82–100%`.
 - A single `JourneyCharacter` slides, falls into Campus, walks left-to-right, changes outfits, hikes the Mountain, and reaches the Summit at `90%`.
-- Camera staging includes the Playground swoop, Campus side tracking shot, rear Mountain follow, continued Summit climb, and final rear-view panorama.
+- Camera staging includes the Playground swoop, Campus side tracking shot, curve-aware Mountain follow, and final Summit panorama.
 - The Summit supports a continuous 360-degree orbit view, upward tilt, and mobile-safe vertical scrolling.
-- The Mountain project prompt uses a testable trigger/reset range, explicit dismissal, Escape support, and re-arm behavior.
+- Scene 3 now uses a measured stone-and-forest transition corridor into a deeply isolated faceted S-curve trail, waterfall chasm, suspension bridge, dense flora, and six gently bobbing project balloons with proximity-driven cards.
 - The current procedural art pass uses rounded chibi geometry, high-roughness clay materials, warm studio/outdoor lighting, shadows, atmospheric depth, and bold overlay typography.
 - Scene 1 includes an opening wave, seated slide pose, accelerated fall, airborne pose, squash-and-hop landing, reverse-scroll behavior, and transition into the Campus walk.
 - The Summit has alpine edge dressing, a translucent moving cloud sea, animated mist, high drifting clouds, flapping birds, an oversized sunset behind massive peaks, an articulated three-phase victory/shielding sequence, a 360-degree orbit, and a minimizable icon-based contact HUD.
@@ -25,7 +25,7 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - Portfolio name, biography, project details, contact information, and real links are still placeholders or missing.
 - The procedural character and environments are art-direction prototypes, not approved production models.
 - Campus detail-card copy uses provisional, non-personal content until approved portfolio details are supplied.
-- The Mountain Polaroid is still a temporary project prompt rather than a project gallery.
+- Four of the six Mountain project cards still use placeholder titles and descriptions.
 - Summit scenery follows the confirmed procedural soft-clay direction and still needs browser-level composition tuning.
 - Reduced-motion behavior and a complete keyboard interaction pass are still outstanding.
 - `scrollOffset` is currently mirrored into React state frequently for the DOM overlay and should be profiled.
@@ -64,13 +64,14 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - [ ] Replace the provisional card copy and example skill labels with approved portfolio information.
 - [ ] Complete the browser capture/tuning pass listed in Priority 1, including Campus landmark hit targets and outfit occlusion.
 
-### 5. Finish Scene 3 — Mountain projects
+### 5. Finish Scene 3 — Adventure projects
 
-- Supply real project/experience content and approved imagery.
-- Replace the temporary prompt with an accessible Polaroid/project gallery.
-- Add the retro-camera pull/flash beat at approximately `60%`.
-- Verify dismissal, reverse entry, repeated entry, and scroll re-arming with pointer and keyboard input.
-- Refine the boulder occlusion and Hiker outfit transition.
+- [x] Replace the straight slope with a winding S-curve, low-poly cliffs, a waterfall chasm, a suspension bridge, flora, and distant scenic motion.
+- [x] Make the character and trailing camera follow the same shared path profile through forward and reverse scrolling.
+- [x] Replace the temporary single-project prompt with six trail-side balloons, each carrying a locally attached proximity-driven project card.
+- Supply the four remaining project titles, descriptions, links, and approved imagery.
+- Tune the project array for narrow screens and provide an accessible DOM equivalent if the final cards become interactive.
+- Complete a browser capture pass at the trail entrance, bridge midpoint, waterfall reveal, and Summit handoff.
 
 ### 6. Finish Scene 4 — Summit and contact
 

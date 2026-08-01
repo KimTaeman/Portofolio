@@ -39,24 +39,20 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ---
 
-### Scene 3: The Mountain Base (Experience & Projects)
-* **Scroll Range:** `50% - 70%`
+### Scene 3: The Adventure Trail (Experience & Projects)
+* **Scroll Range:** `50% - 82%`
 * **The World & Character:**
-  * **World:** Base of a stylized, low-poly mountain with a steeper "zigzag" trail.
+  * **World:** A continuous stepping-stone corridor leads from Campus into a faceted low-poly landscape built around a winding S-curve trail. The route passes dense pine and alpine-flower flora, crosses a suspension bridge over a waterfall chasm, and climbs through floating project balloons toward the summit.
   * **Morph 2:** Model swaps from University Uniform to **Hiker/Explorer Outfit** behind a large boulder.
-  * **Camera:** Shifts to follow *behind* the character and tilts up, emphasizing the height of the mountain.
-* **Key Interaction (The Retro Camera):**
-  * At a scenic overlook (~60% scroll), the **scroll pauses**.
-  * Character pulls out a **3D retro camera**.
-  * Camera "flashes," and 2D **Polaroid images** (your previous projects/experience) fly out.
-  * User clicks Polaroids to read details. Closing them "unlocks" the scroll.
+  * **Camera:** Trails behind the character, follows the curve tangent, and looks ahead toward the chasm so the path and bridge remain readable.
+* **Project Presentation:** Six small hot-air balloons float alternately beside the trail. Each balloon carries one world-space project card that fades in only while the character passes it. The first two introduce CSFD and UniShare; the remaining cards are content placeholders until final portfolio data is supplied.
 * **Copy (HTML Overlay):** 
   > "I put my skills to the test. Here's what I've built and where I've been."
 
 ---
 
 ### Scene 4: The Summit (Future & Contact)
-* **Scroll Range:** `70% - 100%`
+* **Scroll Range:** `82% - 100%`
 * **The World:** A rugged soft-clay rock crown dressed with alpine grass, loose stone, and small edge pines above a translucent sea of clouds and slowly rolling mist. Massive blue-gray peaks sit in front of an oversized sunset, with drifting high clouds and a small flock of birds completing the sky.
 * **Camera Payoff (The Reveal):** As the character reaches the peak, the camera swings into a rear hero view that frames the character against the vista. A timed performance raises both arms in victory, surveys the landscape, and settles into a confident hand-on-hip pose while the articulated right forearm shields the eyes from the sunset. The user can then orbit continuously around the summit through 360 degrees.
 * **Interactions:**
@@ -105,7 +101,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 - [ ] **Create Moodboard:** Collect all reference images (David portfolio, soft clay examples) in Figma/Pinterest to lock in aesthetic.
 - [ ] **Define Color Palette:** Lock in HEX values for ground, sky, plants, and accent UI.
 - [ ] **Storyboard Scenes:** Sketch rough wireframes of the 4 key camera angles.
-- [ ] **Design 2D UI Elements:** Mockup HTML overlays for Hobby cards, Skills laptop screen, Polaroid gallery, and Contact form in Figma.
+- [ ] **Design 2D UI Elements:** Mockup HTML overlays for Hobby cards, Skills laptop screen, the six-card project array, and Contact form in Figma.
 
 ### Phase 2: 3D Asset Creation
 - [ ] **Model Characters & Animations:** Create 3 character variations (School, Uni, Hiker) and export animations.
@@ -122,7 +118,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 ### Phase 4: Development
 - [ ] **Scene 1 (The Slide):** Set up main `<Canvas>` and `<ScrollControls>`. Link scroll to slide animation and text overlay.
 - [ ] **Scene 2 (Path & Hobbies):** Animate camera along path. Build model swap behind tree. Add clickable hobby props and Laptop modal.
-- [ ] **Scene 3 (Retro Camera):** Code scroll pause at viewpoint. Trigger camera pull animation, flash effect, and 2D Polaroid gallery overlay.
+- [x] **Scene 3 (Adventure Trail):** Build the isolated S-curve path, waterfall chasm, suspension bridge, dense low-poly flora, trailing camera, and six proximity-driven project balloons.
 - [x] **Scene 4 (Summit & Contact):** Animate the summit reveal, multi-phase character performance, Day/Night presentation, 360-degree orbit, and minimizable contact HUD.
 
 ### Phase 5: Launch

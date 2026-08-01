@@ -33,8 +33,8 @@ The normalized scroll timeline is:
 
 - **Playground, `0.00–0.20`:** slide from `0.00–0.10`, then fall/landing and outfit transition from `0.10–0.20`.
 - **Campus, `0.20–0.50`:** character walks left-to-right while the camera performs a side tracking shot.
-- **Mountain, `0.50–0.70`:** camera turns behind the character and follows the initial zigzag hike. The project interaction occurs around `0.60`.
-- **Summit climb and reveal, `0.70–1.00`:** the rear-follow climb continues until the character reaches the peak at `0.90`. From `0.90–1.00`, the default view shows the character's back and the vista.
+- **Mountain, `0.50–0.82`:** camera follows the character along a continuous stone-and-forest transition corridor into an isolated winding S-curve trail, low-poly cliffs, waterfall chasm, and suspension bridge. Six floating project balloons reveal their own world-space cards by character proximity.
+- **Summit reveal, `0.82–1.00`:** the character moves onto the peak, then the camera completes the vista reveal. From `0.96–1.00`, the user may orbit around the character and summit.
 
 Summit look-around rules:
 
@@ -98,5 +98,5 @@ The local guidance under `threejs-skills/skills/` may be consulted when work inv
 - Ask targeted questions only when a missing decision would materially change content, production assets, navigation, or an external action.
 - Preserve unrelated user changes in a dirty worktree.
 - After relevant changes, run `npm run lint`, `npm run build`, and `git diff --check`.
-- For timeline/camera changes, also verify exact scroll boundaries, forward/reverse behavior, portrait and landscape framing, the Mountain lock exit/re-arm flow, and Summit drag limits.
+- For timeline/camera changes, also verify exact scroll boundaries, forward/reverse behavior, portrait and landscape framing, deep-Z scene isolation, S-curve/bridge tracking, balloon-card visibility, and Summit drag limits.
 - Report the existing production bundle warning accurately; do not describe a warning-only build as a failure.

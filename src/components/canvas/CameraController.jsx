@@ -25,6 +25,7 @@ const desiredQuaternion = new THREE.Quaternion()
 const lookAtMatrix = new THREE.Matrix4()
 const worldUp = new THREE.Vector3(0, 1, 0)
 const mountainCharacterPosition = new THREE.Vector3()
+const mountainLookAheadPosition = new THREE.Vector3()
 const trailingCameraPosition = new THREE.Vector3()
 const trailingLookTarget = new THREE.Vector3()
 const summitEntryCharacterPosition = new THREE.Vector3()
@@ -183,15 +184,19 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
         MOUNTAIN_PATH.cameraTransitionEnd,
       )
       getCharacterPositionAtOffset(offset, mountainCharacterPosition)
+      getCharacterPositionAtOffset(
+        Math.min(offset + MOUNTAIN_PATH.lookAheadOffset, MOUNTAIN_PATH.end),
+        mountainLookAheadPosition,
+      )
       trailingCameraPosition.set(
         mountainCharacterPosition.x,
         mountainCharacterPosition.y + MOUNTAIN_PATH.cameraHeight,
         mountainCharacterPosition.z + MOUNTAIN_PATH.cameraDistance,
       )
       trailingLookTarget.set(
-        mountainCharacterPosition.x,
-        mountainCharacterPosition.y + MOUNTAIN_PATH.lookHeight,
-        mountainCharacterPosition.z - MOUNTAIN_PATH.lookAhead,
+        mountainLookAheadPosition.x,
+        mountainLookAheadPosition.y + MOUNTAIN_PATH.lookHeight,
+        mountainLookAheadPosition.z,
       )
       desiredCameraPosition.lerp(trailingCameraPosition, cameraBlend)
       desiredLookTarget.lerp(trailingLookTarget, cameraBlend)

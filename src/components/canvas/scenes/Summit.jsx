@@ -511,7 +511,14 @@ export default function Summit({
           args={[40, 32, 32]}
           position={[0, 9, -173]}
         >
-          <meshBasicMaterial color="#FF8C00" fog={false} />
+          <meshStandardMaterial
+            color="#FF8C00"
+            emissive="#FF8C00"
+            emissiveIntensity={2}
+            roughness={1}
+            metalness={0}
+            fog
+          />
         </Sphere>
       )}
     </group>
