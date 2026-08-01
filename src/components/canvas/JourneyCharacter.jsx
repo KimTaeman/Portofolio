@@ -10,7 +10,7 @@ import {
   getNearestCampusProximity,
   MOUNTAIN_PATH,
   PLAYGROUND_MOTION_OFFSETS,
-  SUMMIT_LOOK_AROUND,
+  SUMMIT_SEQUENCE,
 } from '../../config/narrativeTimeline'
 
 const currentPosition = new THREE.Vector3()
@@ -34,6 +34,7 @@ const getSegment = (offset) => {
 export default function JourneyCharacter({ outfit = 'school' }) {
   const characterRef = useRef()
   const poseRef = useRef()
+  const torsoRef = useRef()
   const headRef = useRef()
   const leftArmRef = useRef()
   const rightArmRef = useRef()
@@ -45,6 +46,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     if (
       !characterRef.current ||
       !poseRef.current ||
+      !torsoRef.current ||
       !headRef.current ||
       !leftArmRef.current ||
       !rightArmRef.current ||
@@ -63,6 +65,12 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     if (
       start.t === PLAYGROUND_MOTION_OFFSETS.slideEnd &&
       end.t === PLAYGROUND_MOTION_OFFSETS.groundContact
+    ) {
+      progress = THREE.MathUtils.smootherstep(progress, 0, 1)
+    }
+    if (
+      start.t === SUMMIT_SEQUENCE.haltStart &&
+      end.t === SUMMIT_SEQUENCE.haltEnd
     ) {
       progress = THREE.MathUtils.smootherstep(progress, 0, 1)
     }
@@ -166,12 +174,20 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     } else {
       const isWalking = offset < 0.5
       const isHiking =
-        offset >= MOUNTAIN_PATH.start && offset < SUMMIT_LOOK_AROUND.start
+        offset >= MOUNTAIN_PATH.start && offset < SUMMIT_SEQUENCE.haltEnd
       const isMoving = isWalking || isHiking
       const stride = isHiking ? 0.72 : 0.38
       const motionOffset = isHiking ? offset - 0.5 : offset - 0.2
       const walkCycle = Math.sin(motionOffset * (isHiking ? 170 : 52))
-      const limbSwing = isMoving ? walkCycle * stride : 0
+      const summitWalkFade = isHiking
+        ? 1 -
+          THREE.MathUtils.smoothstep(
+            offset,
+            SUMMIT_SEQUENCE.haltStart,
+            SUMMIT_SEQUENCE.haltEnd,
+          )
+        : 1
+      const limbSwing = isMoving ? walkCycle * stride * summitWalkFade : 0
 
       leftArmX = limbSwing
       rightArmX = -limbSwing
@@ -180,7 +196,16 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       if (isWalking) {
         characterRef.current.position.y += Math.abs(walkCycle) * 0.045
       } else if (isHiking) {
-        posePositionY = Math.abs(walkCycle) * 0.045
+        posePositionY = Math.abs(walkCycle) * 0.045 * summitWalkFade
+      } else if (offset >= SUMMIT_SEQUENCE.haltEnd) {
+        const idleTime = state.clock.elapsedTime
+        const armSway = Math.sin(idleTime * 0.65) * 0.12
+        posePositionY = Math.sin(idleTime * 1.15) * 0.006
+        poseRotationZ = Math.sin(idleTime * 0.45) * 0.008
+        leftArmX = armSway
+        rightArmX = -armSway
+        leftArmZ = -0.1 + Math.sin(idleTime * 0.5) * 0.025
+        rightArmZ = 0.1 - Math.sin(idleTime * 0.5) * 0.025
       }
     }
 
@@ -193,12 +218,26 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       7,
       delta,
     )
+    const isSummitIdle = offset >= SUMMIT_SEQUENCE.haltEnd
+    const headTargetY = isSummitIdle
+      ? Math.sin(state.clock.elapsedTime * 0.5) * 0.2
+      : landmarkProximity * 0.34
     headRef.current.rotation.y = THREE.MathUtils.damp(
       headRef.current.rotation.y,
-      landmarkProximity * 0.34,
+      headTargetY,
       9,
       delta,
     )
+    headRef.current.rotation.x = THREE.MathUtils.damp(
+      headRef.current.rotation.x,
+      0,
+      8,
+      delta,
+    )
+    const torsoBreathScale = isSummitIdle
+      ? 1 + Math.sin(state.clock.elapsedTime * 2) * 0.02
+      : 1
+    torsoRef.current.scale.set(1, torsoBreathScale, 1)
     poseRef.current.position.y = posePositionY
     poseRef.current.scale.set(poseScaleX, poseScaleY, poseScaleZ)
     leftArmRef.current.rotation.set(leftArmX, 0, leftArmZ)
@@ -215,6 +254,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
           scale={0.38}
           userData={{ outfit }}
           partRefs={{
+            torso: torsoRef,
             head: headRef,
             leftArm: leftArmRef,
             rightArm: rightArmRef,

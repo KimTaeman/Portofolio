@@ -36,6 +36,21 @@ export const MOUNTAIN_SUMMIT = Object.freeze({
   z: -77,
 })
 
+export const SUMMIT_SEQUENCE = Object.freeze({
+  start: MOUNTAIN_CLIMB_END,
+  haltStart: 0.85,
+  haltEnd: 0.88,
+  cameraPanStart: 0.84,
+  cameraPanEnd: 0.94,
+  uiRevealStart: 0.94,
+  uiRevealEnd: 0.975,
+  characterPosition: Object.freeze([
+    CAMPUS_PATH.endX,
+    MOUNTAIN_SUMMIT.y,
+    MOUNTAIN_SUMMIT.z,
+  ]),
+})
+
 const APPROACH_STONE_COUNT = 19
 const APPROACH_LOCAL_Z = MOUNTAIN_CORNER.z - MOUNTAIN_ORIGIN_Z
 const CLIMB_BASE_TOP =
@@ -282,37 +297,27 @@ export const CHARACTER_KEYFRAMES = [
   },
   {
     t: MOUNTAIN_CLIMB_END,
-    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y, -70],
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y, -70.2],
     rotationY: Math.PI,
   },
   {
     t: 0.85,
-    position: [CAMPUS_PATH.endX - 1.2, MOUNTAIN_SUMMIT.y, -72],
-    rotationY: 3.08,
+    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y, -72.4],
+    rotationY: Math.PI,
   },
   {
-    t: 0.88,
-    position: [CAMPUS_PATH.endX + 1.3, MOUNTAIN_SUMMIT.y + 0.1, -74],
-    rotationY: 2.45,
-  },
-  {
-    t: 0.91,
-    position: [CAMPUS_PATH.endX - 1.2, MOUNTAIN_SUMMIT.y + 0.2, -75.5],
-    rotationY: 3.93,
-  },
-  {
-    t: 0.94,
-    position: [CAMPUS_PATH.endX + 1, MOUNTAIN_SUMMIT.y + 0.2, -76.5],
-    rotationY: 2.51,
+    t: SUMMIT_SEQUENCE.haltEnd,
+    position: SUMMIT_SEQUENCE.characterPosition,
+    rotationY: Math.PI,
   },
   {
     t: 0.96,
-    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.2, MOUNTAIN_SUMMIT.z],
+    position: SUMMIT_SEQUENCE.characterPosition,
     rotationY: Math.PI,
   },
   {
     t: 1,
-    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.2, MOUNTAIN_SUMMIT.z],
+    position: SUMMIT_SEQUENCE.characterPosition,
     rotationY: Math.PI,
   },
 ]
@@ -366,36 +371,38 @@ export const CAMERA_KEYFRAMES = [
   },
   {
     t: 0.88,
-    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 3, -67],
-    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 0.5, -84],
-    fov: 52,
+    position: [CAMPUS_PATH.endX + 8, MOUNTAIN_SUMMIT.y + 3, -69],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1.2, -77],
+    fov: 50,
   },
   {
     t: 0.94,
-    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 4, -70],
-    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1, -90],
-    fov: 53,
+    position: [CAMPUS_PATH.endX + 8, MOUNTAIN_SUMMIT.y + 3, -69],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1.2, -77],
+    fov: 50,
   },
   {
     t: 0.96,
-    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -70.5],
-    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -95],
-    fov: 55,
+    position: [CAMPUS_PATH.endX + 8, MOUNTAIN_SUMMIT.y + 3, -69],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1.2, -77],
+    fov: 50,
   },
   {
     t: 1,
-    position: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -70.5],
-    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 2, -95],
-    fov: 55,
+    position: [CAMPUS_PATH.endX + 8, MOUNTAIN_SUMMIT.y + 3, -69],
+    target: [CAMPUS_PATH.endX, MOUNTAIN_SUMMIT.y + 1.2, -77],
+    fov: 50,
   },
 ]
 
 export const SUMMIT_LOOK_AROUND = Object.freeze({
   start: 0.96,
-  minYaw: -Math.PI / 2,
-  maxYaw: Math.PI / 2,
-  minPitch: 0,
-  maxPitch: Math.PI / 6,
+  radius: Math.sqrt(8 ** 2 + 8 ** 2 + 1.8 ** 2),
+  baseAzimuth: Math.PI / 4,
+  baseElevation: Math.atan2(1.8, Math.sqrt(8 ** 2 + 8 ** 2)),
+  minElevation: 0,
+  maxElevation:
+    Math.atan2(1.8, Math.sqrt(8 ** 2 + 8 ** 2)) + Math.PI / 6,
 })
 
 export const PLAYGROUND_MOTION_OFFSETS = Object.freeze({
@@ -443,9 +450,15 @@ export const getCharacterPositionAtOffset = (offset, target) => {
     if (offset > end.t) continue
 
     const range = end.t - start.t
-    const progress = range
+    let progress = range
       ? Math.max(0, Math.min(1, (offset - start.t) / range))
       : 0
+    if (
+      start.t === SUMMIT_SEQUENCE.haltStart &&
+      end.t === SUMMIT_SEQUENCE.haltEnd
+    ) {
+      progress = smootherStep(progress)
+    }
     target.set(
       start.position[0] + (end.position[0] - start.position[0]) * progress,
       start.position[1] + (end.position[1] - start.position[1]) * progress,

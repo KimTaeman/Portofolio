@@ -9,6 +9,7 @@ import {
   getNearestCampusProximity,
   MOUNTAIN_PATH,
   SUMMIT_LOOK_AROUND,
+  SUMMIT_SEQUENCE,
 } from '../../config/narrativeTimeline'
 
 const CAMERA_STOPS = CAMERA_KEYFRAMES.map(({ t, position, target, fov }) => ({
@@ -23,10 +24,14 @@ const desiredLookTarget = new THREE.Vector3()
 const desiredQuaternion = new THREE.Quaternion()
 const lookAtMatrix = new THREE.Matrix4()
 const worldUp = new THREE.Vector3(0, 1, 0)
-const lookDirection = new THREE.Vector3()
 const mountainCharacterPosition = new THREE.Vector3()
 const trailingCameraPosition = new THREE.Vector3()
 const trailingLookTarget = new THREE.Vector3()
+const summitEntryCharacterPosition = new THREE.Vector3()
+const summitCharacterPosition = new THREE.Vector3()
+const summitEntryCameraPosition = new THREE.Vector3()
+const summitFinalCameraPosition = new THREE.Vector3()
+const summitOrbitTarget = new THREE.Vector3()
 
 const getSegment = (offset) => {
   for (let i = 0; i < CAMERA_STOPS.length - 1; i += 1) {
@@ -94,15 +99,14 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
       drag.x = event.clientX
       drag.y = event.clientY
 
-      lookYawRef.current = THREE.MathUtils.clamp(
-        lookYawRef.current - deltaX * 0.005,
-        SUMMIT_LOOK_AROUND.minYaw,
-        SUMMIT_LOOK_AROUND.maxYaw,
-      )
+      lookYawRef.current -= deltaX * 0.005
+      if (Math.abs(lookYawRef.current) > Math.PI * 2) {
+        lookYawRef.current %= Math.PI * 2
+      }
       lookPitchRef.current = THREE.MathUtils.clamp(
         lookPitchRef.current - deltaY * 0.004,
-        SUMMIT_LOOK_AROUND.minPitch,
-        SUMMIT_LOOK_AROUND.maxPitch,
+        SUMMIT_LOOK_AROUND.minElevation - SUMMIT_LOOK_AROUND.baseElevation,
+        SUMMIT_LOOK_AROUND.maxElevation - SUMMIT_LOOK_AROUND.baseElevation,
       )
     }
 
@@ -167,7 +171,7 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     const segmentT = range > 0 ? THREE.MathUtils.clamp((offset - start.t) / range, 0, 1) : 0
     desiredCameraPosition.copy(start.position).lerp(end.position, segmentT)
     desiredLookTarget.copy(start.target).lerp(end.target, segmentT)
-    const desiredFov = THREE.MathUtils.lerp(start.fov, end.fov, segmentT)
+    let desiredFov = THREE.MathUtils.lerp(start.fov, end.fov, segmentT)
 
     if (
       offset >= MOUNTAIN_PATH.cameraTransitionStart &&
@@ -193,6 +197,35 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
       desiredLookTarget.lerp(trailingLookTarget, cameraBlend)
     }
 
+    if (offset >= SUMMIT_SEQUENCE.cameraPanStart) {
+      const panProgress = THREE.MathUtils.smootherstep(
+        offset,
+        SUMMIT_SEQUENCE.cameraPanStart,
+        SUMMIT_SEQUENCE.cameraPanEnd,
+      )
+      getCharacterPositionAtOffset(
+        SUMMIT_SEQUENCE.cameraPanStart,
+        summitEntryCharacterPosition,
+      )
+      getCharacterPositionAtOffset(offset, summitCharacterPosition)
+      summitEntryCameraPosition.set(
+        summitEntryCharacterPosition.x,
+        summitEntryCharacterPosition.y + MOUNTAIN_PATH.cameraHeight,
+        summitEntryCharacterPosition.z + MOUNTAIN_PATH.cameraDistance,
+      )
+      summitFinalCameraPosition.set(
+        summitCharacterPosition.x + 8,
+        summitCharacterPosition.y + 3,
+        summitCharacterPosition.z + 8,
+      )
+      desiredCameraPosition
+        .copy(summitEntryCameraPosition)
+        .lerp(summitFinalCameraPosition, panProgress)
+      desiredLookTarget.copy(summitCharacterPosition)
+      desiredLookTarget.y += 1.2
+      desiredFov = THREE.MathUtils.lerp(desiredFov, 50, panProgress)
+    }
+
     const isLookAroundActive = offset >= SUMMIT_LOOK_AROUND.start
     if (isLookAroundActive !== isLookAroundActiveRef.current) {
       isLookAroundActiveRef.current = isLookAroundActive
@@ -206,15 +239,23 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     }
 
     if (isLookAroundActive) {
-      const cosPitch = Math.cos(lookPitchRef.current)
-      lookDirection.set(
-        Math.sin(lookYawRef.current) * cosPitch,
-        Math.sin(lookPitchRef.current),
-        -Math.cos(lookYawRef.current) * cosPitch,
+      getCharacterPositionAtOffset(offset, summitCharacterPosition)
+      summitOrbitTarget.copy(summitCharacterPosition)
+      summitOrbitTarget.y += 1.2
+      const elevation = THREE.MathUtils.clamp(
+        SUMMIT_LOOK_AROUND.baseElevation + lookPitchRef.current,
+        SUMMIT_LOOK_AROUND.minElevation,
+        SUMMIT_LOOK_AROUND.maxElevation,
       )
-      desiredLookTarget
-        .copy(desiredCameraPosition)
-        .addScaledVector(lookDirection, 30)
+      const azimuth = SUMMIT_LOOK_AROUND.baseAzimuth + lookYawRef.current
+      const horizontalRadius =
+        Math.cos(elevation) * SUMMIT_LOOK_AROUND.radius
+      desiredCameraPosition.set(
+        summitOrbitTarget.x + Math.sin(azimuth) * horizontalRadius,
+        summitOrbitTarget.y + Math.sin(elevation) * SUMMIT_LOOK_AROUND.radius,
+        summitOrbitTarget.z + Math.cos(azimuth) * horizontalRadius,
+      )
+      desiredLookTarget.copy(summitOrbitTarget)
     } else {
       desiredCameraPosition.x += pointerRef.current.x * 0.32
       desiredCameraPosition.y += pointerRef.current.y * 0.18
@@ -223,10 +264,14 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
 
     const isMountainClimb =
       offset >= MOUNTAIN_PATH.start && offset <= MOUNTAIN_PATH.end
+    const isSummitCinematic =
+      offset >= SUMMIT_SEQUENCE.cameraPanStart &&
+      offset < SUMMIT_LOOK_AROUND.start
+    const isCinematicCamera = isMountainClimb || isSummitCinematic
     const positionDamping =
-      isMountainClimb ? 0.05 : 1 - Math.exp(-7 * delta)
+      1 - Math.exp(-(isCinematicCamera ? 3.08 : 7) * delta)
     const rotationDamping =
-      1 - Math.exp(-(isMountainClimb ? 4.2 : 8) * delta)
+      1 - Math.exp(-(isCinematicCamera ? 4.2 : 8) * delta)
     camera.position.lerp(desiredCameraPosition, positionDamping)
     if (
       offset >= CAMPUS_CAMERA_TRACKING.start &&
@@ -234,7 +279,7 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     ) {
       camera.position.x = desiredCameraPosition.x
     }
-    if (isMountainClimb) {
+    if (isCinematicCamera) {
       camera.lookAt(desiredLookTarget)
     } else {
       lookAtMatrix.lookAt(camera.position, desiredLookTarget, worldUp)

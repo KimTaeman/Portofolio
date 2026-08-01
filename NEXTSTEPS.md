@@ -14,21 +14,19 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - Scene ranges match the concept document: Playground `0–20%`, Campus `20–50%`, Mountain `50–70%`, and Summit `70–100%`.
 - A single `JourneyCharacter` slides, falls into Campus, walks left-to-right, changes outfits, hikes the Mountain, and reaches the Summit at `90%`.
 - Camera staging includes the Playground swoop, Campus side tracking shot, rear Mountain follow, continued Summit climb, and final rear-view panorama.
-- The Summit supports a constrained 180-degree drag view, upward-only tilt, and mobile-safe vertical scrolling.
+- The Summit supports a continuous 360-degree orbit view, upward tilt, and mobile-safe vertical scrolling.
 - The Mountain project prompt uses a testable trigger/reset range, explicit dismissal, Escape support, and re-arm behavior.
 - The current procedural art pass uses rounded chibi geometry, high-roughness clay materials, warm studio/outdoor lighting, shadows, atmospheric depth, and bold overlay typography.
 - Scene 1 includes an opening wave, seated slide pose, accelerated fall, airborne pose, squash-and-hop landing, reverse-scroll behavior, and transition into the Campus walk.
-- Day/night Summit presentation, distant peaks, clouds, and placeholder city lights are present.
+- The Summit has a rugged rocky crown, a translucent cloud sea, animated mist, massive deep-background peaks, a reflective idle loop, a 360-degree orbit, and a minimizable icon-based contact HUD.
 
 ## Known prototype limitations
 
 - Portfolio name, biography, project details, contact information, and real links are still placeholders or missing.
 - The procedural character and environments are art-direction prototypes, not approved production models.
-- The final Summit confidence pose is not yet implemented as a distinct animation.
 - Campus detail-card copy uses provisional, non-personal content until approved portfolio details are supplied.
 - The Mountain Polaroid is still a temporary project prompt rather than a project gallery.
-- The telescope currently has no purposeful contact interaction.
-- Summit scenery is procedural and needs a visual-quality pass using approved assets or a confirmed procedural direction.
+- Summit scenery follows the confirmed procedural soft-clay direction and still needs browser-level composition tuning.
 - Reduced-motion behavior and a complete keyboard interaction pass are still outstanding.
 - `scrollOffset` is currently mirrored into React state frequently for the DOM overlay and should be profiled.
 - The production JavaScript bundle is over Vite's default warning threshold.
@@ -76,9 +74,9 @@ The project is a functional continuous-scrollytelling prototype. The character n
 
 ### 6. Finish Scene 4 — Summit and contact
 
-- Refine the final climb and confident rear-facing summit pose.
-- Decide whether the procedural vista is final or should be replaced with optimized production assets.
-- Turn the telescope into an accessible contact interaction or remove it.
+- [x] Add the rear-facing breathing/surveying idle, rocky peak, rolling mist, sea of clouds, and deep-background vista.
+- [x] Add continuous 360-degree summit orbit controls with a ground-safe vertical limit.
+- [x] Replace the telescope concept with a minimizable cinematic contact HUD and direct contact actions.
 - Add real contact calls to action and links.
 - Polish day/night differences, including stars, lights, and contrast.
 

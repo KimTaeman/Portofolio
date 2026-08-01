@@ -38,7 +38,7 @@ The normalized scroll timeline is:
 
 Summit look-around rules:
 
-- Horizontal drag is limited to exactly 180 degrees: `-90°` to `+90°` from the default view.
+- Horizontal drag orbits continuously through 360 degrees around the character with no azimuth limit.
 - Vertical drag starts at the horizon and may tilt upward by at most `30°`.
 - Downward tilt is not allowed.
 - Touch must preserve vertical scrolling so mobile users cannot become trapped at the summit.
