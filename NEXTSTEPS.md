@@ -59,7 +59,8 @@ The project is a functional continuous-scrollytelling prototype. The character n
 
 - [x] Add a detailed creative easel/stool, blossom-tree badminton set, and laptop/phone/hardware command-center landmarks while keeping the side-tracking path clear.
 - [x] Add concise DOM detail cards with a close control, initial focus, Escape dismissal, and backdrop dismissal; lock scrolling while a card is open.
-- [x] Build the green low-poly spring campus with a structured stone path, dense faceted blossom trees, instanced falling petals, and localized pink/morning-yellow lighting without filling the character's travel lane.
+- [x] Build the green low-poly spring campus with a raised structured stone path, one non-overlapping grass floor, dense faceted blossom trees, instanced falling petals, and localized pink/morning-yellow lighting.
+- [x] Match the Campus grass and first Mountain hills through one shared low-poly material, physically overlap the terrain at the handoff, and stage the badminton, easel, and command center at distinct depth and travel positions.
 - [x] Centralize the University outfit threshold at `20%`, placing the transition behind the first Campus blossom tree at the Scene 1 boundary.
 - [ ] Replace the provisional card copy and example skill labels with approved portfolio information.
 - [ ] Complete the browser capture/tuning pass listed in Priority 1, including Campus landmark hit targets and outfit occlusion.

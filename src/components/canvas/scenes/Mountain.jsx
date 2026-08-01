@@ -10,6 +10,7 @@ import {
   useScroll,
 } from '@react-three/drei'
 import * as THREE from 'three'
+import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
 import {
   getCharacterPositionAtOffset,
   getMountainTransitionTopY,
@@ -193,11 +194,32 @@ const TRAIL_FOUNDATION_LAYOUT = Object.freeze(
 
 const TRANSITION_HILL_LAYOUT = Object.freeze(
   [
-    { progress: 0.19, x: -0.45, scale: [10.5, 4.8, 33], yaw: 0.12 },
-    { progress: 0.54, x: 0.65, scale: [11.5, 5.2, 32], yaw: -0.1 },
-    { progress: 0.87, x: -0.35, scale: [12.5, 5.6, 29], yaw: 0.16 },
-  ].map(({ progress, x, scale, yaw }) => {
-    const surfaceY = getMountainTransitionTopY(progress) - 0.42
+    {
+      progress: 0.14,
+      x: 0,
+      scale: [12, 2, 45],
+      pitch: -0.014,
+      yaw: 0.05,
+      topOffset: 0.274,
+    },
+    {
+      progress: 0.54,
+      x: 0.65,
+      scale: [11.5, 5.2, 32],
+      pitch: 0,
+      yaw: -0.1,
+      topOffset: -0.42,
+    },
+    {
+      progress: 0.87,
+      x: -0.35,
+      scale: [12.5, 5.6, 29],
+      pitch: 0,
+      yaw: 0.16,
+      topOffset: -0.42,
+    },
+  ].map(({ progress, x, scale, pitch, yaw, topOffset }) => {
+    const surfaceY = getMountainTransitionTopY(progress) + topOffset
     return Object.freeze({
       position: [
         x,
@@ -208,7 +230,7 @@ const TRANSITION_HILL_LAYOUT = Object.freeze(
             progress,
       ],
       scale,
-      rotation: [0, yaw, 0],
+      rotation: [pitch, yaw, 0],
     })
   }),
 )
@@ -633,7 +655,7 @@ function TransitionCorridor() {
             castShadow
             receiveShadow
           >
-            <FlatMaterial color="#557A46" />
+            <LowPolyGrassMaterial />
           </Dodecahedron>
         ))}
       </group>

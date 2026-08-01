@@ -29,7 +29,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Scene 2: The Campus Path (Skills & Hobbies)
 * **Scroll Range:** `20% - 50%`
-* **The World:** A manicured green university campus with a structured light-stone path, densely clustered low-poly **cherry blossom trees**, and an instanced field of gently falling faceted petals.
+* **The World:** A manicured green university campus with a raised, structured light-stone path, densely clustered low-poly **cherry blossom trees**, and an instanced field of gently falling faceted petals. Its shared grass material and overlapping approach hill create a seamless physical handoff into the mountain trail.
 * **Character & Action:** Character is in a **university uniform**, walking or lightly jogging along the path with a focused, steady pace. Camera follows in a smooth tracking shot.
 * **Interactions:**
   * **Hobbies (Fun):** An interactive easel and paint stool form the Creative Practice zone, while a blossom-tree badminton racket and grounded shuttlecock form the Life Beyond Code zone. Clicking them opens small 2D cards with personal details.

@@ -15,7 +15,6 @@ import {
   CAMPUS_PATH,
   CAMERA_KEYFRAMES,
   getCharacterOutfit,
-  MOUNTAIN_PATH,
   SCENE_RANGES,
   SCENES,
   SCROLL_PAGES,
@@ -96,7 +95,7 @@ function App() {
           <InfiniteGround
             isNight={isNight}
             isSunset={isSunset}
-            visible={scrollOffset < MOUNTAIN_PATH.start}
+            visible={scrollOffset < SCENE_RANGES.campus.start}
           />
 
           <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>

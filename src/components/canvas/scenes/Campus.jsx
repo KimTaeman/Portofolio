@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { RoundedBox, useCursor, useScroll } from '@react-three/drei'
 import * as THREE from 'three'
+import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
 import {
   CAMPUS_LANDMARKS,
   CAMPUS_PATH,
@@ -52,11 +53,14 @@ const CHERRY_TREE_LAYOUT = TREE_X_POSITIONS.map((x, index) => {
   ]
 }).filter(([x, , z]) => !isInsideTurnClearance(x, z))
 
-const LAMP_X_POSITIONS = [-10, -6, -2, 2, 10]
-const LAMP_LAYOUT = LAMP_X_POSITIONS.map((x, index) => [
-  x,
-  -3.1 - pseudoRandom(index, 9) * 0.7,
-]).filter(([x, z]) => !isInsideTurnClearance(x, z))
+const LAMP_LAYOUT = [
+  [-4.8, 1.05],
+  [-9, -3.5],
+  [-3, -3.35],
+  [2, -3.55],
+  [7, -3.4],
+  [10, -3.25],
+].filter(([x, z]) => !isInsideTurnClearance(x, z))
 
 const PATH_JOINT_X_POSITIONS = Object.freeze(
   Array.from({ length: 13 }, (_, index) => -12 + index * 2),
@@ -344,7 +348,7 @@ function ProximityLandmark({ children, landmark, onSelect }) {
 function Easel({ onSelect }) {
   return (
     <ProximityLandmark landmark={EASEL_LANDMARK} onSelect={onSelect}>
-      <group name="easelLandmark">
+      <group name="easelLandmark" scale={1.18}>
         <mesh position={[-0.36, 0.68, 0]} rotation={[0, 0, 0.24]} castShadow>
           <cylinderGeometry args={[0.055, 0.055, 1.75, 6]} />
           <ClayMaterial color="#A96F45" />
@@ -404,15 +408,15 @@ function BadmintonRacket({ onSelect }) {
     <>
       <ProximityLandmark landmark={BADMINTON_LANDMARK} onSelect={onSelect}>
         <group
-          position={[0, 0, -3.28]}
-          rotation={[0, 0, -0.24]}
+          position={[0, 0, 0.08]}
+          rotation={[0, 0, -0.28]}
           name="badmintonLandmark"
         >
-          <mesh position={[0, 2.02, 0]} castShadow>
+          <mesh position={[0, 1.7, 0]} castShadow>
             <torusGeometry args={[0.42, 0.06, 6, 16]} />
             <ClayMaterial color="#E88C47" />
           </mesh>
-          <mesh position={[0, 2.02, -0.01]}>
+          <mesh position={[0, 1.7, -0.01]}>
             <circleGeometry args={[0.38, 12]} />
             <ClayMaterial
               color="#F4F4F4"
@@ -422,7 +426,7 @@ function BadmintonRacket({ onSelect }) {
               depthWrite={false}
             />
           </mesh>
-          <mesh position={[0, 1.18, 0]} castShadow>
+          <mesh position={[0, 0.86, 0]} castShadow>
             <cylinderGeometry args={[0.055, 0.075, 1.3, 6]} />
             <ClayMaterial color="#465577" />
           </mesh>
@@ -434,7 +438,7 @@ function BadmintonRacket({ onSelect }) {
         position={[
           BADMINTON_LANDMARK.localX + 0.7,
           0.14,
-          BADMINTON_LANDMARK.z - 3.2,
+          BADMINTON_LANDMARK.z + 0.36,
         ]}
         rotation={[0, 0, -0.7]}
       >
@@ -600,17 +604,17 @@ export default function Campus({
         args={[28, 0.36, 14]}
         radius={0.18}
         smoothness={5}
-        position={[0, -0.18, -2]}
+        position={[0, -0.16, -2]}
         receiveShadow
       >
-        <ClayMaterial color="#7CB342" />
+        <LowPolyGrassMaterial />
       </RoundedBox>
 
       <RoundedBox
         args={[26, 0.14, 2.8]}
         radius={0.06}
         smoothness={4}
-        position={[0, 0.08, 0]}
+        position={[0, 0.12, 0]}
         receiveShadow
       >
         <ClayMaterial color="#E0E0E0" />
@@ -618,7 +622,7 @@ export default function Campus({
 
       <group name="structuredStonePathJoints">
         {PATH_JOINT_X_POSITIONS.map((x) => (
-          <mesh key={`path-joint-${x}`} position={[x, 0.157, 0]} receiveShadow>
+          <mesh key={`path-joint-${x}`} position={[x, 0.197, 0]} receiveShadow>
             <boxGeometry args={[0.035, 0.018, 2.62]} />
             <ClayMaterial color="#C8C8C8" />
           </mesh>
