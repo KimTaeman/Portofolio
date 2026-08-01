@@ -12,6 +12,7 @@ import {
 } from '@react-three/drei'
 import * as THREE from 'three'
 import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
+import useDayNight from '../../../hooks/useDayNight'
 import {
   CAMPUS_PATH,
   PLAYGROUND_MOTION_OFFSETS,
@@ -32,6 +33,10 @@ const COLORS = Object.freeze({
   fence: '#D6A46B',
   flowerCenter: '#F8C95C',
 })
+const DAY_CLOUD_COLOR = new THREE.Color('#FFFFFF')
+const NIGHT_CLOUD_COLOR = new THREE.Color('#AAB7D1')
+const DAY_CLOUD_GLOW = new THREE.Color('#FFFFFF')
+const NIGHT_CLOUD_GLOW = new THREE.Color('#8CA8FF')
 
 const PLATEAU_STEP_COLORS = Object.freeze([
   '#E5A9A9',
@@ -107,14 +112,6 @@ const CLOUD_LAYOUT = [
   { position: [34, 33, -94], scale: 2, speed: 0.045, phase: 10.5 },
 ]
 
-const NIGHT_STARS = [
-  { position: [-1.15, 0.45, 0], scale: 0.24, phase: 0 },
-  { position: [-0.65, -0.35, 0.15], scale: 0.17, phase: 1.2 },
-  { position: [0.75, 0.62, 0.1], scale: 0.2, phase: 2.4 },
-  { position: [1.15, -0.22, 0.05], scale: 0.15, phase: 3.6 },
-  { position: [0.25, -0.72, 0.18], scale: 0.13, phase: 4.8 },
-]
-
 const DAISY_PETALS = Array.from({ length: 5 }, (_, index) => {
   const angle = (index / 5) * Math.PI * 2
   return [Math.cos(angle) * 0.12, Math.sin(angle) * 0.12]
@@ -143,8 +140,24 @@ function ClayMaterial({ color }) {
 }
 
 function CloudMaterial() {
+  const { isNightMode } = useDayNight()
+  const materialRef = useRef()
+
+  useFrame((_, delta) => {
+    const alpha = 1 - Math.exp(-delta / 0.65)
+    materialRef.current?.color.lerp(
+      isNightMode ? NIGHT_CLOUD_COLOR : DAY_CLOUD_COLOR,
+      alpha,
+    )
+    materialRef.current?.emissive.lerp(
+      isNightMode ? NIGHT_CLOUD_GLOW : DAY_CLOUD_GLOW,
+      alpha,
+    )
+  })
+
   return (
     <meshStandardMaterial
+      ref={materialRef}
       color="#FFFFFF"
       roughness={1}
       metalness={0}
@@ -152,60 +165,6 @@ function CloudMaterial() {
       emissiveIntensity={0.1}
       flatShading
     />
-  )
-}
-
-function ClayStar({ position, scale, starRef }) {
-  return (
-    <group ref={starRef} position={position} scale={scale}>
-      <RoundedBox
-        args={[0.075, 0.42, 0.075]}
-        radius={0.03}
-        smoothness={4}
-        rotation={[0, 0, Math.PI / 4]}
-      >
-        <ClayMaterial color={COLORS.sun} />
-      </RoundedBox>
-      <RoundedBox
-        args={[0.075, 0.42, 0.075]}
-        radius={0.03}
-        smoothness={4}
-        rotation={[0, 0, -Math.PI / 4]}
-      >
-        <ClayMaterial color={COLORS.sun} />
-      </RoundedBox>
-    </group>
-  )
-}
-
-function Moon() {
-  const starRefs = useRef([])
-
-  useFrame((state) => {
-    const elapsed = state.clock.elapsedTime
-    starRefs.current.forEach((star, index) => {
-      if (!star) return
-      const { position, phase } = NIGHT_STARS[index]
-      star.position.y = position[1] + Math.sin(elapsed * 1.15 + phase) * 0.09
-    })
-  })
-
-  return (
-    <group name="moon" position={[18, 34, -90]} scale={4}>
-      <Dodecahedron args={[0.58, 0]} castShadow>
-        <ClayMaterial color={COLORS.moon} />
-      </Dodecahedron>
-      {NIGHT_STARS.map(({ position, scale }, index) => (
-        <ClayStar
-          key={index}
-          position={position}
-          scale={scale}
-          starRef={(element) => {
-            starRefs.current[index] = element
-          }}
-        />
-      ))}
-    </group>
   )
 }
 
@@ -610,58 +569,13 @@ function LandingPetalBurst() {
 }
 
 export default function Playground({
-  isNight = false,
-  isSunset = false,
-  isSummitActive = false,
-  castDirectionalShadow = false,
   position = [0, 20, 0],
 }) {
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
   const slideRotationX = -0.35
-  const skyColor = isNight
-    ? '#1E1B4B'
-    : isSunset
-      ? '#FFE5D9'
-      : '#E8F4FA'
-  const ambientColor = isNight
-    ? '#312E81'
-    : isSunset
-      ? '#E6E6FA'
-      : '#FFFFFF'
-  const directionalColor = isNight
-    ? '#818CF8'
-    : isSunset
-      ? '#FFB347'
-      : '#FFF9E6'
 
   return (
     <>
-      <color attach="background" args={[skyColor]} />
-      <ambientLight
-        color={ambientColor}
-        intensity={
-          isNight ? 0.6 : isSummitActive ? 0.55 : isSunset ? 0.8 : 1.35
-        }
-      />
-      <directionalLight
-        color={directionalColor}
-        intensity={
-          isNight ? 0.5 : isSummitActive ? 0.25 : isSunset ? 1.5 : 1.9
-        }
-        position={isSunset ? [10, 5, 5] : [5, 10, 5]}
-        castShadow={castDirectionalShadow}
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-near={1}
-        shadow-camera-far={120}
-        shadow-camera-left={-45}
-        shadow-camera-right={45}
-        shadow-camera-top={45}
-        shadow-camera-bottom={-45}
-        shadow-bias={-0.0002}
-        shadow-normalBias={0.03}
-      />
-
-      {isNight ? <Moon /> : null}
       {CLOUD_LAYOUT.map(({ position, scale, speed, phase }) => (
         <Cloud
           key={position.join('-')}

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme {
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-sans: Inter, "Avenir Next", "Segoe UI", sans-serif;
+}
+
 /* You can also add a quick reset here to prevent weird scrollbars */
 html, body, #root {
   margin: 0;
@@ -10,9 +15,9 @@ html, body, #root {
 }
 
 body {
-  background: #fdf6e3;
-  color: #18213d;
-  font-family: Inter, "Avenir Next", "Segoe UI", sans-serif;
+  background: #fff0e5;
+  color: #3e2723;
+  font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }

@@ -11,6 +11,7 @@ import {
 import * as THREE from 'three'
 import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
 import { PROJECTS } from '../../../data/projects'
+import useDayNight from '../../../hooks/useDayNight'
 import {
   getCharacterPositionAtOffset,
   getMountainTransitionTopY,
@@ -761,6 +762,7 @@ function ProjectBalloons({
   worldOrigin,
   onProjectProximityChange = () => {},
 }) {
+  const { isNightMode } = useDayNight()
   const scroll = useScroll()
   const balloonRefs = useRef([])
   const balloonMaterialRefs = useRef([])
@@ -819,7 +821,7 @@ function ProjectBalloons({
       if (balloonMaterial) {
         balloonMaterial.emissiveIntensity = THREE.MathUtils.damp(
           balloonMaterial.emissiveIntensity,
-          isActive ? 0.38 : 0,
+          isActive ? (isNightMode ? 0.7 : 0.38) : 0,
           8,
           delta,
         )

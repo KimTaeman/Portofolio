@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { useCallback, useRef, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { ScrollControls } from '@react-three/drei'
 import * as THREE from 'three'
 import CameraController from './components/canvas/CameraController'
+import GlobalSceneEnvironment from './components/canvas/GlobalSceneEnvironment'
 import JourneyCharacter from './components/canvas/JourneyCharacter'
 import Playground from './components/canvas/scenes/Playground'
 import Campus from './components/canvas/scenes/Campus'
@@ -14,6 +15,7 @@ import CampusProximityOverlay from './components/ui/overlays/CampusProximityOver
 import ProjectDetailModal from './components/ui/overlays/ProjectDetailModal'
 import ProjectTeaserCard from './components/ui/overlays/ProjectTeaserCard'
 import { PROJECTS } from './data/projects'
+import useDayNight from './hooks/useDayNight'
 import {
   CAMPUS_PATH,
   CAMERA_KEYFRAMES,
@@ -26,13 +28,20 @@ import {
 const scenePosition = (sceneId) =>
   SCENES.find((scene) => scene.id === sceneId).position
 const initialCamera = CAMERA_KEYFRAMES[0]
-const playgroundEnd = SCENES.find((scene) => scene.id === 'playground').end
+const DAY_GROUND_COLOR = new THREE.Color('#EAF4D3')
+const NIGHT_GROUND_COLOR = new THREE.Color('#25254D')
 
-function InfiniteGround({
-  isNight = false,
-  isSunset = false,
-  visible = true,
-}) {
+function InfiniteGround({ visible = true }) {
+  const { isNightMode } = useDayNight()
+  const materialRef = useRef()
+
+  useFrame((_, delta) => {
+    materialRef.current?.color.lerp(
+      isNightMode ? NIGHT_GROUND_COLOR : DAY_GROUND_COLOR,
+      1 - Math.exp(-delta / 0.65),
+    )
+  })
+
   return (
     <mesh
       name="infiniteWorldGround"
@@ -42,7 +51,8 @@ function InfiniteGround({
     >
       <boxGeometry args={[150, 2, 150]} />
       <meshStandardMaterial
-        color={isNight ? '#25254D' : isSunset ? '#D9C5A4' : '#EAF4D3'}
+        ref={materialRef}
+        color="#EAF4D3"
         roughness={1}
         metalness={0}
       />
@@ -51,22 +61,13 @@ function InfiniteGround({
 }
 
 function App() {
+  const { isNightMode, toggleNightMode } = useDayNight()
   const [isLocked, setIsLocked] = useState(false)
-  const [isNight, setIsNight] = useState(false)
   const [scrollOffset, setScrollOffset] = useState(0)
   const [campusDetailId, setCampusDetailId] = useState(null)
   const [nearbyProjectId, setNearbyProjectId] = useState(null)
   const [projectDetail, setProjectDetail] = useState(null)
   const outfit = getCharacterOutfit(scrollOffset)
-  const isSummitActive = scrollOffset >= SCENE_RANGES.summit.start
-  const isSunset =
-    !isNight &&
-    scrollOffset >= SCENE_RANGES.campus.start
-  const skyColor = isNight
-    ? '#1E1B4B'
-    : isSunset
-      ? '#FFE5D9'
-      : '#E8F4FA'
 
   const handleCampusSelect = useCallback((detailId) => {
     setCampusDetailId(detailId)
@@ -101,7 +102,11 @@ function App() {
     : null
 
   return (
-    <div className="relative isolate h-screen w-screen overflow-hidden bg-[#FDF6E3]">
+    <div
+      className={`relative isolate h-screen w-screen overflow-hidden font-sans transition-colors duration-500 ${
+        isNightMode ? 'bg-[#0B0D17]' : 'bg-[#FFF0E5]'
+      }`}
+    >
       <div className="absolute inset-0 z-0">
         <Canvas
           camera={{
@@ -111,17 +116,15 @@ function App() {
           }}
           dpr={[1, 1.5]}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
-          shadows
+          shadows="soft"
           onCreated={({ gl }) => {
             gl.shadowMap.type = THREE.PCFSoftShadowMap
             gl.toneMapping = THREE.ACESFilmicToneMapping
             gl.toneMappingExposure = 1.05
           }}
         >
-          <fog attach="fog" args={[skyColor, 100, 500]} />
+          <GlobalSceneEnvironment />
           <InfiniteGround
-            isNight={isNight}
-            isSunset={isSunset}
             visible={scrollOffset < SCENE_RANGES.campus.start}
           />
 
@@ -132,16 +135,11 @@ function App() {
             {/* Scene 1: The Playground (Introduction) */}
             <Playground
               position={scenePosition('playground')}
-              isNight={isNight}
-              isSunset={isSunset}
-              isSummitActive={isSummitActive}
-              castDirectionalShadow={scrollOffset >= playgroundEnd}
             />
 
             {/* Scene 2: The Campus Path (Skills & Hobbies) */}
             <Campus
               position={scenePosition('campus')}
-              isNight={isNight}
               onSelect={handleCampusSelect}
             />
 
@@ -154,8 +152,6 @@ function App() {
             {/* Scene 4: The Summit (Future & Contact) */}
             <Summit
               position={scenePosition('summit')}
-              isNight={isNight}
-              isActive={isSummitActive}
             />
           </ScrollControls>
         </Canvas>
@@ -167,10 +163,15 @@ function App() {
 
         <button
           type="button"
-          onClick={() => setIsNight((prev) => !prev)}
-          className="pointer-events-auto fixed right-6 top-6 rounded-full border border-white/70 bg-white/80 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#4A3B32] shadow-[0_12px_32px_rgba(92,65,35,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white"
+          onClick={toggleNightMode}
+          className={`pointer-events-auto fixed right-6 top-6 rounded-full border px-5 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.16em] shadow-[0_12px_32px_rgba(15,23,42,0.2)] backdrop-blur-md transition-all duration-500 hover:-translate-y-0.5 ${
+            isNightMode
+              ? 'border-white/15 bg-[#1E293B]/85 text-[#F8FAFC] hover:bg-[#334155]'
+              : 'border-white/70 bg-[#FFF9F4]/85 text-[#3E2723] hover:bg-[#FFF9F4]'
+          }`}
+          aria-pressed={isNightMode}
         >
-          {isNight ? 'Switch to Day' : 'Switch to Night'}
+          {isNightMode ? 'Switch to Day' : 'Switch to Night'}
         </button>
 
         <CampusDetailCard

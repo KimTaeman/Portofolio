@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { RoundedBox, useCursor, useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
+import useDayNight from '../../../hooks/useDayNight'
 import {
   CAMPUS_LANDMARKS,
   CAMPUS_PATH,
@@ -84,6 +85,8 @@ const BADMINTON_LANDMARK = CAMPUS_LANDMARKS.find(
 const SKILLS_LANDMARK = CAMPUS_LANDMARKS.find(({ id }) => id === 'skills')
 
 const PETAL_COUNT = 150
+const LAMP_DAY_COLOR = new THREE.Color('#FFF6E0')
+const LAMP_NIGHT_COLOR = new THREE.Color('#FFE8A3')
 const PETAL_BOUNDS = Object.freeze({
   minX: -13,
   maxX: 13,
@@ -275,6 +278,33 @@ function FallingPetals() {
 }
 
 function VintageLampPost({ position, isNight }) {
+  const bulbMaterialRef = useRef()
+  const pointLightRef = useRef()
+
+  useFrame((_, delta) => {
+    const alpha = 1 - Math.exp(-delta / 0.65)
+    if (bulbMaterialRef.current) {
+      bulbMaterialRef.current.color.lerp(
+        isNight ? LAMP_NIGHT_COLOR : LAMP_DAY_COLOR,
+        alpha,
+      )
+      bulbMaterialRef.current.emissiveIntensity = THREE.MathUtils.damp(
+        bulbMaterialRef.current.emissiveIntensity,
+        isNight ? 1.1 : 0.06,
+        2.4,
+        delta,
+      )
+    }
+    if (pointLightRef.current) {
+      pointLightRef.current.intensity = THREE.MathUtils.damp(
+        pointLightRef.current.intensity,
+        isNight ? 1.5 : 0,
+        2.4,
+        delta,
+      )
+    }
+  })
+
   return (
     <group position={position} name="vintageLampPost">
       <mesh position={[0, 0.12, 0]} castShadow>
@@ -291,10 +321,14 @@ function VintageLampPost({ position, isNight }) {
       </mesh>
       <mesh position={[0, 2.19, 0]} castShadow>
         <dodecahedronGeometry args={[0.23, 0]} />
-        <ClayMaterial
-          color={isNight ? '#FFE8A3' : '#FFF6E0'}
+        <meshStandardMaterial
+          ref={bulbMaterialRef}
+          color="#FFF6E0"
           emissive="#FFD15C"
-          emissiveIntensity={isNight ? 1.1 : 0.06}
+          emissiveIntensity={0.06}
+          roughness={1}
+          metalness={0}
+          flatShading
         />
       </mesh>
       <mesh position={[0, 2.42, 0]} castShadow>
@@ -302,8 +336,9 @@ function VintageLampPost({ position, isNight }) {
         <ClayMaterial color="#3D4054" />
       </mesh>
       <pointLight
+        ref={pointLightRef}
         color="#FFD15C"
-        intensity={isNight ? 1.5 : 0}
+        intensity={0}
         distance={4.4}
         decay={2}
         position={[0, 2.2, 0]}
@@ -576,12 +611,35 @@ function SkillsLaptop({ onSelect }) {
 }
 
 function CampusSpringLights({ isNight }) {
+  const blossomLightRef = useRef()
+  const morningLightRef = useRef()
+
+  useFrame((_, delta) => {
+    if (blossomLightRef.current) {
+      blossomLightRef.current.intensity = THREE.MathUtils.damp(
+        blossomLightRef.current.intensity,
+        isNight ? 0.2 : 1.05,
+        2.4,
+        delta,
+      )
+    }
+    if (morningLightRef.current) {
+      morningLightRef.current.intensity = THREE.MathUtils.damp(
+        morningLightRef.current.intensity,
+        isNight ? 0.28 : 1.3,
+        2.4,
+        delta,
+      )
+    }
+  })
+
   return (
     <group name="campusSpringLights">
       <pointLight
+        ref={blossomLightRef}
         name="blossomFillLight"
         color="#FFD6E5"
-        intensity={isNight ? 0.2 : 1.05}
+        intensity={1.05}
         distance={18}
         decay={2}
         position={[-6, 7, 2]}
@@ -592,9 +650,10 @@ function CampusSpringLights({ isNight }) {
         shadow-radius={6}
       />
       <pointLight
+        ref={morningLightRef}
         name="morningKeyLight"
         color="#FFF0B5"
-        intensity={isNight ? 0.28 : 1.3}
+        intensity={1.3}
         distance={20}
         decay={2}
         position={[7, 8, 3]}
@@ -610,9 +669,10 @@ function CampusSpringLights({ isNight }) {
 
 export default function Campus({
   position = [0, 0, 0],
-  isNight = false,
   onSelect = () => {},
 }) {
+  const { isNightMode: isNight } = useDayNight()
+
   return (
     <group position={position} name="campusScene">
       <RoundedBox

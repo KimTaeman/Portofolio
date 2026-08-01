@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { FaEnvelope, FaGithub, FaLinkedinIn, FaTimes } from 'react-icons/fa'
+import useDayNight from '../../../hooks/useDayNight'
 import {
   SCENES,
   SCENE_RANGES,
@@ -85,8 +86,13 @@ const getSceneOpacity = (scene, offset) => {
 }
 
 function ContactPill({ label, href, icon: Icon }) {
+  const { isNightMode } = useDayNight()
   const className =
-    'pointer-events-auto inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border border-white/80 bg-white/60 text-[#3E2723] shadow-[0_12px_34px_rgba(62,39,35,0.14)] backdrop-blur-md transition-colors hover:bg-white/95 hover:text-[#E07A5F] hover:shadow-[0_16px_38px_rgba(224,122,95,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F] focus-visible:ring-offset-2'
+    `pointer-events-auto inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border shadow-[0_12px_34px_rgba(15,23,42,0.2)] backdrop-blur-md transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${
+      isNightMode
+        ? 'border-white/15 bg-[#1E293B]/80 text-[#F8FAFC] hover:bg-[#334155] hover:text-white'
+        : 'border-white/80 bg-[#FFF9F4]/70 text-[#3E2723] hover:bg-[#FFF9F4] hover:text-[#8A817A]'
+    }`
   const motionProps = {
     whileHover: { y: -4, scale: 1.025 },
     whileTap: { scale: 0.98 },
@@ -125,6 +131,7 @@ function ContactPill({ label, href, icon: Icon }) {
 }
 
 export default function UIOverlay({ scrollOffset = 0 }) {
+  const { isNightMode } = useDayNight()
   const [isMinimized, setIsMinimized] = useState(false)
   const activeScene = getActiveScene(scrollOffset)
   const opacity = getSceneOpacity(activeScene, scrollOffset)
@@ -155,23 +162,17 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               exit={{ opacity: 0, y: -12, transition: { duration: 0 } }}
               transition={entranceTransition}
             >
-              <p className="mb-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[#E07A5F]">
+              <p className={`mb-4 text-left font-serif text-xs font-semibold uppercase tracking-[0.18em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                 {SCENE_LABELS[activeScene]}
               </p>
               <h1
-                className="text-left font-serif text-[clamp(1.9rem,3.2vw,2.25rem)] font-semibold leading-[1.14] tracking-[-0.025em] text-[#4A3B32]"
-                style={{
-                  textShadow: '0 2px 10px rgba(255, 255, 255, 0.5)',
-                }}
+                className={`text-left font-serif text-[clamp(1.9rem,3.2vw,2.25rem)] font-semibold leading-[1.14] tracking-[-0.025em] transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
               >
                 {content.headline}
               </h1>
               {content.body && (
                 <p
-                  className="mt-5 max-w-[330px] text-left text-base font-normal leading-relaxed text-[#5F4B40]"
-                  style={{
-                    textShadow: '0 2px 10px rgba(255, 255, 255, 0.5)',
-                  }}
+                  className={`mt-5 max-w-[330px] text-left font-sans text-base font-normal leading-relaxed transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
                 >
                   {content.body}
                 </p>
@@ -187,38 +188,35 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               animate={{ opacity, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.97 }}
               transition={entranceTransition}
-              className="pointer-events-auto relative rounded-[1.6rem] border border-white/70 bg-white/45 px-6 py-6 text-left shadow-[0_24px_70px_rgba(62,39,35,0.18)] backdrop-blur-xl"
+              className={`pointer-events-auto relative rounded-[1.6rem] border px-6 py-6 text-left shadow-[0_24px_70px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-colors duration-500 ${isNightMode ? 'border-white/15 bg-[#1E293B]/80 text-[#F8FAFC]' : 'border-white/70 bg-[#FFF9F4]/65 text-[#3E2723]'}`}
               style={{ pointerEvents: opacity > 0.08 ? 'auto' : 'none' }}
             >
               <button
                 type="button"
                 aria-label="Minimize contact panel"
                 onClick={() => setIsMinimized(true)}
-                className="pointer-events-auto absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full border border-white/75 bg-white/55 text-lg leading-none text-[#3E2723] transition hover:-translate-y-0.5 hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F] focus-visible:ring-offset-2"
+                className={`pointer-events-auto absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full border text-lg leading-none transition-all duration-500 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/15 bg-[#334155]/80 text-[#F8FAFC] hover:bg-[#475569]' : 'border-white/75 bg-[#FFF9F4]/70 text-[#3E2723] hover:bg-white'}`}
               >
                 <FaTimes aria-hidden="true" size={14} />
               </button>
 
-              <p className="mb-3 pr-10 text-left text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#E07A5F]">
+              <p className={`mb-3 pr-10 text-left font-serif text-[0.7rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                 {SCENE_LABELS.summit}
               </p>
               <h1
-                className="pr-7 text-left font-serif text-[clamp(1.75rem,3vw,2.2rem)] font-semibold leading-[1.12] tracking-[-0.025em] text-[#3E2723]"
-                style={{
-                  textShadow: '0 2px 10px rgba(255, 255, 255, 0.5)',
-                }}
+                className={`pr-7 text-left font-serif text-[clamp(1.75rem,3vw,2.2rem)] font-semibold leading-[1.12] tracking-[-0.025em] transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
               >
                 {SCENE_CONTENT.summit.headline}
               </h1>
-              <p className="mt-4 text-left text-sm font-normal leading-relaxed text-[#5F4B40]">
+              <p className={`mt-4 text-left font-sans text-sm font-normal leading-relaxed transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
                 {SCENE_CONTENT.summit.body}
               </p>
 
-              <div className="mt-5 border-t border-white/55 pt-4">
-                <p className="font-serif text-lg font-semibold text-[#3E2723]">
+              <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
+                <p className={`font-serif text-lg font-semibold transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
                   Nang Hayman Aye Mya
                 </p>
-                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#6F5B50]">
+                <p className={`mt-1 font-sans text-xs font-medium uppercase tracking-[0.12em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                   Computer Science, KMUTT
                 </p>
               </div>
@@ -243,10 +241,10 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={entranceTransition}
-              className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/75 bg-white/55 px-5 py-3 text-sm font-semibold text-[#3E2723] shadow-[0_16px_44px_rgba(62,39,35,0.16)] backdrop-blur-xl transition-colors hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F] focus-visible:ring-offset-2"
+              className={`pointer-events-auto inline-flex items-center gap-2 rounded-full border px-5 py-3 font-sans text-sm font-semibold shadow-[0_16px_44px_rgba(15,23,42,0.2)] backdrop-blur-xl transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/15 bg-[#1E293B]/80 text-[#F8FAFC] hover:bg-[#334155]' : 'border-white/75 bg-[#FFF9F4]/70 text-[#3E2723] hover:bg-white'}`}
               aria-label="Expand contact panel"
             >
-              <span className="h-2 w-2 rounded-full bg-[#E07A5F]" />
+              <span className={`h-2 w-2 rounded-full transition-colors duration-500 ${isNightMode ? 'bg-[#94A3B8]' : 'bg-[#8A817A]'}`} />
               Connect / Contact
             </motion.button>
           )}
@@ -259,7 +257,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 0.72, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="pointer-events-none fixed bottom-6 right-6 hidden rounded-full border border-white/70 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#4A3B32] shadow-[0_10px_30px_rgba(72,52,36,0.12)] backdrop-blur-md md:inline-flex"
+            className={`pointer-events-none fixed bottom-6 right-6 hidden rounded-full border px-4 py-2 font-sans text-xs font-semibold uppercase tracking-[0.12em] shadow-[0_10px_30px_rgba(15,23,42,0.18)] backdrop-blur-md transition-colors duration-500 md:inline-flex ${isNightMode ? 'border-white/15 bg-[#1E293B]/75 text-[#94A3B8]' : 'border-white/70 bg-[#FFF9F4]/75 text-[#8A817A]'}`}
           >
             Drag to explore the 360° view
           </motion.p>

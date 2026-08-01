@@ -1,4 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import useDayNight from '../../../hooks/useDayNight'
 import {
   CAMPUS_LANDMARKS,
   getCampusLandmarkProximity,
@@ -26,6 +27,7 @@ const getActiveLandmark = (scrollOffset) => {
 }
 
 export default function CampusProximityOverlay({ scrollOffset = 0 }) {
+  const { isNightMode } = useDayNight()
   const activeLandmark = getActiveLandmark(scrollOffset)
   const prefersReducedMotion = useReducedMotion()
   const transition = prefersReducedMotion
@@ -45,12 +47,12 @@ export default function CampusProximityOverlay({ scrollOffset = 0 }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.98 }}
             transition={transition}
-            className="rounded-3xl border border-white/90 bg-[#FFF9F4]/95 px-6 py-5 text-[#4A3B32] shadow-[0_20px_55px_rgba(75,48,58,0.22)]"
+            className={`rounded-3xl border px-6 py-5 shadow-[0_20px_55px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors duration-500 ${isNightMode ? 'border-white/15 bg-[#1E293B]/90 text-[#F8FAFC]' : 'border-white/90 bg-[#FFF9F4]/95 text-[#3E2723]'}`}
           >
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#E07A5F]">
+            <p className={`mb-2 font-serif text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
               {LANDMARK_LABELS[activeLandmark.id]}
             </p>
-            <p className="font-serif text-base font-medium leading-relaxed">
+            <p className="font-sans text-base font-medium leading-relaxed">
               {activeLandmark.text}
             </p>
           </motion.div>

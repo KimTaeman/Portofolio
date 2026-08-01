@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Cone, Cylinder, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
+import useDayNight from '../../../hooks/useDayNight'
 
 // Summit-local coordinates. With the scene origin at world Z -77, these peaks
 // occupy the world-space Z -100…-150 horizon band.
@@ -123,6 +124,78 @@ function ClayMaterial({
   )
 }
 
+function AnimatedClayMaterial({ isNight, dayColor, nightColor }) {
+  const materialRef = useRef()
+  const dayColorRef = useRef(new THREE.Color(dayColor))
+  const nightColorRef = useRef(new THREE.Color(nightColor))
+
+  useFrame((_, delta) => {
+    materialRef.current?.color.lerp(
+      isNight ? nightColorRef.current : dayColorRef.current,
+      1 - Math.exp(-delta / 0.65),
+    )
+  })
+
+  return (
+    <meshStandardMaterial
+      ref={materialRef}
+      color={dayColor}
+      roughness={1}
+      metalness={0}
+    />
+  )
+}
+
+function AnimatedAtmosphereMaterial({
+  isNight,
+  dayColor = '#FFFFFF',
+  nightColor = '#AAB7D1',
+  dayEmissive = '#FFFFFF',
+  nightEmissive = '#8CA8FF',
+  dayEmissiveIntensity = 0.06,
+  nightEmissiveIntensity = 0.1,
+  opacity,
+}) {
+  const materialRef = useRef()
+  const dayColorRef = useRef(new THREE.Color(dayColor))
+  const nightColorRef = useRef(new THREE.Color(nightColor))
+  const dayEmissiveRef = useRef(new THREE.Color(dayEmissive))
+  const nightEmissiveRef = useRef(new THREE.Color(nightEmissive))
+
+  useFrame((_, delta) => {
+    const alpha = 1 - Math.exp(-delta / 0.65)
+    if (!materialRef.current) return
+    materialRef.current.color.lerp(
+      isNight ? nightColorRef.current : dayColorRef.current,
+      alpha,
+    )
+    materialRef.current.emissive.lerp(
+      isNight ? nightEmissiveRef.current : dayEmissiveRef.current,
+      alpha,
+    )
+    materialRef.current.emissiveIntensity = THREE.MathUtils.damp(
+      materialRef.current.emissiveIntensity,
+      isNight ? nightEmissiveIntensity : dayEmissiveIntensity,
+      2.4,
+      delta,
+    )
+  })
+
+  return (
+    <meshStandardMaterial
+      ref={materialRef}
+      color={dayColor}
+      emissive={dayEmissive}
+      emissiveIntensity={dayEmissiveIntensity}
+      roughness={1}
+      metalness={0}
+      transparent
+      opacity={opacity}
+      depthWrite={false}
+    />
+  )
+}
+
 function RockyPeak({ isNight }) {
   return (
     <group name="rockySummitPeak">
@@ -136,7 +209,11 @@ function RockyPeak({ isNight }) {
           castShadow
           receiveShadow
         >
-          <ClayMaterial color={isNight ? '#4A5258' : color} />
+          <AnimatedClayMaterial
+            isNight={isNight}
+            dayColor={color}
+            nightColor="#4A5258"
+          />
         </Sphere>
       ))}
 
@@ -148,15 +225,17 @@ function RockyPeak({ isNight }) {
         position={[0, -0.1, 0]}
         receiveShadow
       >
-        <ClayMaterial color={isNight ? '#515A60' : '#808080'} />
+        <AnimatedClayMaterial
+          isNight={isNight}
+          dayColor="#808080"
+          nightColor="#515A60"
+        />
       </Cylinder>
     </group>
   )
 }
 
 function CloudBank({ position, scale, isNight, cloudRef }) {
-  const color = isNight ? '#D8D9E8' : '#FFFFFF'
-
   return (
     <group ref={cloudRef} name="cloudBank" position={position} scale={scale}>
       {[
@@ -173,10 +252,12 @@ function CloudBank({ position, scale, isNight, cloudRef }) {
           scale={[sx, sy, sz]}
           renderOrder={-1}
         >
-          <ClayMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={isNight ? 0.04 : 0.08}
+          <AnimatedAtmosphereMaterial
+            isNight={isNight}
+            nightColor="#AAB7D1"
+            nightEmissive="#8CA8FF"
+            dayEmissiveIntensity={0.08}
+            nightEmissiveIntensity={0.12}
             opacity={0.6}
           />
         </Sphere>
@@ -251,10 +332,12 @@ function FloatingSkyClouds({ isNight }) {
               scale={[1.35, 0.72, 0.78]}
               renderOrder={-1}
             >
-              <ClayMaterial
-                color="#FFFFFF"
-                emissive={isNight ? '#C7D2FE' : '#FFFFFF'}
-                emissiveIntensity={0.08}
+              <AnimatedAtmosphereMaterial
+                isNight={isNight}
+                nightColor="#B7C1D8"
+                nightEmissive="#8CA8FF"
+                dayEmissiveIntensity={0.08}
+                nightEmissiveIntensity={0.12}
                 opacity={0.8}
               />
             </Sphere>
@@ -431,38 +514,6 @@ function AlpineDecoration() {
   )
 }
 
-function SummitSunsetLight({ isActive, isNight }) {
-  const lightRef = useRef()
-  const targetRef = useRef()
-
-  useEffect(() => {
-    if (!lightRef.current || !targetRef.current) return
-    lightRef.current.target = targetRef.current
-  }, [])
-
-  return (
-    <>
-      <object3D ref={targetRef} position={[0, 1.1, 0]} />
-      <directionalLight
-        ref={lightRef}
-        color="#FF9A62"
-        intensity={isActive && !isNight ? 1.65 : 0}
-        position={[0, 10, -50]}
-        castShadow={isActive && !isNight}
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-near={1}
-        shadow-camera-far={100}
-        shadow-camera-left={-12}
-        shadow-camera-right={12}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
-        shadow-bias={-0.0002}
-        shadow-normalBias={0.03}
-      />
-    </>
-  )
-}
-
 function DistantPeak({ peak, isNight }) {
   const [x, y, z, radius, height, color] = peak
 
@@ -470,14 +521,22 @@ function DistantPeak({ peak, isNight }) {
     <group position={[x, y, z]}>
       <mesh receiveShadow>
         <coneGeometry args={[radius, height, 7]} />
-        <ClayMaterial color={isNight ? '#374151' : color} />
+        <AnimatedClayMaterial
+          isNight={isNight}
+          dayColor={color}
+          nightColor="#374151"
+        />
       </mesh>
       <Sphere
         args={[1, 18, 14]}
         position={[0, height * 0.31, 0.1]}
         scale={[height * 0.16, height * 0.055, height * 0.12]}
       >
-        <ClayMaterial color={isNight ? '#CBD5E1' : '#FFF7F0'} />
+        <AnimatedClayMaterial
+          isNight={isNight}
+          dayColor="#FFF7F0"
+          nightColor="#CBD5E1"
+        />
       </Sphere>
     </group>
   )
@@ -515,15 +574,13 @@ function RollingMist({ isNight }) {
           scale={[sx, sy, sz]}
           renderOrder={-2}
         >
-          <meshStandardMaterial
-            color={isNight ? '#DDE2F1' : '#FFFFFF'}
-            emissive={isNight ? '#A5B4FC' : '#FFFFFF'}
-            emissiveIntensity={0.03}
-            roughness={1}
-            metalness={0}
-            transparent
+          <AnimatedAtmosphereMaterial
+            isNight={isNight}
+            nightColor="#AAB7D1"
+            nightEmissive="#8CA8FF"
+            dayEmissiveIntensity={0.03}
+            nightEmissiveIntensity={0.1}
             opacity={0.18}
-            depthWrite={false}
           />
         </Sphere>
       ))}
@@ -533,12 +590,11 @@ function RollingMist({ isNight }) {
 
 export default function Summit({
   position = [0, 0, 0],
-  isNight = false,
-  isActive = false,
 }) {
+  const { isNightMode: isNight } = useDayNight()
+
   return (
     <group name="summitScene" position={position}>
-      <SummitSunsetLight isActive={isActive} isNight={isNight} />
       <RockyPeak isNight={isNight} />
       <AlpineDecoration />
       <RollingMist isNight={isNight} />
@@ -553,22 +609,6 @@ export default function Summit({
         ))}
       </group>
 
-      {!isNight && (
-        <Sphere
-          name="sunsetSun"
-          args={[40, 32, 32]}
-          position={[0, 9, -173]}
-        >
-          <meshStandardMaterial
-            color="#FF8C00"
-            emissive="#FF8C00"
-            emissiveIntensity={2}
-            roughness={1}
-            metalness={0}
-            fog
-          />
-        </Sphere>
-      )}
     </group>
   )
 }

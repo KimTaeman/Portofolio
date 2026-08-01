@@ -12,7 +12,7 @@ function SunMaterial() {
   return (
     <meshStandardMaterial
       color="#FFD15C"
-      roughness={0.4}
+      roughness={1}
       metalness={0}
       emissive="#FFE58F"
       emissiveIntensity={0.4}
