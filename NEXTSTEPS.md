@@ -15,7 +15,7 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - A single `JourneyCharacter` slides, falls into Campus, walks left-to-right, changes outfits, hikes the Mountain, and reaches the Summit at `90%`.
 - Camera staging includes the Playground swoop, Campus side tracking shot, curve-aware Mountain follow, and final Summit panorama.
 - The Summit supports a continuous 360-degree orbit view, upward tilt, and mobile-safe vertical scrolling.
-- Scene 3 now uses a measured stone-and-forest transition corridor into a deeply isolated faceted S-curve trail, waterfall chasm, suspension bridge, dense flora, and six gently bobbing project balloons with proximity-driven cards.
+- Scene 3 now uses overlapping low-poly hills and a continuous curving stone-and-forest transition into a solid faceted valley with surface-grounded, scale-varied pine flora, deep trail foundations, a confined canyon river and connected waterfall, a suspension bridge, and six gently bobbing project balloons with proximity-driven cards.
 - The current procedural art pass uses rounded chibi geometry, high-roughness clay materials, warm studio/outdoor lighting, shadows, atmospheric depth, and bold overlay typography.
 - Scene 1 includes an opening wave, seated slide pose, accelerated fall, airborne pose, squash-and-hop landing, reverse-scroll behavior, and transition into the Campus walk.
 - The Summit has alpine edge dressing, a translucent moving cloud sea, animated mist, high drifting clouds, flapping birds, an oversized sunset behind massive peaks, an articulated three-phase victory/shielding sequence, a 360-degree orbit, and a minimizable icon-based contact HUD.

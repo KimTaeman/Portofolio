@@ -81,7 +81,7 @@ function App() {
           camera={{
             position: initialCamera.position,
             fov: initialCamera.fov,
-            far: 1000,
+            far: 2000,
           }}
           dpr={[1, 1.5]}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
@@ -92,7 +92,7 @@ function App() {
             gl.toneMappingExposure = 1.05
           }}
         >
-          <fog attach="fog" args={[skyColor, 100, 500]} />
+          <fog attach="fog" args={[skyColor, 80, 400]} />
           <InfiniteGround
             isNight={isNight}
             isSunset={isSunset}

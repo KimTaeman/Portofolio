@@ -25,7 +25,7 @@ const MOUNTAIN_CLIMB_END = 0.82
 const MOUNTAIN_SUMMIT_Z = -187
 const TRAIL_START_LOCAL_Z = 20
 const TRAIL_END_LOCAL_Z = MOUNTAIN_SUMMIT_Z + 6.8 - MOUNTAIN_ORIGIN_Z
-const TRAIL_START_TOP = 0.16
+const TRAIL_START_TOP = -4
 const TRAIL_END_TOP = 19.85
 const TRAIL_POINT_COUNT = 49
 const smootherStep = (value) =>
@@ -43,16 +43,43 @@ export const MOUNTAIN_TRANSITION = Object.freeze({
   endWorldZ: MOUNTAIN_ORIGIN_Z + TRAIL_START_LOCAL_Z,
   startLocalZ: TRANSITION_START_LOCAL_Z,
   endLocalZ: TRAIL_START_LOCAL_Z,
+  startTopY: 0,
+  endTopY: TRAIL_START_TOP,
   distance: TRANSITION_DISTANCE,
 })
+
+export const getMountainTransitionTopY = (progress) => {
+  const clampedProgress = Math.max(0, Math.min(1, progress))
+  const descent = smootherStep(clampedProgress)
+  const rollingProfile =
+    Math.sin(clampedProgress * Math.PI * 3) *
+    Math.sin(clampedProgress * Math.PI) *
+    0.55
+
+  return (
+    MOUNTAIN_TRANSITION.startTopY +
+    (MOUNTAIN_TRANSITION.endTopY - MOUNTAIN_TRANSITION.startTopY) *
+      descent +
+    rollingProfile
+  )
+}
+
+export const getMountainTransitionX = (progress) => {
+  const clampedProgress = Math.max(0, Math.min(1, progress))
+  return (
+    Math.sin(clampedProgress * Math.PI * 2) *
+    Math.sin(clampedProgress * Math.PI) *
+    1.15
+  )
+}
 
 export const MOUNTAIN_TRANSITION_STONES = Object.freeze(
   Array.from({ length: TRANSITION_STONE_COUNT }, (_, index) => {
     const progress = index / (TRANSITION_STONE_COUNT - 1)
     return Object.freeze({
       progress,
-      x: Math.sin(index * 1.73) * 0.16,
-      topY: TRAIL_START_TOP * smootherStep(progress),
+      x: getMountainTransitionX(progress),
+      topY: getMountainTransitionTopY(progress),
       z:
         TRANSITION_START_LOCAL_Z +
         (TRAIL_START_LOCAL_Z - TRANSITION_START_LOCAL_Z) * progress,
@@ -505,14 +532,12 @@ export const getMountainTrailPositionAtOffset = (offset, target) => {
       ),
     )
     const easedApproach = smootherStep(approachProgress)
-    const entrySurfaceY = MOUNTAIN_CORNER.y + TRAIL_START_TOP
+    const transitionTopY = getMountainTransitionTopY(easedApproach)
     target.set(
-      MOUNTAIN_CORNER.x,
+      MOUNTAIN_CORNER.x + getMountainTransitionX(easedApproach),
       MOUNTAIN_CORNER.y +
-        (entrySurfaceY +
-          MOUNTAIN_CHARACTER_GROUND_OFFSET -
-          MOUNTAIN_CORNER.y) *
-          easedApproach,
+        transitionTopY +
+        MOUNTAIN_CHARACTER_GROUND_OFFSET * easedApproach,
       MOUNTAIN_CORNER.z +
         (MOUNTAIN_TRANSITION.endWorldZ - MOUNTAIN_CORNER.z) * easedApproach,
     )

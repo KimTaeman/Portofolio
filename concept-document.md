@@ -42,7 +42,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 ### Scene 3: The Adventure Trail (Experience & Projects)
 * **Scroll Range:** `50% - 82%`
 * **The World & Character:**
-  * **World:** A continuous stepping-stone corridor leads from Campus into a faceted low-poly landscape built around a winding S-curve trail. The route passes dense pine and alpine-flower flora, crosses a suspension bridge over a waterfall chasm, and climbs through floating project balloons toward the summit.
+  * **World:** Overlapping faceted hills and a continuous curved stepping-stone corridor descend organically from Campus into a solid low-poly valley built around a winding S-curve trail. Deep cliff masses meet an earthy valley floor, while a confined canyon river receives the layered chasm waterfall below the suspension bridge. The route passes surface-grounded, scale-varied pine and alpine-flower flora and climbs through floating project balloons toward the summit.
   * **Morph 2:** Model swaps from University Uniform to **Hiker/Explorer Outfit** behind a large boulder.
   * **Camera:** Trails behind the character, follows the curve tangent, and looks ahead toward the chasm so the path and bridge remain readable.
 * **Project Presentation:** Six small hot-air balloons float alternately beside the trail. Each balloon carries one world-space project card that fades in only while the character passes it. The first two introduce CSFD and UniShare; the remaining cards are content placeholders until final portfolio data is supplied.

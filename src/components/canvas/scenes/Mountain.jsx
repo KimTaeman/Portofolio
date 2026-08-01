@@ -12,8 +12,10 @@ import {
 import * as THREE from 'three'
 import {
   getCharacterPositionAtOffset,
+  getMountainTransitionTopY,
   MOUNTAIN_ORIGIN_Z,
   MOUNTAIN_PATH,
+  MOUNTAIN_TRANSITION,
   MOUNTAIN_TRANSITION_STONES,
   MOUNTAIN_TRAIL_STONES,
 } from '../../../config/narrativeTimeline'
@@ -21,6 +23,9 @@ import {
 const STEP_COLORS = ['#E5A9A9', '#F5F5F5']
 const FLOWER_COLORS = ['#F6D365', '#FFFFFF', '#F2A7B5']
 const BRIDGE_WIDTH = 2.8
+const VALLEY_FLOOR_TOP_Y = -30
+const TERRAIN_BOTTOM_Y = -32
+const TREE_SURFACE_EMBED = 0.08
 
 const PROJECTS = Object.freeze([
   {
@@ -61,16 +66,29 @@ const PROJECTS = Object.freeze([
   },
 ])
 
-const CLIFF_MASSES = Object.freeze([
-  [-20, -2.2, 30, 11, 5.1, 18, '#557A46'],
-  [18, -1.2, 20, 10, 5.8, 13, '#7C736B'],
-  [-20, 1.2, 18, 10, 5.8, 11, '#557A46'],
-  [-25, 1.9, 10.5, 9, 5.2, 8, '#7C736B'],
-  [22, 5, -8, 10, 7, 8, '#557A46'],
-  [29, 6.4, -13, 11, 7.1, 17, '#557A46'],
-  [23, 8.4, -24, 10, 7.5, 14, '#7C736B'],
-  [-17, 12.7, -27, 10, 7.3, 12, '#557A46'],
-])
+const CLIFF_MASSES = Object.freeze(
+  [
+    [-20, -2.2, 30, 11, 5.1, 18, '#557A46'],
+    [18, -1.2, 20, 10, 5.8, 13, '#7C736B'],
+    [-20, 1.2, 18, 10, 5.8, 11, '#557A46'],
+    [-25, 1.9, 10.5, 9, 5.2, 8, '#7C736B'],
+    [22, 5, -8, 10, 7, 8, '#557A46'],
+    [29, 6.4, -13, 11, 7.1, 17, '#557A46'],
+    [23, 8.4, -24, 10, 7.5, 14, '#7C736B'],
+    [-17, 12.7, -27, 10, 7.3, 12, '#557A46'],
+  ].map(([x, y, z, sx, sy, sz, color]) => {
+    const originalTop = y + sy
+    return [
+      x,
+      (originalTop + TERRAIN_BOTTOM_Y) / 2,
+      z,
+      sx,
+      (originalTop - TERRAIN_BOTTOM_Y) / 2,
+      sz,
+      color,
+    ]
+  }),
+)
 
 const BRIDGE_POINTS = MOUNTAIN_TRAIL_STONES.filter(
   (stone) => stone.phase === 'bridge',
@@ -151,6 +169,102 @@ const NON_BRIDGE_STONES = MOUNTAIN_TRAIL_STONES.filter(
   (stone) => stone.phase !== 'bridge',
 )
 
+const TRAIL_FOUNDATION_LAYOUT = Object.freeze(
+  NON_BRIDGE_STONES.filter((_, index) => index % 3 === 0).map(
+    (stone, index) => {
+      const terrainTop = stone.topY - 0.42
+      return Object.freeze({
+        position: [
+          stone.x,
+          (terrainTop + TERRAIN_BOTTOM_Y) / 2,
+          stone.z,
+        ],
+        scale: [
+          3.8 + (index % 3) * 0.45,
+          (terrainTop - TERRAIN_BOTTOM_Y) / 2,
+          5 + (index % 2) * 0.55,
+        ],
+        rotation: [0.03 * (index % 2), stone.rotationY, index * 0.17],
+        color: index % 3 === 1 ? '#7C736B' : '#557A46',
+      })
+    },
+  ),
+)
+
+const TRANSITION_HILL_LAYOUT = Object.freeze(
+  [
+    { progress: 0.19, x: -0.45, scale: [10.5, 4.8, 33], yaw: 0.12 },
+    { progress: 0.54, x: 0.65, scale: [11.5, 5.2, 32], yaw: -0.1 },
+    { progress: 0.87, x: -0.35, scale: [12.5, 5.6, 29], yaw: 0.16 },
+  ].map(({ progress, x, scale, yaw }) => {
+    const surfaceY = getMountainTransitionTopY(progress) - 0.42
+    return Object.freeze({
+      position: [
+        x,
+        surfaceY - scale[1],
+        MOUNTAIN_TRANSITION.startLocalZ +
+          (MOUNTAIN_TRANSITION.endLocalZ -
+            MOUNTAIN_TRANSITION.startLocalZ) *
+            progress,
+      ],
+      scale,
+      rotation: [0, yaw, 0],
+    })
+  }),
+)
+
+const TERRAIN_SAMPLE_GEOMETRY = new THREE.DodecahedronGeometry(1, 0)
+const TERRAIN_SAMPLE_MATERIAL = new THREE.MeshBasicMaterial()
+const TERRAIN_RAYCASTER = new THREE.Raycaster()
+const TERRAIN_RAY_ORIGIN = new THREE.Vector3()
+const TERRAIN_RAY_DIRECTION = new THREE.Vector3(0, -1, 0)
+const TERRAIN_RAY_HITS = []
+
+const createTerrainSampleMesh = (position, scale, rotation) => {
+  const mesh = new THREE.Mesh(
+    TERRAIN_SAMPLE_GEOMETRY,
+    TERRAIN_SAMPLE_MATERIAL,
+  )
+  mesh.position.fromArray(position)
+  mesh.scale.fromArray(scale)
+  mesh.rotation.set(...rotation)
+  mesh.updateMatrixWorld(true)
+  return mesh
+}
+
+const SCENE3_TERRAIN_SAMPLE_MESHES = Object.freeze([
+  ...CLIFF_MASSES.map(([x, y, z, sx, sy, sz], index) =>
+    createTerrainSampleMesh(
+      [x, y, z],
+      [sx, sy, sz],
+      [0.08 * (index % 2), index * 0.38, -0.04],
+    ),
+  ),
+  ...TRAIL_FOUNDATION_LAYOUT.map((mass) =>
+    createTerrainSampleMesh(mass.position, mass.scale, mass.rotation),
+  ),
+])
+
+const TRANSITION_TERRAIN_SAMPLE_MESHES = Object.freeze(
+  TRANSITION_HILL_LAYOUT.map((hill) =>
+    createTerrainSampleMesh(hill.position, hill.scale, hill.rotation),
+  ),
+)
+
+const sampleTerrainSurfaceY = (meshes, x, z, fallbackY) => {
+  TERRAIN_RAY_ORIGIN.set(x, 100, z)
+  TERRAIN_RAYCASTER.set(TERRAIN_RAY_ORIGIN, TERRAIN_RAY_DIRECTION)
+  TERRAIN_RAY_HITS.length = 0
+  TERRAIN_RAYCASTER.intersectObjects(meshes, false, TERRAIN_RAY_HITS)
+  return TERRAIN_RAY_HITS[0]?.point.y ?? fallbackY
+}
+
+const getTreeScale = (index, seed = 0) => {
+  const randomValue = Math.sin((index + seed + 1) * 12.9898) * 43758.5453
+  const normalized = randomValue - Math.floor(randomValue)
+  return THREE.MathUtils.lerp(0.7, 1.3, normalized)
+}
+
 const PINE_LAYOUT = Object.freeze(
   Array.from({ length: 36 }, (_, index) => {
     const stone =
@@ -161,13 +275,18 @@ const PINE_LAYOUT = Object.freeze(
     const offset = 4.3 + (index % 5) * 0.82
     const perpendicularX = Math.cos(stone.rotationY)
     const perpendicularZ = -Math.sin(stone.rotationY)
+    const x = stone.x + perpendicularX * offset * side
+    const z = stone.z + perpendicularZ * offset * side
+    const terrainSurfaceY = sampleTerrainSurfaceY(
+      SCENE3_TERRAIN_SAMPLE_MESHES,
+      x,
+      z,
+      stone.topY - 0.1,
+    )
+    const scale = getTreeScale(index)
     return Object.freeze({
-      position: [
-        stone.x + perpendicularX * offset * side,
-        stone.topY - 0.1,
-        stone.z + perpendicularZ * offset * side,
-      ],
-      scale: 0.56 + (index % 5) * 0.1,
+      position: [x, terrainSurfaceY - TREE_SURFACE_EMBED, z],
+      scale,
     })
   }),
 )
@@ -240,13 +359,18 @@ const TRANSITION_TREE_LAYOUT = Object.freeze(
     )
     const stone = MOUNTAIN_TRANSITION_STONES[stoneIndex]
     const side = index % 2 ? 1 : -1
+    const scale = getTreeScale(index, 101)
+    const x = side * (4.6 + (index % 4) * 0.85)
+    const z = stone.z + Math.sin(index * 1.41) * 1.1
+    const terrainSurfaceY = sampleTerrainSurfaceY(
+      TRANSITION_TERRAIN_SAMPLE_MESHES,
+      x,
+      z,
+      stone.topY - 0.45,
+    )
     return Object.freeze({
-      position: [
-        side * (4.6 + (index % 4) * 0.85),
-        stone.topY - 0.08,
-        stone.z + Math.sin(index * 1.41) * 1.1,
-      ],
-      scale: 0.5 + (index % 5) * 0.09,
+      position: [x, terrainSurfaceY - TREE_SURFACE_EMBED, z],
+      scale,
     })
   }),
 )
@@ -339,23 +463,56 @@ function SuspensionBridge() {
   )
 }
 
+function ValleyFloor() {
+  return (
+    <Box
+      name="scene3ValleyFloor"
+      args={[160, 4, 230]}
+      position={[0, VALLEY_FLOOR_TOP_Y - 2, 60]}
+      receiveShadow
+    >
+      <FlatMaterial color="#3F4937" />
+    </Box>
+  )
+}
+
+function TrailFoundations() {
+  return (
+    <group name="solidTrailFoundations">
+      {TRAIL_FOUNDATION_LAYOUT.map((mass, index) => (
+        <Dodecahedron
+          key={`trail-foundation-${index}`}
+          args={[1, 0]}
+          position={mass.position}
+          scale={mass.scale}
+          rotation={mass.rotation}
+          castShadow
+          receiveShadow
+        >
+          <FlatMaterial color={mass.color} />
+        </Dodecahedron>
+      ))}
+    </group>
+  )
+}
+
 function ChasmAndWaterfall() {
   return (
     <group name="waterfallChasm">
       <mesh
         name="chasmWater"
-        position={[0, -5.2, 6]}
+        position={[0, VALLEY_FLOOR_TOP_Y + 0.12, 60]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[22, 28, 2, 2]} />
+        <planeGeometry args={[22, 190, 2, 8]} />
         <FlatMaterial color="#5BC0BE" side={THREE.DoubleSide} />
       </mesh>
 
       <Box
         name="waterfall"
-        args={[6.2, 20, 0.38]}
-        position={[6, 2, -2.4]}
+        args={[6.2, 56, 0.5]}
+        position={[6, -10, 11.8]}
         rotation={[-Math.PI / 4, 0, 0]}
         castShadow
         receiveShadow
@@ -363,19 +520,51 @@ function ChasmAndWaterfall() {
         <FlatMaterial color="#5BC0BE" />
       </Box>
 
-      {Array.from({ length: 9 }, (_, index) => (
+      {[-1.6, 0, 1.55].map((streamOffset, index) => (
+        <Box
+          key={`waterfall-stream-${streamOffset}`}
+          name="waterfallFlowStream"
+          args={[index === 1 ? 0.72 : 0.46, 54.5, 0.09]}
+          position={[6 + streamOffset, -10, 12.18]}
+          rotation={[-Math.PI / 4, 0, 0]}
+        >
+          <FlatMaterial color={index === 1 ? '#FFFFFF' : '#EAFBFF'} />
+        </Box>
+      ))}
+
+      {Array.from({ length: 12 }, (_, index) => (
         <Box
           key={`waterfall-foam-${index}`}
           args={[0.75 + (index % 3) * 0.24, 0.3, 0.58]}
           position={[
             3.4 + index * 0.66,
-            -5 + (index % 2) * 0.13,
-            3.1 + Math.sin(index * 1.7) * 0.48,
+            VALLEY_FLOOR_TOP_Y + 0.35 + (index % 2) * 0.13,
+            31.4 + Math.sin(index * 1.7) * 0.62,
           ]}
           rotation={[0.04, index * 0.43, 0.05]}
         >
           <FlatMaterial color="#F5F5F5" />
         </Box>
+      ))}
+
+      {Array.from({ length: 14 }, (_, index) => (
+        <Dodecahedron
+          key={`waterfall-foam-rock-${index}`}
+          args={[1, 0]}
+          position={[
+            3.2 + (index % 7) * 0.88,
+            VALLEY_FLOOR_TOP_Y + 0.32 + (index % 3) * 0.16,
+            30.6 + Math.sin(index * 1.37) * 1.25,
+          ]}
+          rotation={[index * 0.21, index * 0.47, index * 0.16]}
+          scale={[
+            0.32 + (index % 3) * 0.13,
+            0.2 + (index % 2) * 0.11,
+            0.36 + (index % 4) * 0.09,
+          ]}
+        >
+          <FlatMaterial color="#FFFFFF" />
+        </Dodecahedron>
       ))}
     </group>
   )
@@ -385,16 +574,32 @@ function LowPolyPine({ position, scale }) {
   return (
     <group name="lowPolyPine" position={position} scale={scale}>
       <Cylinder
-        args={[0.15, 0.24, 1.45, 7]}
-        position={[0, 0.72, 0]}
+        args={[0.3, 0.3, 2.5, 6]}
+        position={[0, -0.25, 0]}
         castShadow
         receiveShadow
       >
         <FlatMaterial color="#6A4632" />
       </Cylinder>
       <Cone
-        args={[1.05, 2.6, 7]}
-        position={[0, 2.05, 0]}
+        args={[2, 3, 5]}
+        position={[0, 2.25, 0]}
+        castShadow
+        receiveShadow
+      >
+        <FlatMaterial color="#2D4C3B" />
+      </Cone>
+      <Cone
+        args={[1.5, 2.5, 5]}
+        position={[0, 3.55, 0]}
+        castShadow
+        receiveShadow
+      >
+        <FlatMaterial color="#2D4C3B" />
+      </Cone>
+      <Cone
+        args={[1, 2, 5]}
+        position={[0, 4.65, 0]}
         castShadow
         receiveShadow
       >
@@ -417,8 +622,24 @@ function TransitionCorridor() {
 
   return (
     <group ref={corridorRef} name="sceneTransitionForestTrail" visible={false}>
+      <group name="organicTransitionHills">
+        {TRANSITION_HILL_LAYOUT.map((hill, index) => (
+          <Dodecahedron
+            key={`transition-hill-${index}`}
+            args={[1, 0]}
+            position={hill.position}
+            rotation={hill.rotation}
+            scale={hill.scale}
+            castShadow
+            receiveShadow
+          >
+            <FlatMaterial color="#557A46" />
+          </Dodecahedron>
+        ))}
+      </group>
+
       <group name="transitionSteppingStones">
-        {MOUNTAIN_TRANSITION_STONES.slice(0, -1).map((stone, index) => (
+        {MOUNTAIN_TRANSITION_STONES.map((stone, index) => (
           <Cylinder
             key={`transition-stone-${index}`}
             args={[1.08, 1.16, 0.56, 8]}
@@ -594,6 +815,7 @@ export default function Mountain({ position = [0, 0, MOUNTAIN_ORIGIN_Z] }) {
   return (
     <group name="mountainBase" position={position}>
       <TransitionCorridor />
+      <ValleyFloor />
 
       <group name="lowPolyCliffs">
         {CLIFF_MASSES.map(([x, y, z, sx, sy, sz, color], index) => (
@@ -612,6 +834,7 @@ export default function Mountain({ position = [0, 0, MOUNTAIN_ORIGIN_Z] }) {
       </group>
 
       <ChasmAndWaterfall />
+      <TrailFoundations />
 
       <group name="sCurveSteppingStones">
         {MOUNTAIN_TRAIL_STONES.filter(
