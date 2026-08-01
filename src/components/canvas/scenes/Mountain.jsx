@@ -196,7 +196,7 @@ const TRANSITION_HILL_LAYOUT = Object.freeze(
   [
     {
       progress: 0.5,
-      x: -11.2,
+      x: -9.2,
       scale: [7.5, 2.2, 75],
       pitch: -0.03,
       yaw: 0,
@@ -205,7 +205,7 @@ const TRANSITION_HILL_LAYOUT = Object.freeze(
     },
     {
       progress: 0.5,
-      x: 11.2,
+      x: 9.3,
       scale: [7.8, 2.65, 75],
       pitch: -0.03,
       yaw: 0,
@@ -228,6 +228,29 @@ const TRANSITION_HILL_LAYOUT = Object.freeze(
     })
   }),
 )
+
+const TRANSITION_BASE_HEIGHT = 1.4
+const TRANSITION_BASE_PITCH = -Math.atan2(
+  MOUNTAIN_TRANSITION.startTopY - MOUNTAIN_TRANSITION.endTopY,
+  MOUNTAIN_TRANSITION.distance,
+)
+const TRANSITION_BASE_TOP_Y = getMountainTransitionTopY(0.5) - 0.08
+const TRANSITION_BASE_LAYOUT = Object.freeze({
+  position: Object.freeze([
+    0,
+    TRANSITION_BASE_TOP_Y -
+      Math.cos(TRANSITION_BASE_PITCH) * (TRANSITION_BASE_HEIGHT / 2),
+    (MOUNTAIN_TRANSITION.startLocalZ +
+      MOUNTAIN_TRANSITION.endLocalZ) /
+      2,
+  ]),
+  rotation: Object.freeze([TRANSITION_BASE_PITCH, 0, 0]),
+  size: Object.freeze([
+    7.2,
+    TRANSITION_BASE_HEIGHT,
+    MOUNTAIN_TRANSITION.distance + 6,
+  ]),
+})
 
 const TERRAIN_SAMPLE_GEOMETRY = new THREE.DodecahedronGeometry(1, 0)
 const TERRAIN_SAMPLE_MATERIAL = new THREE.MeshBasicMaterial()
@@ -524,11 +547,11 @@ function ChasmAndWaterfall() {
     <group name="waterfallChasm">
       <mesh
         name="chasmWater"
-        position={[0, VALLEY_FLOOR_TOP_Y + 0.12, 60]}
+        position={[0, VALLEY_FLOOR_TOP_Y + 0.12, -15]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[22, 190, 2, 8]} />
+        <planeGeometry args={[19.5, 110, 2, 8]} />
         <FlatMaterial color="#5BC0BE" side={THREE.DoubleSide} />
       </mesh>
 
@@ -635,6 +658,17 @@ function LowPolyPine({ position, scale }) {
 function TransitionCorridor() {
   return (
     <group name="sceneTransitionForestTrail">
+      <Box
+        name="solidTransitionTrailBase"
+        args={TRANSITION_BASE_LAYOUT.size}
+        position={TRANSITION_BASE_LAYOUT.position}
+        rotation={TRANSITION_BASE_LAYOUT.rotation}
+        castShadow
+        receiveShadow
+      >
+        <LowPolyGrassMaterial />
+      </Box>
+
       <group name="organicTransitionHills">
         {TRANSITION_HILL_LAYOUT.map((hill, index) => (
           <Dodecahedron
