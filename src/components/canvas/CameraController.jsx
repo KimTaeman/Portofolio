@@ -29,6 +29,7 @@ const lookAtMatrix = new THREE.Matrix4()
 const worldUp = new THREE.Vector3(0, 1, 0)
 const mountainCharacterPosition = new THREE.Vector3()
 const mountainLookAheadPosition = new THREE.Vector3()
+const mountainForwardDirection = new THREE.Vector3()
 const trailingCameraPosition = new THREE.Vector3()
 const trailingLookTarget = new THREE.Vector3()
 const summitEntryCharacterPosition = new THREE.Vector3()
@@ -218,15 +219,37 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
         Math.min(offset + MOUNTAIN_PATH.lookAheadOffset, MOUNTAIN_PATH.end),
         mountainLookAheadPosition,
       )
+      mountainForwardDirection.subVectors(
+        mountainLookAheadPosition,
+        mountainCharacterPosition,
+      )
+      mountainForwardDirection.y = 0
+      if (mountainForwardDirection.lengthSq() < 0.0001) {
+        getCharacterPositionAtOffset(
+          Math.max(
+            offset - MOUNTAIN_PATH.lookAheadOffset,
+            MOUNTAIN_PATH.start,
+          ),
+          mountainLookAheadPosition,
+        )
+        mountainForwardDirection.subVectors(
+          mountainCharacterPosition,
+          mountainLookAheadPosition,
+        )
+        mountainForwardDirection.y = 0
+      }
+      mountainForwardDirection.normalize()
       trailingCameraPosition.set(
         mountainCharacterPosition.x,
         mountainCharacterPosition.y + MOUNTAIN_PATH.cameraHeight,
         mountainCharacterPosition.z + MOUNTAIN_PATH.cameraDistance,
       )
       trailingLookTarget.set(
-        mountainLookAheadPosition.x,
-        mountainLookAheadPosition.y + MOUNTAIN_PATH.lookHeight,
-        mountainLookAheadPosition.z,
+        mountainCharacterPosition.x +
+          mountainForwardDirection.x * MOUNTAIN_PATH.lookDistance,
+        mountainCharacterPosition.y + MOUNTAIN_PATH.subjectFrameHeight,
+        mountainCharacterPosition.z +
+          mountainForwardDirection.z * MOUNTAIN_PATH.lookDistance,
       )
       desiredCameraPosition.lerp(trailingCameraPosition, cameraBlend)
       desiredLookTarget.lerp(trailingLookTarget, cameraBlend)

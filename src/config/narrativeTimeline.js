@@ -1,4 +1,6 @@
-export const SCROLL_PAGES = 8
+// Sixteen pages stretches the same normalized story timeline over roughly
+// twice the physical wheel/touch distance of the previous eight-page setup.
+export const SCROLL_PAGES = 16
 
 export const PLAYGROUND_PLATEAU_Y = 20
 export const PLAYGROUND_SLIDE_START = Object.freeze([
@@ -267,9 +269,11 @@ export const MOUNTAIN_PATH = Object.freeze({
   cameraTransitionStart: SCENE_RANGES.mountain.start,
   cameraTransitionEnd: 0.53,
   climbHeight: 18,
-  cameraHeight: 6,
-  cameraDistance: 10,
-  lookHeight: 1.4,
+  cameraHeight: 7.5,
+  cameraDistance: 11,
+  lookHeight: 1.8,
+  lookDistance: 14,
+  subjectFrameHeight: -2.35,
   lookAheadOffset: 0.022,
 })
 

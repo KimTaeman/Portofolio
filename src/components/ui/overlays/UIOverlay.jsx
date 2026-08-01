@@ -10,7 +10,7 @@ import {
 
 const SCENE_CONTENT = {
   playground: {
-    headline: "Hi, I'm [Your Name]! Welcome to my world.",
+    headline: "Hi, I'm Nang Hayman Aye Mya! Welcome to my world.",
     body: "I'm a developer who believes every great project starts with curiosity.",
   },
   campus: {
