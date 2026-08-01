@@ -13,11 +13,11 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - One shared `narrativeTimeline.js` defines scene ranges, character keyframes, the Mountain S-curve/bridge profile, camera keyframes, overlay timing, and Summit look-around limits.
 - Scene ranges match the concept document: Playground `0–20%`, Campus `20–50%`, Mountain `50–82%`, and Summit `82–100%`.
 - A single `JourneyCharacter` slides, falls into Campus, walks left-to-right, changes outfits, hikes the Mountain, and reaches the Summit at `90%`.
-- Camera staging includes the Playground swoop, Campus side tracking shot, curve-aware Mountain follow, and final Summit panorama.
+- Camera staging includes the Playground slide and parabolic-fall tracking shot, Campus side tracking shot, curve-aware Mountain follow, and final Summit panorama.
 - The Summit supports a continuous 360-degree orbit view, upward tilt, and mobile-safe vertical scrolling.
 - Scene 3 now uses overlapping low-poly hills and a continuous curving stone-and-forest transition into a solid faceted valley with surface-grounded, scale-varied pine flora, deep trail foundations, a confined canyon river and connected waterfall, a suspension bridge, and six gently bobbing project balloons with proximity-driven cards.
 - The current procedural art pass uses rounded chibi geometry, high-roughness clay materials, warm studio/outdoor lighting, shadows, atmospheric depth, and bold overlay typography.
-- Scene 1 includes an opening wave, seated slide pose, accelerated fall, airborne pose, squash-and-hop landing, reverse-scroll behavior, and transition into the Campus walk.
+- Scene 1 is now a high low-poly plateau with a broad deep-background mountain and drifting fall clouds, a collision-free foreground fall lane and protected Campus landing zone, colorful playground steps, strengthened playground props, layered pines, flowers and rocks, plus an opening wave, seated slide, reversible parabolic fall, close camera-tracked descent, exact-contact blossom burst, squash landing, and instant Campus outfit match cut.
 - The Summit has alpine edge dressing, a translucent moving cloud sea, animated mist, high drifting clouds, flapping birds, an oversized sunset behind massive peaks, an articulated three-phase victory/shielding sequence, a 360-degree orbit, and a minimizable icon-based contact HUD.
 
 ## Known prototype limitations
@@ -52,6 +52,7 @@ The project is a functional continuous-scrollytelling prototype. The character n
 
 - [x] Add the opening wave, controlled slide pose, fall pose, landing squash/hop, and transition into the Campus walk.
 - [x] Refine the slide rails, cliff silhouette, and landing occlusion so the outfit swap reads clearly.
+- [x] Elevate the playground into a low-poly plateau, replace the stacked transition cliff with a broad distant mountain/cloud composition, protect the fall and Campus landing planes, retain the distant Mountain vista, and trigger an instanced blossom burst at exact ground contact.
 - [ ] Replace placeholder introduction copy after the real name and biography are supplied.
 - [ ] Complete the browser capture/tuning pass listed in Priority 1.
 

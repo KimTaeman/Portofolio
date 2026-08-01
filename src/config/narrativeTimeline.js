@@ -1,8 +1,21 @@
 export const SCROLL_PAGES = 8
 
+export const PLAYGROUND_PLATEAU_Y = 20
+export const PLAYGROUND_SLIDE_START = Object.freeze([
+  2,
+  PLAYGROUND_PLATEAU_Y + 2.28,
+  -0.34,
+])
+export const PLAYGROUND_SLIDE_EXIT = Object.freeze([
+  2,
+  PLAYGROUND_PLATEAU_Y + 0.91,
+  3.42,
+])
+
 export const CAMPUS_PATH = Object.freeze({
   centerX: 8,
   groundY: -10,
+  surfaceY: -9.81,
   characterZ: 3.42,
   walkStart: 0.2,
   walkEnd: 0.48,
@@ -12,7 +25,7 @@ export const CAMPUS_PATH = Object.freeze({
 
 export const MOUNTAIN_CORNER = Object.freeze({
   x: CAMPUS_PATH.endX,
-  y: CAMPUS_PATH.groundY,
+  y: CAMPUS_PATH.surfaceY,
   z: CAMPUS_PATH.characterZ,
 })
 
@@ -90,7 +103,7 @@ export const MOUNTAIN_TRANSITION_STONES = Object.freeze(
 )
 
 export const MOUNTAIN_SUMMIT = Object.freeze({
-  y: CAMPUS_PATH.groundY + TRAIL_END_TOP + MOUNTAIN_CHARACTER_GROUND_OFFSET,
+  y: CAMPUS_PATH.surfaceY + TRAIL_END_TOP + MOUNTAIN_CHARACTER_GROUND_OFFSET,
   z: MOUNTAIN_SUMMIT_Z,
 })
 
@@ -170,7 +183,7 @@ export const CAMPUS_LANDMARKS = Object.freeze([
     id: 'badminton',
     worldX: 3.2,
     localX: -4.8,
-    z: 1.05,
+    z: -3.7,
     proximityRadius: 1.55,
     bobSpeed: 1.7,
     bobPhase: 1.8,
@@ -206,7 +219,7 @@ export const SCENES = [
     id: 'playground',
     start: 0,
     end: 0.2,
-    position: [0, 0, 0],
+    position: [0, PLAYGROUND_PLATEAU_Y, 0],
   },
   {
     id: 'campus',
@@ -261,21 +274,21 @@ export const MOUNTAIN_PATH = Object.freeze({
 })
 
 export const CHARACTER_KEYFRAMES = [
-  { t: 0, position: [2, 2.28, -0.34], rotationY: 0 },
-  { t: 0.08, position: [2, 0.91, 3.42], rotationY: 0 },
+  { t: 0, position: PLAYGROUND_SLIDE_START, rotationY: 0 },
+  { t: 0.08, position: PLAYGROUND_SLIDE_EXIT, rotationY: 0 },
   {
     t: 0.19,
-    position: [CAMPUS_PATH.startX, CAMPUS_PATH.groundY, CAMPUS_PATH.characterZ],
+    position: [CAMPUS_PATH.startX, CAMPUS_PATH.surfaceY, CAMPUS_PATH.characterZ],
     rotationY: 0,
   },
   {
     t: CAMPUS_PATH.walkStart,
-    position: [CAMPUS_PATH.startX, CAMPUS_PATH.groundY, CAMPUS_PATH.characterZ],
+    position: [CAMPUS_PATH.startX, CAMPUS_PATH.surfaceY, CAMPUS_PATH.characterZ],
     rotationY: Math.PI / 2,
   },
   {
     t: CAMPUS_PATH.walkEnd,
-    position: [CAMPUS_PATH.endX, CAMPUS_PATH.groundY, CAMPUS_PATH.characterZ],
+    position: [CAMPUS_PATH.endX, CAMPUS_PATH.surfaceY, CAMPUS_PATH.characterZ],
     rotationY: Math.PI / 2,
   },
   {
@@ -319,9 +332,19 @@ export const CHARACTER_KEYFRAMES = [
 ]
 
 export const CAMERA_KEYFRAMES = [
-  { t: 0, position: [1.5, 2.5, 6], target: [2, 1.55, 0.5], fov: 40 },
-  { t: 0.08, position: [6, 2.5, 10], target: [2, 0.9, 3.42], fov: 48 },
-  { t: 0.19, position: [3.6, -7, 12], target: [3.6, -9.4, 3.42], fov: 48 },
+  {
+    t: 0,
+    position: [1.5, PLAYGROUND_PLATEAU_Y + 2.5, 6],
+    target: [2, PLAYGROUND_PLATEAU_Y + 1.55, 0.5],
+    fov: 40,
+  },
+  {
+    t: 0.08,
+    position: [5, PLAYGROUND_PLATEAU_Y + 3.11, 9.82],
+    target: [2, PLAYGROUND_PLATEAU_Y + 0.7, 3.42],
+    fov: 48,
+  },
+  { t: 0.19, position: [4, -7.2, 9.82], target: [3.6, -9.4, 3.42], fov: 48 },
   { t: 0.2, position: [3.6, -7, 12], target: [3.6, -9.4, 3.42], fov: 48 },
   {
     t: 0.46,
@@ -448,6 +471,32 @@ export const PLAYGROUND_MOTION_OFFSETS = Object.freeze({
   landingEnd: 0.2,
 })
 
+export const getPlaygroundFallProgress = (offset) =>
+  Math.max(
+    0,
+    Math.min(
+      1,
+      (offset - PLAYGROUND_MOTION_OFFSETS.slideEnd) /
+        (PLAYGROUND_MOTION_OFFSETS.groundContact -
+          PLAYGROUND_MOTION_OFFSETS.slideEnd),
+    ),
+  )
+
+export const getPlaygroundFallPositionAtOffset = (offset, target) => {
+  const progress = getPlaygroundFallProgress(offset)
+  const arc = Math.sin(progress * Math.PI)
+
+  return target.set(
+    PLAYGROUND_SLIDE_EXIT[0] +
+      (CAMPUS_PATH.startX - PLAYGROUND_SLIDE_EXIT[0]) * progress,
+    PLAYGROUND_SLIDE_EXIT[1] +
+      (CAMPUS_PATH.surfaceY - PLAYGROUND_SLIDE_EXIT[1]) * progress +
+      arc * 11.5,
+    PLAYGROUND_SLIDE_EXIT[2] +
+      (CAMPUS_PATH.characterZ - PLAYGROUND_SLIDE_EXIT[2]) * progress,
+  )
+}
+
 export const OUTFIT_TRANSITION_OFFSETS = Object.freeze({
   university: PLAYGROUND_MOTION_OFFSETS.groundContact,
   hiker: SCENE_RANGES.mountain.start,
@@ -476,6 +525,13 @@ export const getCharacterXAtOffset = (offset) => {
 }
 
 export const getCharacterPositionAtOffset = (offset, target) => {
+  if (
+    offset >= PLAYGROUND_MOTION_OFFSETS.slideEnd &&
+    offset <= PLAYGROUND_MOTION_OFFSETS.groundContact
+  ) {
+    return getPlaygroundFallPositionAtOffset(offset, target)
+  }
+
   if (offset >= MOUNTAIN_PATH.start && offset <= MOUNTAIN_PATH.end) {
     return getMountainTrailPositionAtOffset(offset, target)
   }

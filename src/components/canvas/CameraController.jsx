@@ -7,7 +7,10 @@ import {
   CAMERA_KEYFRAMES,
   getCharacterPositionAtOffset,
   getNearestCampusProximity,
+  getPlaygroundFallPositionAtOffset,
+  getPlaygroundFallProgress,
   MOUNTAIN_PATH,
+  PLAYGROUND_MOTION_OFFSETS,
   SUMMIT_LOOK_AROUND,
   SUMMIT_SEQUENCE,
 } from '../../config/narrativeTimeline'
@@ -33,6 +36,9 @@ const summitCharacterPosition = new THREE.Vector3()
 const summitEntryCameraPosition = new THREE.Vector3()
 const summitFinalCameraPosition = new THREE.Vector3()
 const summitOrbitTarget = new THREE.Vector3()
+const fallCharacterPosition = new THREE.Vector3()
+const fallCameraPosition = new THREE.Vector3()
+const fallLookTarget = new THREE.Vector3()
 
 const getSegment = (offset) => {
   for (let i = 0; i < CAMERA_STOPS.length - 1; i += 1) {
@@ -173,6 +179,30 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     desiredCameraPosition.copy(start.position).lerp(end.position, segmentT)
     desiredLookTarget.copy(start.target).lerp(end.target, segmentT)
     let desiredFov = THREE.MathUtils.lerp(start.fov, end.fov, segmentT)
+    const isPlaygroundFall =
+      offset >= PLAYGROUND_MOTION_OFFSETS.slideEnd &&
+      offset <= PLAYGROUND_MOTION_OFFSETS.groundContact
+
+    if (isPlaygroundFall) {
+      const fallProgress = getPlaygroundFallProgress(offset)
+      const landingEase = THREE.MathUtils.smoothstep(fallProgress, 0.72, 1)
+      getPlaygroundFallPositionAtOffset(offset, fallCharacterPosition)
+      fallCameraPosition.set(
+        fallCharacterPosition.x +
+          THREE.MathUtils.lerp(3, 2, landingEase),
+        fallCharacterPosition.y + THREE.MathUtils.lerp(2.2, 2.8, fallProgress),
+        fallCharacterPosition.z + 6.4,
+      )
+      fallLookTarget.set(
+        fallCharacterPosition.x + 1.6 * landingEase,
+        fallCharacterPosition.y +
+          THREE.MathUtils.lerp(-0.21, 0.6, fallProgress),
+        fallCharacterPosition.z,
+      )
+      desiredCameraPosition.copy(fallCameraPosition)
+      desiredLookTarget.copy(fallLookTarget)
+      desiredFov = 48 + Math.sin(fallProgress * Math.PI) * 2.5
+    }
 
     if (
       offset >= MOUNTAIN_PATH.cameraTransitionStart &&
@@ -272,7 +302,8 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     const isSummitCinematic =
       offset >= SUMMIT_SEQUENCE.cameraPanStart &&
       offset < SUMMIT_LOOK_AROUND.start
-    const isCinematicCamera = isMountainClimb || isSummitCinematic
+    const isCinematicCamera =
+      isPlaygroundFall || isMountainClimb || isSummitCinematic
     const positionDamping =
       1 - Math.exp(-(isCinematicCamera ? 3.08 : 7) * delta)
     const rotationDamping =

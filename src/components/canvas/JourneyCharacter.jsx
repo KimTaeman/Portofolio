@@ -6,6 +6,7 @@ import Character from './Character'
 import {
   CAMPUS_PATH,
   CHARACTER_KEYFRAMES,
+  getPlaygroundFallPositionAtOffset,
   getMountainTrailHeadingAtOffset,
   getMountainTrailPositionAtOffset,
   getNearestCampusProximity,
@@ -81,6 +82,13 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     currentPosition.fromArray(start.position)
     nextPosition.fromArray(end.position)
     characterRef.current.position.copy(currentPosition.lerp(nextPosition, progress))
+    const isPlaygroundFall =
+      offset >= PLAYGROUND_MOTION_OFFSETS.slideEnd &&
+      offset <= PLAYGROUND_MOTION_OFFSETS.groundContact
+    if (isPlaygroundFall) {
+      getPlaygroundFallPositionAtOffset(offset, currentPosition)
+      characterRef.current.position.copy(currentPosition)
+    }
     const isOnMountainPath =
       offset >= MOUNTAIN_PATH.start && offset <= MOUNTAIN_PATH.end
     if (isOnMountainPath) {
@@ -180,7 +188,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       )
       const impact = (1 - landingProgress) ** 3
 
-      characterRef.current.position.y = CAMPUS_PATH.groundY
+      characterRef.current.position.y = CAMPUS_PATH.surfaceY
       poseScaleX = 1 + impact * 0.16
       poseScaleY = 1 - impact * 0.28
       poseScaleZ = 1 + impact * 0.12

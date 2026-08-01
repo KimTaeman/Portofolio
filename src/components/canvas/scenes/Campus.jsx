@@ -36,10 +36,16 @@ const TREE_X_POSITIONS = [
 ]
 
 const TURN_CORNER_LOCAL_X = CAMPUS_PATH.endX - CAMPUS_PATH.centerX
+const LANDING_LOCAL_X = CAMPUS_PATH.startX - CAMPUS_PATH.centerX
+const LANDING_LOCAL_Z = CAMPUS_PATH.characterZ - 3.4
+const LANDING_CLEARANCE_RADIUS = 2.4
 const isInsideTurnClearance = (x, z) =>
   Math.abs(x - TURN_CORNER_LOCAL_X) < 3 &&
   z < 0.75 &&
   z > -8.5
+const isInsideLandingClearance = (x, z) =>
+  Math.hypot(x - LANDING_LOCAL_X, z - LANDING_LOCAL_Z) <
+  LANDING_CLEARANCE_RADIUS
 
 const CHERRY_TREE_LAYOUT = TREE_X_POSITIONS.map((x, index) => {
   const z = index === 9 ? -4 : -4.25 - pseudoRandom(index, 7) * 1.8
@@ -60,7 +66,10 @@ const LAMP_LAYOUT = [
   [2, -3.55],
   [7, -3.4],
   [10, -3.25],
-].filter(([x, z]) => !isInsideTurnClearance(x, z))
+].filter(
+  ([x, z]) =>
+    !isInsideTurnClearance(x, z) && !isInsideLandingClearance(x, z),
+)
 
 const PATH_JOINT_X_POSITIONS = Object.freeze(
   Array.from({ length: 13 }, (_, index) => -12 + index * 2),
@@ -301,7 +310,7 @@ function VintageLampPost({ position, isNight }) {
   )
 }
 
-function ProximityLandmark({ children, landmark, onSelect }) {
+function ProximityLandmark({ children, landmark, onSelect, bobAmount = 0.15 }) {
   const [isHovered, setIsHovered] = useState(false)
   const anchorRef = useRef()
   const floatingRef = useRef()
@@ -314,7 +323,7 @@ function ProximityLandmark({ children, landmark, onSelect }) {
     const elapsed = state.clock.elapsedTime
     const proximity = getCampusLandmarkProximity(scroll.offset, landmark)
     floatingRef.current.position.y =
-      Math.sin(elapsed * landmark.bobSpeed + landmark.bobPhase) * 0.15
+      Math.sin(elapsed * landmark.bobSpeed + landmark.bobPhase) * bobAmount
 
     const targetScale = isHovered ? 1.06 : 1 + proximity * 0.025
     const damping = 1 - Math.exp(-10 * delta)
@@ -406,18 +415,22 @@ function Easel({ onSelect }) {
 function BadmintonRacket({ onSelect }) {
   return (
     <>
-      <ProximityLandmark landmark={BADMINTON_LANDMARK} onSelect={onSelect}>
+      <ProximityLandmark
+        landmark={BADMINTON_LANDMARK}
+        onSelect={onSelect}
+        bobAmount={0}
+      >
         <group
-          position={[0, 0, 0.08]}
-          rotation={[0, 0, -0.28]}
+          position={[0, 0, 0.02]}
+          rotation={[0.08, -0.12, -0.38]}
           name="badmintonLandmark"
         >
-          <mesh position={[0, 1.7, 0]} castShadow>
-            <torusGeometry args={[0.42, 0.06, 6, 16]} />
+          <mesh position={[0, 1.23, 0]} castShadow>
+            <torusGeometry args={[0.3, 0.05, 16]} />
             <ClayMaterial color="#E88C47" />
           </mesh>
-          <mesh position={[0, 1.7, -0.01]}>
-            <circleGeometry args={[0.38, 12]} />
+          <mesh position={[0, 1.23, -0.01]}>
+            <circleGeometry args={[0.265, 12]} />
             <ClayMaterial
               color="#F4F4F4"
               transparent
@@ -426,8 +439,8 @@ function BadmintonRacket({ onSelect }) {
               depthWrite={false}
             />
           </mesh>
-          <mesh position={[0, 0.86, 0]} castShadow>
-            <cylinderGeometry args={[0.055, 0.075, 1.3, 6]} />
+          <mesh position={[0, 0.58, 0]} castShadow>
+            <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
             <ClayMaterial color="#465577" />
           </mesh>
         </group>

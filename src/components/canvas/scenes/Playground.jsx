@@ -1,16 +1,23 @@
-import { useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   Box,
+  Cone,
   ContactShadows,
   Cylinder,
+  Dodecahedron,
   RoundedBox,
   Sphere,
+  useScroll,
 } from '@react-three/drei'
-import Sun from './Sun'
+import * as THREE from 'three'
+import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
+import {
+  CAMPUS_PATH,
+  PLAYGROUND_MOTION_OFFSETS,
+} from '../../../config/narrativeTimeline'
 
 const COLORS = Object.freeze({
-  cream: '#FDF6E3',
   slide: '#FFB380',
   slideRail: '#FFC89F',
   teal: '#59BFAE',
@@ -25,6 +32,44 @@ const COLORS = Object.freeze({
   fence: '#D6A46B',
   flowerCenter: '#F8C95C',
 })
+
+const PLATEAU_STEP_COLORS = Object.freeze([
+  '#E5A9A9',
+  '#F5F5F5',
+  '#FFD15C',
+  '#A8E6CF',
+  '#B8C9F4',
+])
+
+const pseudoRandom = (index, salt) => {
+  const value = Math.sin((index + 1) * 12.9898 + salt * 78.233) * 43758.5453
+  return value - Math.floor(value)
+}
+
+const PLATEAU_TERRAIN = Object.freeze([
+  { position: [0, -1.05, -1.2], scale: [7.4, 1.15, 4.2], color: null },
+  { position: [-5.4, -1.18, -1.4], scale: [4.6, 1.25, 4], color: '#72A93B' },
+  { position: [5.2, -1.12, -1.35], scale: [4.5, 1.2, 3.95], color: '#86BA48' },
+])
+
+const BACKGROUND_MOUNTAIN = Object.freeze({
+  position: [2, -10.9, -42],
+  radius: 24,
+  height: 38,
+  color: '#688F4E',
+})
+
+const ROCK_LAYOUT = Object.freeze([
+  [-5.1, 0.12, -1.6, 0.42],
+  [-3.8, 0.08, 1.8, 0.3],
+  [-0.5, 0.1, 2.2, 0.36],
+  [3.7, 0.11, 1.7, 0.4],
+  [5.1, 0.08, -1.3, 0.32],
+  [0.9, 0.09, -2.6, 0.28],
+])
+
+const LANDING_BURST_COUNT = 180
+const LANDING_BURST_DURATION = 1.45
 
 const STEPPING_STONES = [
   { position: [-2.05, 0.06, -2.72], scale: [1.12, 1, 0.78], rotationY: 0.12 },
@@ -51,10 +96,13 @@ const TREE_LAYOUT = [
 ]
 
 const CLOUD_LAYOUT = [
-  { position: [-4.6, 3.55, -6], scale: 0.62, speed: 0.08, phase: 0 },
-  { position: [-0.8, 4.15, -8], scale: 0.78, speed: 0.055, phase: 3.5 },
-  { position: [3.1, 3.45, -5.5], scale: 0.5, speed: 0.09, phase: 7 },
-  { position: [6, 4.05, -9], scale: 0.7, speed: 0.045, phase: 10.5 },
+  { position: [-10, 16, -34], scale: 1.05, speed: 0.07, phase: 1.4 },
+  { position: [12, 8, -38], scale: 1.25, speed: 0.055, phase: 4.8 },
+  { position: [-7, -1, -31], scale: 0.9, speed: 0.08, phase: 8.2 },
+  { position: [-18, 30, -58], scale: 1.8, speed: 0.08, phase: 0 },
+  { position: [-2, 34, -86], scale: 2.2, speed: 0.055, phase: 3.5 },
+  { position: [18, 28, -52], scale: 1.5, speed: 0.09, phase: 7 },
+  { position: [34, 33, -94], scale: 2, speed: 0.045, phase: 10.5 },
 ]
 
 const NIGHT_STARS = [
@@ -82,7 +130,14 @@ const DAISY_LAYOUT = [
 const FENCE_POSTS = [-5, -3.75, -2.5, -1.25, 0, 1.25, 2.5, 3.75, 5]
 
 function ClayMaterial({ color }) {
-  return <meshStandardMaterial color={color} roughness={1} metalness={0} />
+  return (
+    <meshStandardMaterial
+      color={color}
+      roughness={1}
+      metalness={0}
+      flatShading
+    />
+  )
 }
 
 function CloudMaterial() {
@@ -93,6 +148,7 @@ function CloudMaterial() {
       metalness={0}
       emissive="#FFFFFF"
       emissiveIntensity={0.1}
+      flatShading
     />
   )
 }
@@ -133,10 +189,10 @@ function Moon() {
   })
 
   return (
-    <group name="moon" position={[4.65, 4.2, -6]}>
-      <Sphere args={[0.58, 28, 22]} castShadow>
+    <group name="moon" position={[18, 34, -90]} scale={4}>
+      <Dodecahedron args={[0.58, 0]} castShadow>
         <ClayMaterial color={COLORS.moon} />
-      </Sphere>
+      </Dodecahedron>
       {NIGHT_STARS.map(({ position, scale }, index) => (
         <ClayStar
           key={index}
@@ -167,32 +223,32 @@ function Cloud({ position, scale, speed, phase }) {
       position={position}
       scale={scale}
     >
-      <Sphere args={[1, 24, 18]} scale={[1.15, 0.56, 0.62]}>
+      <Sphere args={[1, 12, 8]} scale={[1.15, 0.56, 0.62]}>
         <CloudMaterial />
       </Sphere>
       <Sphere
-        args={[1, 22, 18]}
+        args={[1, 12, 8]}
         position={[-0.86, -0.03, 0.02]}
         scale={[0.72, 0.46, 0.5]}
       >
         <CloudMaterial />
       </Sphere>
       <Sphere
-        args={[1, 22, 18]}
+        args={[1, 12, 8]}
         position={[0.86, -0.02, 0]}
         scale={[0.7, 0.45, 0.48]}
       >
         <CloudMaterial />
       </Sphere>
       <Sphere
-        args={[1, 22, 18]}
+        args={[1, 12, 8]}
         position={[-0.34, 0.38, -0.03]}
         scale={[0.62, 0.58, 0.54]}
       >
         <CloudMaterial />
       </Sphere>
       <Sphere
-        args={[1, 22, 18]}
+        args={[1, 12, 8]}
         position={[0.38, 0.33, 0]}
         scale={[0.68, 0.62, 0.56]}
       >
@@ -208,18 +264,18 @@ function Daisy({ position, scale }) {
       <Cylinder args={[0.018, 0.024, 0.24, 10]} position={[0, 0.12, 0]}>
         <ClayMaterial color={COLORS.leaves} />
       </Cylinder>
-      <Sphere args={[0.075, 14, 12]} position={[0, 0.28, 0.02]}>
+      <Dodecahedron args={[0.075, 0]} position={[0, 0.28, 0.02]}>
         <ClayMaterial color={COLORS.flowerCenter} />
-      </Sphere>
+      </Dodecahedron>
       {DAISY_PETALS.map(([x, y], index) => (
-        <Sphere
+        <Dodecahedron
           key={index}
-          args={[0.075, 14, 12]}
+          args={[0.075, 0]}
           position={[x, y + 0.28, 0]}
           scale={[1.2, 0.82, 0.65]}
         >
           <ClayMaterial color="#FFFFFF" />
-        </Sphere>
+        </Dodecahedron>
       ))}
     </group>
   )
@@ -248,46 +304,25 @@ function PastelFence() {
   )
 }
 
-function GumdropTree({ position, scale = 1 }) {
+function LowPolyPlaygroundTree({ position, scale = 1 }) {
   return (
-    <group name="gumdropTree" position={position} scale={scale}>
+    <group name="layeredLowPolyTree" position={position} scale={scale}>
       <Cylinder
-        args={[0.15, 0.21, 1.05, 18]}
-        position={[0, 0.52, 0]}
+        args={[0.22, 0.28, 1.5, 7]}
+        position={[0, 0.75, 0]}
         castShadow
       >
         <ClayMaterial color={COLORS.trunk} />
       </Cylinder>
-
-      <group position={[0, 1.34, 0]}>
-        <Sphere args={[1, 24, 20]} scale={[0.68, 0.58, 0.62]} castShadow>
-          <ClayMaterial color={COLORS.leaves} />
-        </Sphere>
-        <Sphere
-          args={[1, 22, 18]}
-          position={[-0.4, 0.02, 0.02]}
-          scale={[0.48, 0.44, 0.48]}
-          castShadow
-        >
-          <ClayMaterial color={COLORS.leaves} />
-        </Sphere>
-        <Sphere
-          args={[1, 22, 18]}
-          position={[0.4, 0.06, 0]}
-          scale={[0.5, 0.46, 0.48]}
-          castShadow
-        >
-          <ClayMaterial color={COLORS.leaves} />
-        </Sphere>
-        <Sphere
-          args={[1, 22, 18]}
-          position={[0, 0.38, -0.02]}
-          scale={[0.46, 0.43, 0.45]}
-          castShadow
-        >
-          <ClayMaterial color={COLORS.leaves} />
-        </Sphere>
-      </group>
+      <Cone args={[1.35, 2.15, 6]} position={[0, 1.75, 0]} castShadow>
+        <ClayMaterial color="#4F8A45" />
+      </Cone>
+      <Cone args={[1.05, 1.8, 6]} position={[0, 2.65, 0]} castShadow>
+        <ClayMaterial color="#5E9E50" />
+      </Cone>
+      <Cone args={[0.72, 1.4, 6]} position={[0, 3.4, 0]} castShadow>
+        <ClayMaterial color={COLORS.leaves} />
+      </Cone>
     </group>
   )
 }
@@ -304,7 +339,7 @@ function SlideLadder() {
   return (
     <group name="slideLadder">
       <Cylinder
-        args={[0.075, 0.075, 2.08, 18]}
+        args={[0.12, 0.12, 2.08, 8]}
         position={[-2.4, 1.1, 1.05]}
         rotation={[-0.615, 0, 0]}
         castShadow
@@ -312,7 +347,7 @@ function SlideLadder() {
         <ClayMaterial color={COLORS.teal} />
       </Cylinder>
       <Cylinder
-        args={[0.075, 0.075, 2.08, 18]}
+        args={[0.12, 0.12, 2.08, 8]}
         position={[-1.6, 1.1, 1.05]}
         rotation={[-0.615, 0, 0]}
         castShadow
@@ -323,7 +358,7 @@ function SlideLadder() {
       {stepPositions.map(([y, z]) => (
         <Cylinder
           key={`${y}-${z}`}
-          args={[0.055, 0.055, 0.78, 16]}
+          args={[0.08, 0.08, 0.78, 8]}
           position={[-2, y, z]}
           rotation={[0, 0, Math.PI / 2]}
           castShadow
@@ -347,7 +382,9 @@ function SteppingStonePath() {
           rotation={[0, rotationY, 0]}
           receiveShadow
         >
-          <ClayMaterial color={COLORS.stone} />
+          <ClayMaterial
+            color={PLATEAU_STEP_COLORS[index % PLATEAU_STEP_COLORS.length]}
+          />
         </Cylinder>
       ))}
     </group>
@@ -368,7 +405,7 @@ function SwingSet() {
       {frameLegs.map(({ x, z, rotationX }) => (
         <Cylinder
           key={`${x}-${z}`}
-          args={[0.09, 0.12, 2.2, 18]}
+          args={[0.15, 0.19, 2.2, 8]}
           position={[x, 1.12, z]}
           rotation={[rotationX, 0, 0]}
           castShadow
@@ -378,7 +415,7 @@ function SwingSet() {
       ))}
 
       <Cylinder
-        args={[0.12, 0.12, 3, 20]}
+        args={[0.18, 0.18, 3.15, 8]}
         position={[0, 2.18, 0]}
         rotation={[0, 0, Math.PI / 2]}
         castShadow
@@ -389,19 +426,19 @@ function SwingSet() {
       {swingPositions.map((x) => (
         <group key={x} position={[x, 0, 0]}>
           <Cylinder
-            args={[0.018, 0.018, 1.32, 10]}
+            args={[0.025, 0.025, 1.32, 6]}
             position={[-0.22, 1.46, 0]}
           >
             <ClayMaterial color={COLORS.chain} />
           </Cylinder>
           <Cylinder
-            args={[0.018, 0.018, 1.32, 10]}
+            args={[0.025, 0.025, 1.32, 6]}
             position={[0.22, 1.46, 0]}
           >
             <ClayMaterial color={COLORS.chain} />
           </Cylinder>
           <RoundedBox
-            args={[0.72, 0.12, 0.46]}
+            args={[0.8, 0.16, 0.54]}
             radius={0.05}
             smoothness={4}
             position={[0, 0.78, 0]}
@@ -415,11 +452,167 @@ function SwingSet() {
   )
 }
 
+function LowPolyPlateauTerrain() {
+  return (
+    <group name="continuousPlaygroundTerrain">
+      {PLATEAU_TERRAIN.map(({ position, scale, color }, index) => (
+        <Dodecahedron
+          key={`plateau-${index}`}
+          args={[1, 0]}
+          position={position}
+          scale={scale}
+          castShadow
+          receiveShadow
+        >
+          {color ? <ClayMaterial color={color} /> : <LowPolyGrassMaterial />}
+        </Dodecahedron>
+      ))}
+
+      <Cone
+        name="distantFallMountain"
+        args={[
+          BACKGROUND_MOUNTAIN.radius,
+          BACKGROUND_MOUNTAIN.height,
+          7,
+        ]}
+        position={BACKGROUND_MOUNTAIN.position}
+        rotation={[0, 0.18, -0.025]}
+        receiveShadow
+      >
+        <ClayMaterial color={BACKGROUND_MOUNTAIN.color} />
+      </Cone>
+
+      <group name="plateauRocks">
+        {ROCK_LAYOUT.map(([x, y, z, scale], index) => (
+          <Dodecahedron
+            key={`plateau-rock-${index}`}
+            args={[1, 0]}
+            position={[x, y, z]}
+            rotation={[index * 0.22, index * 0.41, index * 0.12]}
+            scale={[scale * 1.35, scale, scale]}
+            castShadow
+            receiveShadow
+          >
+            <ClayMaterial color={index % 2 ? '#8F928A' : '#A7AAA3'} />
+          </Dodecahedron>
+        ))}
+      </group>
+    </group>
+  )
+}
+
+function LandingPetalBurst() {
+  const meshRef = useRef()
+  const previousOffsetRef = useRef(0)
+  const triggerTimeRef = useRef(null)
+  const hasTriggeredRef = useRef(false)
+  const scroll = useScroll()
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const particles = useMemo(
+    () =>
+      Array.from({ length: LANDING_BURST_COUNT }, (_, index) => {
+        const angle = pseudoRandom(index, 1) * Math.PI * 2
+        const speed = 2.4 + pseudoRandom(index, 2) * 4.6
+
+        return Object.freeze({
+          velocityX: Math.cos(angle) * speed,
+          velocityY: 4.6 + pseudoRandom(index, 3) * 6.2,
+          velocityZ: Math.sin(angle) * speed,
+          spinX: 1.5 + pseudoRandom(index, 4) * 5,
+          spinZ: 1.5 + pseudoRandom(index, 5) * 5,
+          phase: pseudoRandom(index, 6) * Math.PI * 2,
+          size: 0.055 + pseudoRandom(index, 7) * 0.09,
+        })
+      }),
+    [],
+  )
+
+  useEffect(() => {
+    if (!meshRef.current) return
+    meshRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    meshRef.current.visible = false
+  }, [])
+
+  useFrame((state) => {
+    if (!meshRef.current) return
+
+    const offset = scroll.offset
+    const elapsed = state.clock.elapsedTime
+    const crossedLanding =
+      previousOffsetRef.current < PLAYGROUND_MOTION_OFFSETS.groundContact &&
+      offset >= PLAYGROUND_MOTION_OFFSETS.groundContact
+
+    if (crossedLanding && !hasTriggeredRef.current) {
+      triggerTimeRef.current = elapsed
+      hasTriggeredRef.current = true
+    }
+    if (offset < PLAYGROUND_MOTION_OFFSETS.slideEnd) {
+      triggerTimeRef.current = null
+      hasTriggeredRef.current = false
+    }
+    previousOffsetRef.current = offset
+
+    const age =
+      triggerTimeRef.current === null ? -1 : elapsed - triggerTimeRef.current
+    if (age < 0 || age > LANDING_BURST_DURATION) {
+      meshRef.current.visible = false
+      return
+    }
+
+    meshRef.current.visible = true
+    const progress = age / LANDING_BURST_DURATION
+    const fadeScale = 1 - THREE.MathUtils.smoothstep(progress, 0.68, 1)
+
+    particles.forEach((particle, index) => {
+      dummy.position.set(
+        CAMPUS_PATH.startX + particle.velocityX * age,
+        CAMPUS_PATH.surfaceY +
+          0.12 +
+          particle.velocityY * age -
+          4.9 * age * age,
+        CAMPUS_PATH.characterZ + particle.velocityZ * age,
+      )
+      dummy.rotation.set(
+        particle.phase + age * particle.spinX,
+        particle.phase * 0.4,
+        age * particle.spinZ,
+      )
+      dummy.scale.setScalar(particle.size * fadeScale)
+      dummy.updateMatrix()
+      meshRef.current.setMatrixAt(index, dummy.matrix)
+    })
+
+    meshRef.current.instanceMatrix.needsUpdate = true
+  })
+
+  return (
+    <instancedMesh
+      ref={meshRef}
+      name="landingCherryBlossomBurst"
+      args={[null, null, LANDING_BURST_COUNT]}
+      frustumCulled={false}
+    >
+      <circleGeometry args={[1, 5]} />
+      <meshStandardMaterial
+        color="#FF9FBA"
+        roughness={1}
+        metalness={0}
+        flatShading
+        transparent
+        opacity={0.92}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+      />
+    </instancedMesh>
+  )
+}
+
 export default function Playground({
   isNight = false,
   isSunset = false,
   isSummitActive = false,
   castDirectionalShadow = false,
+  position = [0, 20, 0],
 }) {
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
   const slideRotationX = -0.35
@@ -466,7 +659,7 @@ export default function Playground({
         shadow-normalBias={0.03}
       />
 
-      {isNight ? <Moon /> : <Sun />}
+      {isNight ? <Moon /> : null}
       {CLOUD_LAYOUT.map(({ position, scale, speed, phase }) => (
         <Cloud
           key={position.join('-')}
@@ -477,77 +670,70 @@ export default function Playground({
         />
       ))}
 
-      <group rotation={[0, Math.PI, 0]}>
-        <RoundedBox
-          args={[12, 0.65, 6.4]}
-          radius={0.24}
-          smoothness={6}
-          position={[0, -0.325, 0]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={COLORS.cream} />
-        </RoundedBox>
+      <group name="elevatedPlaygroundPlateau" position={position}>
+        <LowPolyPlateauTerrain />
 
-        <RoundedBox
-          args={[1, 0.25, 4]}
-          radius={0.12}
-          smoothness={5}
-          position={[slidePosition.x, slidePosition.y, slidePosition.z]}
-          rotation={[slideRotationX, 0, 0]}
-          castShadow
-          receiveShadow
-        >
-          <ClayMaterial color={COLORS.slide} />
-        </RoundedBox>
+        <group rotation={[0, Math.PI, 0]}>
+          <Box
+            args={[1.18, 0.38, 4.15]}
+            position={[slidePosition.x, slidePosition.y, slidePosition.z]}
+            rotation={[slideRotationX, 0, 0]}
+            castShadow
+            receiveShadow
+          >
+            <ClayMaterial color={COLORS.slide} />
+          </Box>
 
-        <Cylinder
-          args={[0.055, 0.055, 4, 12]}
-          position={[-2.48, 1.42, -1.5]}
-          rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
-          castShadow
-        >
-          <ClayMaterial color={COLORS.slideRail} />
-        </Cylinder>
-        <Cylinder
-          args={[0.055, 0.055, 4, 12]}
-          position={[-1.52, 1.42, -1.5]}
-          rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
-          castShadow
-        >
-          <ClayMaterial color={COLORS.slideRail} />
-        </Cylinder>
+          <Cylinder
+            args={[0.1, 0.1, 4.15, 8]}
+            position={[-2.48, 1.42, -1.5]}
+            rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
+            castShadow
+          >
+            <ClayMaterial color={COLORS.slideRail} />
+          </Cylinder>
+          <Cylinder
+            args={[0.1, 0.1, 4.15, 8]}
+            position={[-1.52, 1.42, -1.5]}
+            rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
+            castShadow
+          >
+            <ClayMaterial color={COLORS.slideRail} />
+          </Cylinder>
 
-        <SlideLadder />
-        <SteppingStonePath />
-        <SwingSet />
-        <PastelFence />
+          <SlideLadder />
+          <SteppingStonePath />
+          <SwingSet />
+          <PastelFence />
 
-        {DAISY_LAYOUT.map(({ position, scale }) => (
-          <Daisy
-            key={position.join('-')}
-            position={position}
-            scale={scale}
-          />
-        ))}
+          {DAISY_LAYOUT.map(({ position, scale }) => (
+            <Daisy
+              key={position.join('-')}
+              position={position}
+              scale={scale}
+            />
+          ))}
 
-        {TREE_LAYOUT.map(({ position, scale }) => (
-          <GumdropTree
-            key={position.join('-')}
-            position={position}
-            scale={scale}
-          />
-        ))}
+          {TREE_LAYOUT.map(({ position, scale }) => (
+            <LowPolyPlaygroundTree
+              key={position.join('-')}
+              position={position}
+              scale={scale}
+            />
+          ))}
+        </group>
+
+        <ContactShadows
+          position={[0, 0.08, 0]}
+          scale={16}
+          blur={2.4}
+          far={7}
+          opacity={0.34}
+          resolution={512}
+        />
       </group>
 
-      <ContactShadows
-        position={[0, 0.01, 0]}
-        scale={10}
-        blur={2}
-        far={4}
-        opacity={0.4}
-        resolution={512}
-      />
+      <LandingPetalBurst />
     </>
   )
 }

@@ -91,7 +91,7 @@ function App() {
             gl.toneMappingExposure = 1.05
           }}
         >
-          <fog attach="fog" args={[skyColor, 80, 400]} />
+          <fog attach="fog" args={[skyColor, 100, 500]} />
           <InfiniteGround
             isNight={isNight}
             isSunset={isSunset}
@@ -104,6 +104,7 @@ function App() {
 
             {/* Scene 1: The Playground (Introduction) */}
             <Playground
+              position={scenePosition('playground')}
               isNight={isNight}
               isSunset={isSunset}
               isSummitActive={isSummitActive}

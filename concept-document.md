@@ -16,12 +16,13 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Scene 1: The Playground (Introduction)
 * **Scroll Range:** `0% - 20%`
-* **The World:** A stylized, "soft 3D" playground. The look is matte, clean, and warm. Features a simple orange slide, soft green "gumdrop" trees, and a cream-colored ground.
+* **The World:** A high, faceted spring-green playground plateau with a sharply defined launch edge. One broad, distant low-poly mountain and three small drifting cloud clusters frame the fall without entering the foreground air or lower Campus staging plane. Colorful stepping stones cross the plateau beside a detailed orange slide, thick wooden swings, layered pine trees, wildflowers, and scattered rocks. The deep vista keeps the later mountains, waterfall, balloons, and sunset readable through atmospheric fog.
 * **Character & Action:**
   * **Start (0%):** Character is a stylized "chibi" figure in a **school uniform**, sitting at the top of the slide, waving.
-  * **Action (0% - 10%):** On scroll, the character stops waving and **slides down**. The camera performs a dynamic swoop to follow.
-  * **Landing (10% - 20%):** Character lands with a playful hop and begins a walking loop toward the path.
-* **Key Interaction (The Growth Morph):** As the character walks *behind* a large tree or playground structure, the model instantly **swaps** from School Uniform to University Uniform.
+  * **Action (0% - 8%):** On scroll, the character stops waving and **slides down** toward the plateau edge. The camera performs a dynamic swoop to follow.
+  * **Fall (8% - 19%):** The character launches from the slide into a reversible parabolic fall through a fixed, collision-free foreground X/Z lane while the close camera tracks the complete arc and tilts toward the Campus below.
+  * **Landing (19% - 20%):** Character touches the Campus path with a squash-and-recover impact, triggering a one-shot burst of instanced cherry-blossom petals.
+* **Key Interaction (The Growth Morph):** At exact ground contact, the outfit instantly **swaps** from School Uniform to University Uniform while the impact petals visually punctuate the match cut.
 * **Copy (HTML Overlay):** 
   > "Hi, I'm [Your Name]! Welcome to my world. I'm a developer who believes every great project starts with curiosity."
 
@@ -116,7 +117,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 - [ ] **Set Up Project Structure:** Create folder hierarchy (`/components/Scenes`, `/components/UI`, `/models`).
 
 ### Phase 4: Development
-- [ ] **Scene 1 (The Slide):** Set up main `<Canvas>` and `<ScrollControls>`. Link scroll to slide animation and text overlay.
+- [x] **Scene 1 (The Slide):** Build the elevated low-poly playground plateau, continuous cliff/path handoff, scroll-linked parabolic fall, tracking camera, landing-petal burst, and text transition.
 - [x] **Scene 2 (Path & Hobbies):** Animate the camera along the low-poly spring campus, build the model swap behind the blossom trees, and add the clickable creative, badminton, and command-center props.
 - [x] **Scene 3 (Adventure Trail):** Build the isolated S-curve path, waterfall chasm, suspension bridge, dense low-poly flora, trailing camera, and six proximity-driven project balloons.
 - [x] **Scene 4 (Summit & Contact):** Animate the summit reveal, multi-phase character performance, Day/Night presentation, 360-degree orbit, and minimizable contact HUD.

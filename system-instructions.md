@@ -31,7 +31,7 @@ When changing a scene boundary or narrative beat, update every affected consumer
 
 The normalized scroll timeline is:
 
-- **Playground, `0.00–0.20`:** slide from `0.00–0.10`, then fall/landing and outfit transition from `0.10–0.20`.
+- **Playground, `0.00–0.20`:** seated wave and slide from `0.00–0.08`, a scroll-reversible parabolic cliff fall from `0.08–0.19`, then the Campus landing and outfit transition from `0.19–0.20`.
 - **Campus, `0.20–0.50`:** character walks left-to-right while the camera performs a side tracking shot.
 - **Mountain, `0.50–0.82`:** camera follows the character along a continuous stone-and-forest transition corridor into an isolated winding S-curve trail, low-poly cliffs, waterfall chasm, and suspension bridge. Six floating project balloons reveal their own world-space cards by character proximity.
 - **Summit reveal, `0.82–1.00`:** the character moves onto the peak, then the camera completes the vista reveal. From `0.96–1.00`, the user may orbit around the character and summit.
