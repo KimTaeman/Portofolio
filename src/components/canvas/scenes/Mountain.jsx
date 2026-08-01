@@ -27,6 +27,22 @@ const BRIDGE_WIDTH = 2.8
 const VALLEY_FLOOR_TOP_Y = -30
 const TERRAIN_BOTTOM_Y = -32
 const TREE_SURFACE_EMBED = 0.08
+const WATERFALL_LAYOUT = Object.freeze({
+  position: Object.freeze([20, -10.2, -23.3]),
+  rotation: Object.freeze([-0.035, 0, 0]),
+  width: 4.6,
+  height: 40,
+  sourceY: 9.8,
+  impact: Object.freeze([20, VALLEY_FLOOR_TOP_Y + 0.2, -22.6]),
+  riverPosition: Object.freeze([11, VALLEY_FLOOR_TOP_Y + 0.12, -25]),
+  riverSize: Object.freeze([22, 68]),
+})
+
+const WATERFALL_SOURCE_ROCKS = Object.freeze([
+  { position: [18.4, 10.2, -24], scale: [1.45, 0.5, 1.05] },
+  { position: [20, 10.6, -24.08], scale: [1.65, 0.58, 1.18] },
+  { position: [21.6, 10.7, -24], scale: [1.35, 0.46, 1] },
+])
 
 const PROJECTS = Object.freeze([
   {
@@ -547,45 +563,65 @@ function ChasmAndWaterfall() {
     <group name="waterfallChasm">
       <mesh
         name="chasmWater"
-        position={[0, VALLEY_FLOOR_TOP_Y + 0.12, -15]}
+        position={WATERFALL_LAYOUT.riverPosition}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[19.5, 110, 2, 8]} />
+        <planeGeometry args={WATERFALL_LAYOUT.riverSize} />
         <FlatMaterial color="#5BC0BE" side={THREE.DoubleSide} />
       </mesh>
 
       <Box
-        name="waterfall"
-        args={[6.2, 56, 0.5]}
-        position={[6, -10, 11.8]}
-        rotation={[-Math.PI / 4, 0, 0]}
+        name="rightCliffWaterfall"
+        args={[WATERFALL_LAYOUT.width, WATERFALL_LAYOUT.height, 0.48]}
+        position={WATERFALL_LAYOUT.position}
+        rotation={WATERFALL_LAYOUT.rotation}
         castShadow
         receiveShadow
       >
         <FlatMaterial color="#5BC0BE" />
       </Box>
 
-      {[-1.6, 0, 1.55].map((streamOffset, index) => (
+      {[-1.25, 0, 1.2].map((streamOffset, index) => (
         <Box
           key={`waterfall-stream-${streamOffset}`}
           name="waterfallFlowStream"
-          args={[index === 1 ? 0.72 : 0.46, 54.5, 0.09]}
-          position={[6 + streamOffset, -10, 12.18]}
-          rotation={[-Math.PI / 4, 0, 0]}
+          args={[index === 1 ? 0.62 : 0.38, 39.4, 0.08]}
+          position={[
+            WATERFALL_LAYOUT.position[0] + streamOffset,
+            WATERFALL_LAYOUT.position[1],
+            WATERFALL_LAYOUT.position[2] + 0.27,
+          ]}
+          rotation={WATERFALL_LAYOUT.rotation}
         >
           <FlatMaterial color={index === 1 ? '#FFFFFF' : '#EAFBFF'} />
         </Box>
       ))}
+
+      <group name="rockyWaterfallSource">
+        {WATERFALL_SOURCE_ROCKS.map((rock, index) => (
+          <Dodecahedron
+            key={`waterfall-source-rock-${index}`}
+            args={[1, 0]}
+            position={rock.position}
+            scale={rock.scale}
+            rotation={[0.06 * index, index * 0.47, -0.04]}
+            castShadow
+            receiveShadow
+          >
+            <FlatMaterial color={index % 2 ? '#7C736B' : '#8A8782'} />
+          </Dodecahedron>
+        ))}
+      </group>
 
       {Array.from({ length: 12 }, (_, index) => (
         <Box
           key={`waterfall-foam-${index}`}
           args={[0.75 + (index % 3) * 0.24, 0.3, 0.58]}
           position={[
-            3.4 + index * 0.66,
+            WATERFALL_LAYOUT.impact[0] - 2.5 + index * 0.35,
             VALLEY_FLOOR_TOP_Y + 0.35 + (index % 2) * 0.13,
-            31.4 + Math.sin(index * 1.7) * 0.62,
+            WATERFALL_LAYOUT.impact[2] + Math.sin(index * 1.7) * 0.62,
           ]}
           rotation={[0.04, index * 0.43, 0.05]}
         >
@@ -598,9 +634,9 @@ function ChasmAndWaterfall() {
           key={`waterfall-foam-rock-${index}`}
           args={[1, 0]}
           position={[
-            3.2 + (index % 7) * 0.88,
+            WATERFALL_LAYOUT.impact[0] - 2.6 + (index % 7) * 0.7,
             VALLEY_FLOOR_TOP_Y + 0.32 + (index % 3) * 0.16,
-            30.6 + Math.sin(index * 1.37) * 1.25,
+            WATERFALL_LAYOUT.impact[2] + Math.sin(index * 1.37) * 1.05,
           ]}
           rotation={[index * 0.21, index * 0.47, index * 0.16]}
           scale={[

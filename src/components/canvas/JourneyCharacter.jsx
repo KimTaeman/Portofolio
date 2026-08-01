@@ -17,7 +17,9 @@ import {
 
 const currentPosition = new THREE.Vector3()
 const nextPosition = new THREE.Vector3()
-const SEATED_POSE_Y = -0.42
+// Calibrated against the top of the angled slide: the skirt/hip volume
+// intersects the surface by a few millimetres instead of hovering above it.
+const SEATED_POSE_Y = -0.65
 const SEATED_LEG_ROTATION_X = -1.22
 
 const getSegment = (offset) => {

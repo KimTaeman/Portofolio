@@ -46,8 +46,8 @@ const CONTACT_ACTIONS = [
 ]
 
 const SCENE_LABELS = {
-  playground: '01 CURIOSITY',
-  campus: '02 LEARNING',
+  playground: '01 ABOUT ME',
+  campus: '02 SKILLS',
   mountain: '03 EXPERIENCE',
   summit: '04 - THE SUMMIT',
 }
