@@ -240,68 +240,31 @@ export default function JourneyCharacter({ outfit = 'school' }) {
           leftArmZ = THREE.MathUtils.lerp(-0.08, -2.3, victoryProgress)
           rightArmZ = THREE.MathUtils.lerp(0.08, 2.3, victoryProgress)
           summitHeadTargetY = 0
-        } else if (summitElapsed < 4.5) {
-          const armLowerProgress = THREE.MathUtils.smootherstep(
+        } else {
+          const idleBlend = THREE.MathUtils.smootherstep(
             summitElapsed,
             2,
-            3.1,
+            3.35,
           )
-          leftArmX = THREE.MathUtils.lerp(-0.18, 0, armLowerProgress)
-          rightArmX = THREE.MathUtils.lerp(-0.18, 0, armLowerProgress)
-          leftArmZ = THREE.MathUtils.lerp(-2.3, -0.55, armLowerProgress)
-          rightArmZ = THREE.MathUtils.lerp(2.3, 0.55, armLowerProgress)
-
-          const surveyProgress = THREE.MathUtils.clamp(
-            (summitElapsed - 2) / 2.5,
-            0,
-            1,
-          )
-          if (surveyProgress < 1 / 3) {
-            summitHeadTargetY = THREE.MathUtils.lerp(
-              0,
-              -0.3,
-              surveyProgress * 3,
-            )
-          } else if (surveyProgress < 2 / 3) {
-            summitHeadTargetY = THREE.MathUtils.lerp(
-              -0.3,
-              0.3,
-              (surveyProgress - 1 / 3) * 3,
-            )
-          } else {
-            summitHeadTargetY = THREE.MathUtils.lerp(
-              0.3,
-              0,
-              (surveyProgress - 2 / 3) * 3,
-            )
-          }
-        } else {
-          const relaxedProgress = THREE.MathUtils.smootherstep(
-            summitElapsed,
-            4.5,
-            6,
-          )
-          leftArmX = THREE.MathUtils.lerp(0, 0.28, relaxedProgress)
-          rightArmX = THREE.MathUtils.lerp(0, -0.38, relaxedProgress)
-          leftArmZ = THREE.MathUtils.lerp(-0.55, -0.32, relaxedProgress)
-          rightArmZ = THREE.MathUtils.lerp(0.55, 2.85, relaxedProgress)
-          rightForearmX = THREE.MathUtils.lerp(0, -0.45, relaxedProgress)
-          rightForearmZ = THREE.MathUtils.lerp(0, 1.2, relaxedProgress)
-          rightForearmY = THREE.MathUtils.lerp(
-            -0.32,
-            -0.42,
-            relaxedProgress,
-          )
-          summitHeadTargetY = 0
+          const idleElapsed = summitElapsed - 2
+          const armSway = Math.sin(idleElapsed * 0.72) * 0.045
+          leftArmX = THREE.MathUtils.lerp(-0.18, armSway, idleBlend)
+          rightArmX = THREE.MathUtils.lerp(-0.18, -armSway, idleBlend)
+          leftArmZ = THREE.MathUtils.lerp(-2.3, -0.12, idleBlend)
+          rightArmZ = THREE.MathUtils.lerp(2.3, 0.12, idleBlend)
+          summitHeadTargetY =
+            Math.sin(idleElapsed * 0.38) * 0.22 * idleBlend
           torsoBreathScale =
-            1 +
-            Math.sin((summitElapsed - 4.5) * 2) *
-              0.02 *
-              relaxedProgress
+            1 + Math.sin(idleElapsed * 1.7) * 0.02 * idleBlend
           posePositionY =
-            Math.sin((summitElapsed - 4.5) * 1.1) *
-            0.005 *
-            relaxedProgress
+            Math.sin(idleElapsed * 1.7) * 0.004 * idleBlend
+          rightForearmX = THREE.MathUtils.lerp(
+            rightForearmX,
+            armSway * 0.35,
+            idleBlend,
+          )
+          rightForearmZ = 0
+          rightForearmY = -0.32
         }
       }
     }

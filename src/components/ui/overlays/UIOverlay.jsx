@@ -86,7 +86,7 @@ const getSceneOpacity = (scene, offset) => {
 
 function ContactPill({ label, href, icon: Icon }) {
   const className =
-    'pointer-events-auto inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border border-white/80 bg-white/60 text-[#3E2723] shadow-[0_12px_34px_rgba(62,39,35,0.14)] backdrop-blur-md transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F] focus-visible:ring-offset-2'
+    'pointer-events-auto inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border border-white/80 bg-white/60 text-[#3E2723] shadow-[0_12px_34px_rgba(62,39,35,0.14)] backdrop-blur-md transition-colors hover:bg-white/95 hover:text-[#E07A5F] hover:shadow-[0_16px_38px_rgba(224,122,95,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F] focus-visible:ring-offset-2'
   const motionProps = {
     whileHover: { y: -4, scale: 1.025 },
     whileTap: { scale: 0.98 },
@@ -213,6 +213,15 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               <p className="mt-4 text-left text-sm font-normal leading-relaxed text-[#5F4B40]">
                 {SCENE_CONTENT.summit.body}
               </p>
+
+              <div className="mt-5 border-t border-white/55 pt-4">
+                <p className="font-serif text-lg font-semibold text-[#3E2723]">
+                  Nang Hayman Aye Mya
+                </p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#6F5B50]">
+                  Computer Science, KMUTT
+                </p>
+              </div>
 
               <div
                 className="mt-5 flex w-full gap-3"

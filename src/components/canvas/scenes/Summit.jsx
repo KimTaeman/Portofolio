@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Box, Cone, Cylinder, Sphere } from '@react-three/drei'
+import { Cone, Cylinder, Sphere } from '@react-three/drei'
+import * as THREE from 'three'
 
 // Summit-local coordinates. With the scene origin at world Z -77, these peaks
 // occupy the world-space Z -100…-150 horizon band.
@@ -13,9 +14,11 @@ const DISTANT_PEAKS = Object.freeze([
 ])
 
 const MIST_LAYERS = Object.freeze([
-  [0, -1.7, -5, 22, 0.52, 14, 0.08, 0],
-  [-10, -6.2, -32, 32, 0.68, 18, 0.052, 2.1],
-  [12, -10.5, -62, 42, 0.84, 22, 0.036, 4.2],
+  [-7.5, 0.1, -3.8, 5.2, 0.07, 3.2, 0.32, 0],
+  [-3.5, 0.08, 2.8, 4.6, 0.06, 2.8, 0.27, 1.4],
+  [0.5, 0.06, -4.5, 5.8, 0.08, 3.5, 0.23, 2.7],
+  [4.5, 0.09, 3.5, 4.8, 0.065, 3, 0.2, 4.1],
+  [8, 0.07, 0, 5.4, 0.07, 3.3, 0.18, 5.3],
 ])
 
 const ROCK_MASSES = Object.freeze([
@@ -91,10 +94,13 @@ const SKY_CLOUDS = Object.freeze([
   [39, 37, 8, 1.5, 0.74],
 ])
 
-const BIRDS = Object.freeze([
-  [-17, 23, -47, 0.72, 0],
-  [-9, 25, -50, 0.58, 1.7],
-  [-2, 22, -44, 0.64, 3.2],
+const BIRD_FLOCK = Object.freeze([
+  [17, 25, -108, 0.72, 0, 0.16],
+  [19, 28, -114, 0.58, 1.05, 0.14],
+  [15, 23, -103, 0.64, 2.1, 0.18],
+  [21, 30, -118, 0.52, 3.05, 0.13],
+  [18, 26, -110, 0.6, 4.2, 0.15],
+  [14, 24, -99, 0.5, 5.15, 0.19],
 ])
 
 function ClayMaterial({
@@ -259,62 +265,96 @@ function FloatingSkyClouds({ isNight }) {
   )
 }
 
-function FlyingBirds() {
-  const birdRefs = useRef([])
-  const leftWingRefs = useRef([])
-  const rightWingRefs = useRef([])
+function BirdFlock() {
+  const leftWingsRef = useRef()
+  const rightWingsRef = useRef()
+  const leftWingDummyRef = useRef(new THREE.Object3D())
+  const rightWingDummyRef = useRef(new THREE.Object3D())
 
-  useFrame((state, delta) => {
+  useEffect(() => {
+    if (leftWingsRef.current) {
+      leftWingsRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    }
+    if (rightWingsRef.current) {
+      rightWingsRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    }
+  }, [])
+
+  useFrame((state) => {
     const time = state.clock.elapsedTime
+    const leftWing = leftWingDummyRef.current
+    const rightWing = rightWingDummyRef.current
 
-    birdRefs.current.forEach((bird, index) => {
-      if (!bird) return
-      bird.position.x += (1.3 + index * 0.16) * delta
-      if (bird.position.x > 42) bird.position.x = -42
+    BIRD_FLOCK.forEach(
+      ([radius, baseY, centerZ, scale, phase, orbitSpeed], index) => {
+        const angle = time * orbitSpeed + phase
+        const heading = -angle
+        const centerX = Math.cos(angle) * radius
+        const centerY = baseY + Math.sin(time * 0.72 + phase) * 1.1
+        const centerBirdZ = centerZ + Math.sin(angle) * radius * 0.48
+        const separation = 0.38 * scale
+        const rightX = Math.cos(heading)
+        const rightZ = -Math.sin(heading)
+        const flap = Math.sin(time * 8.5 + phase * 2) * 0.52
 
-      const flap = Math.sin(time * 8 + BIRDS[index][4]) * 0.58
-      if (leftWingRefs.current[index]) {
-        leftWingRefs.current[index].rotation.x = flap
-      }
-      if (rightWingRefs.current[index]) {
-        rightWingRefs.current[index].rotation.x = -flap
-      }
-    })
+        leftWing.position.set(
+          centerX - rightX * separation,
+          centerY,
+          centerBirdZ - rightZ * separation,
+        )
+        leftWing.rotation.set(flap, heading, 0.4)
+        leftWing.scale.setScalar(scale)
+        leftWing.updateMatrix()
+        leftWingsRef.current?.setMatrixAt(index, leftWing.matrix)
+
+        rightWing.position.set(
+          centerX + rightX * separation,
+          centerY,
+          centerBirdZ + rightZ * separation,
+        )
+        rightWing.rotation.set(-flap, heading, -0.4)
+        rightWing.scale.setScalar(scale)
+        rightWing.updateMatrix()
+        rightWingsRef.current?.setMatrixAt(index, rightWing.matrix)
+      },
+    )
+
+    if (leftWingsRef.current) {
+      leftWingsRef.current.instanceMatrix.needsUpdate = true
+    }
+    if (rightWingsRef.current) {
+      rightWingsRef.current.instanceMatrix.needsUpdate = true
+    }
   })
 
   return (
-    <group name="summitBirds">
-      {BIRDS.map(([x, y, z, scale], index) => (
-        <group
-          ref={(bird) => {
-            birdRefs.current[index] = bird
-          }}
-          key={`bird-${index}`}
-          position={[x, y, z]}
-          scale={scale}
-        >
-          <Box
-            ref={(wing) => {
-              leftWingRefs.current[index] = wing
-            }}
-            args={[0.82, 0.075, 0.18]}
-            position={[-0.36, 0.12, 0]}
-            rotation={[0, 0, 0.38]}
-          >
-            <meshStandardMaterial color="#111111" roughness={1} metalness={0} />
-          </Box>
-          <Box
-            ref={(wing) => {
-              rightWingRefs.current[index] = wing
-            }}
-            args={[0.82, 0.075, 0.18]}
-            position={[0.36, 0.12, 0]}
-            rotation={[0, 0, -0.38]}
-          >
-            <meshStandardMaterial color="#111111" roughness={1} metalness={0} />
-          </Box>
-        </group>
-      ))}
+    <group name="circlingSummitBirdFlock">
+      <instancedMesh
+        ref={leftWingsRef}
+        args={[undefined, undefined, BIRD_FLOCK.length]}
+        frustumCulled={false}
+      >
+        <boxGeometry args={[0.9, 0.08, 0.24]} />
+        <meshStandardMaterial
+          color="#111111"
+          roughness={1}
+          metalness={0}
+          flatShading
+        />
+      </instancedMesh>
+      <instancedMesh
+        ref={rightWingsRef}
+        args={[undefined, undefined, BIRD_FLOCK.length]}
+        frustumCulled={false}
+      >
+        <boxGeometry args={[0.9, 0.08, 0.24]} />
+        <meshStandardMaterial
+          color="#111111"
+          roughness={1}
+          metalness={0}
+          flatShading
+        />
+      </instancedMesh>
     </group>
   )
 }
@@ -446,15 +486,19 @@ function DistantPeak({ peak, isNight }) {
 function RollingMist({ isNight }) {
   const mistRefs = useRef([])
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const time = state.clock.elapsedTime
 
-    MIST_LAYERS.forEach(([baseX, , , , , , speed, phase], index) => {
+    MIST_LAYERS.forEach(([, , baseZ, scaleX, , , speed, phase], index) => {
       const mist = mistRefs.current[index]
       if (!mist) return
 
-      mist.position.x = baseX + Math.sin(time * speed + phase) * 5
-      mist.rotation.y = Math.sin(time * speed * 0.7 + phase) * 0.12
+      mist.position.x += speed * delta
+      if (mist.position.x > 12 + scaleX) {
+        mist.position.x = -12 - scaleX
+      }
+      mist.position.z = baseZ + Math.sin(time * 0.08 + phase) * 1.1
+      mist.rotation.y = Math.sin(time * 0.055 + phase) * 0.1
     })
   })
 
@@ -466,16 +510,20 @@ function RollingMist({ isNight }) {
             mistRefs.current[index] = mesh
           }}
           key={`${x}-${z}-${index}`}
-          args={[1, 28, 18]}
+          args={[1, 20, 12]}
           position={[x, y, z]}
           scale={[sx, sy, sz]}
           renderOrder={-2}
         >
-          <ClayMaterial
+          <meshStandardMaterial
             color={isNight ? '#DDE2F1' : '#FFFFFF'}
             emissive={isNight ? '#A5B4FC' : '#FFFFFF'}
-            emissiveIntensity={0.06}
-            opacity={0.2}
+            emissiveIntensity={0.03}
+            roughness={1}
+            metalness={0}
+            transparent
+            opacity={0.18}
+            depthWrite={false}
           />
         </Sphere>
       ))}
@@ -497,7 +545,7 @@ export default function Summit({
 
       <SeaOfClouds isNight={isNight} />
       <FloatingSkyClouds isNight={isNight} />
-      <FlyingBirds />
+      <BirdFlock />
 
       <group name="distantMountainSkyline">
         {DISTANT_PEAKS.map((peak, index) => (
