@@ -29,11 +29,11 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Scene 2: The Campus Path (Skills & Hobbies)
 * **Scroll Range:** `20% - 50%`
-* **The World:** A University Campus Path lined with "soft 3D" **cherry blossom trees** (simple trunks, pink cloud-like petals). Gentle falling petal particles fill the air.
+* **The World:** A manicured green university campus with a structured light-stone path, densely clustered low-poly **cherry blossom trees**, and an instanced field of gently falling faceted petals.
 * **Character & Action:** Character is in a **university uniform**, walking or lightly jogging along the path with a focused, steady pace. Camera follows in a smooth tracking shot.
 * **Interactions:**
-  * **Hobbies (Fun):** Interactive 3D items along the path (Easel, Badminton Racket). Clicking them opens small 2D cards with personal details.
-  * **Skills (Technical):** A **laptop** on a bench. Clicking it opens a clean 2D modal listing technical skills (Languages, Frameworks, Databases).
+  * **Hobbies (Fun):** An interactive easel and paint stool form the Creative Practice zone, while a blossom-tree badminton racket and grounded shuttlecock form the Life Beyond Code zone. Clicking them opens small 2D cards with personal details.
+  * **Skills (Technical):** A bench-mounted command center combines an open terminal **laptop**, mobile phone, and LED hardware board. Clicking it opens a clean 2D modal listing technical skills (Languages, Frameworks, Databases).
 * **Copy (HTML Overlay):** 
   > "I spent my time learning, growing, and building my foundation."
 
@@ -117,7 +117,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Phase 4: Development
 - [ ] **Scene 1 (The Slide):** Set up main `<Canvas>` and `<ScrollControls>`. Link scroll to slide animation and text overlay.
-- [ ] **Scene 2 (Path & Hobbies):** Animate camera along path. Build model swap behind tree. Add clickable hobby props and Laptop modal.
+- [x] **Scene 2 (Path & Hobbies):** Animate the camera along the low-poly spring campus, build the model swap behind the blossom trees, and add the clickable creative, badminton, and command-center props.
 - [x] **Scene 3 (Adventure Trail):** Build the isolated S-curve path, waterfall chasm, suspension bridge, dense low-poly flora, trailing camera, and six proximity-driven project balloons.
 - [x] **Scene 4 (Summit & Contact):** Animate the summit reveal, multi-phase character performance, Day/Night presentation, 360-degree orbit, and minimizable contact HUD.
 
