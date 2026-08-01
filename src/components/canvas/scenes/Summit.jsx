@@ -1,6 +1,6 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Cylinder, Sphere } from '@react-three/drei'
+import { Cone, Cylinder, Sphere } from '@react-three/drei'
 
 // Summit-local coordinates. With the scene origin at world Z -77, these peaks
 // occupy the world-space Z -100…-150 horizon band.
@@ -38,6 +38,50 @@ const CLOUD_BANKS = Object.freeze([
   [-8, -8.7, 4, 1.45],
   [10, -8.4, 2, 1.7],
   [29, -8, 7, 1.35],
+])
+
+const ALPINE_GRASS_PATCHES = Object.freeze(
+  Array.from({ length: 18 }, (_, index) => {
+    const angle = (index / 18) * Math.PI * 2 + (index % 3) * 0.16
+    const radius = 4.15 + (index % 4) * 0.42
+    return Object.freeze({
+      position: [
+        Math.cos(angle) * radius,
+        0.23 + (index % 2) * 0.025,
+        Math.sin(angle) * radius,
+      ],
+      scale: [
+        0.36 + (index % 3) * 0.09,
+        0.075,
+        0.22 + (index % 2) * 0.07,
+      ],
+      rotationY: angle + index * 0.37,
+    })
+  }),
+)
+
+const LOOSE_ROCKS = Object.freeze(
+  Array.from({ length: 12 }, (_, index) => {
+    const angle = (index / 12) * Math.PI * 2 + 0.28
+    const radius = 4.5 + (index % 3) * 0.48
+    const scale = 0.22 + (index % 4) * 0.075
+    return Object.freeze({
+      position: [
+        Math.cos(angle) * radius,
+        0.23 + scale * 0.3,
+        Math.sin(angle) * radius,
+      ],
+      scale,
+      rotationY: index * 0.71,
+    })
+  }),
+)
+
+const EDGE_PINES = Object.freeze([
+  [-4.7, 0.18, -3.3, 0.72],
+  [-2.1, 0.18, -5.05, 0.62],
+  [2.25, 0.18, -5.15, 0.68],
+  [4.75, 0.18, -3.25, 0.76],
 ])
 
 function ClayMaterial({
@@ -91,11 +135,11 @@ function RockyPeak({ isNight }) {
   )
 }
 
-function CloudBank({ position, scale, isNight }) {
+function CloudBank({ position, scale, isNight, cloudRef }) {
   const color = isNight ? '#D8D9E8' : '#FFFFFF'
 
   return (
-    <group name="cloudBank" position={position} scale={scale}>
+    <group ref={cloudRef} name="cloudBank" position={position} scale={scale}>
       {[
         [0, 0, 0, 3.8, 0.82, 2.15],
         [-3.2, -0.08, 0.25, 3, 0.66, 1.9],
@@ -119,6 +163,140 @@ function CloudBank({ position, scale, isNight }) {
         </Sphere>
       ))}
     </group>
+  )
+}
+
+function SeaOfClouds({ isNight }) {
+  const cloudRefs = useRef([])
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime
+    cloudRefs.current.forEach((cloud, index) => {
+      if (!cloud) return
+      const [baseX] = CLOUD_BANKS[index]
+      cloud.position.x =
+        baseX + Math.sin(time * (0.035 + index * 0.004) + index * 1.7) * 3.4
+    })
+  })
+
+  return (
+    <group name="seaOfClouds">
+      {CLOUD_BANKS.map(([x, y, z, scale], index) => (
+        <CloudBank
+          key={`${x}-${z}-${index}`}
+          cloudRef={(cloud) => {
+            cloudRefs.current[index] = cloud
+          }}
+          position={[x, y, z]}
+          scale={scale}
+          isNight={isNight}
+        />
+      ))}
+    </group>
+  )
+}
+
+function AlpinePine({ position, scale }) {
+  return (
+    <group name="summitPine" position={position} scale={scale}>
+      <Cylinder
+        args={[0.12, 0.18, 1.05, 14]}
+        position={[0, 0.52, 0]}
+        castShadow
+        receiveShadow
+      >
+        <ClayMaterial color="#6B4B35" />
+      </Cylinder>
+      {[
+        [0.72, 1.05, 1.18],
+        [0.58, 0.92, 1.62],
+        [0.43, 0.76, 2.02],
+      ].map(([radius, height, y], index) => (
+        <Cone
+          key={`${radius}-${y}`}
+          args={[radius, height, 20]}
+          position={[0, y, 0]}
+          rotation={[0, index * 0.24, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color="#2D4C3B" />
+        </Cone>
+      ))}
+    </group>
+  )
+}
+
+function AlpineDecoration() {
+  return (
+    <group name="alpineSummitDecoration">
+      {ALPINE_GRASS_PATCHES.map((patch, index) => (
+        <Sphere
+          key={`grass-${index}`}
+          args={[1, 16, 12]}
+          position={patch.position}
+          scale={patch.scale}
+          rotation={[0, patch.rotationY, 0]}
+          receiveShadow
+        >
+          <ClayMaterial color="#6B8E23" />
+        </Sphere>
+      ))}
+
+      {LOOSE_ROCKS.map((rock, index) => (
+        <Sphere
+          key={`loose-rock-${index}`}
+          args={[1, 16, 12]}
+          position={rock.position}
+          scale={[rock.scale * 1.2, rock.scale * 0.72, rock.scale]}
+          rotation={[0.08, rock.rotationY, -0.06]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={index % 2 ? '#9A9A9A' : '#73797C'} />
+        </Sphere>
+      ))}
+
+      {EDGE_PINES.map(([x, y, z, scale], index) => (
+        <AlpinePine
+          key={`edge-pine-${index}`}
+          position={[x, y, z]}
+          scale={scale}
+        />
+      ))}
+    </group>
+  )
+}
+
+function SummitSunsetLight({ isActive, isNight }) {
+  const lightRef = useRef()
+  const targetRef = useRef()
+
+  useEffect(() => {
+    if (!lightRef.current || !targetRef.current) return
+    lightRef.current.target = targetRef.current
+  }, [])
+
+  return (
+    <>
+      <object3D ref={targetRef} position={[0, 1.1, 0]} />
+      <directionalLight
+        ref={lightRef}
+        color="#FF9A62"
+        intensity={isActive && !isNight ? 1.65 : 0}
+        position={[0, 10, -50]}
+        castShadow={isActive && !isNight}
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-near={1}
+        shadow-camera-far={100}
+        shadow-camera-left={-12}
+        shadow-camera-right={12}
+        shadow-camera-top={12}
+        shadow-camera-bottom={-12}
+        shadow-bias={-0.0002}
+        shadow-normalBias={0.03}
+      />
+    </>
   )
 }
 
@@ -182,22 +360,19 @@ function RollingMist({ isNight }) {
   )
 }
 
-export default function Summit({ position = [0, 0, 0], isNight = false }) {
+export default function Summit({
+  position = [0, 0, 0],
+  isNight = false,
+  isActive = false,
+}) {
   return (
     <group name="summitScene" position={position}>
+      <SummitSunsetLight isActive={isActive} isNight={isNight} />
       <RockyPeak isNight={isNight} />
+      <AlpineDecoration />
       <RollingMist isNight={isNight} />
 
-      <group name="seaOfClouds">
-        {CLOUD_BANKS.map(([x, y, z, scale], index) => (
-          <CloudBank
-            key={`${x}-${z}-${index}`}
-            position={[x, y, z]}
-            scale={scale}
-            isNight={isNight}
-          />
-        ))}
-      </group>
+      <SeaOfClouds isNight={isNight} />
 
       <group name="distantMountainSkyline">
         {DISTANT_PEAKS.map((peak, index) => (
@@ -205,13 +380,11 @@ export default function Summit({ position = [0, 0, 0], isNight = false }) {
         ))}
       </group>
 
-      <Sphere args={[3, 24, 24]} position={[-26, 20, -20]}>
-        <ClayMaterial
-          color={isNight ? '#F8FAFC' : '#FFE8A3'}
-          emissive={isNight ? '#E0E7FF' : '#FFE8A3'}
-          emissiveIntensity={0.3}
-        />
-      </Sphere>
+      {!isNight && (
+        <Sphere name="sunsetSun" args={[8, 32, 24]} position={[0, 9, -73]}>
+          <meshBasicMaterial color="#FF7F50" fog={false} />
+        </Sphere>
+      )}
     </group>
   )
 }

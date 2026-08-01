@@ -418,6 +418,7 @@ function SwingSet() {
 export default function Playground({
   isNight = false,
   isSunset = false,
+  isSummitActive = false,
   castDirectionalShadow = false,
 }) {
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
@@ -443,11 +444,15 @@ export default function Playground({
       <color attach="background" args={[skyColor]} />
       <ambientLight
         color={ambientColor}
-        intensity={isNight ? 0.6 : isSunset ? 0.8 : 1.35}
+        intensity={
+          isNight ? 0.6 : isSummitActive ? 0.55 : isSunset ? 0.8 : 1.35
+        }
       />
       <directionalLight
         color={directionalColor}
-        intensity={isNight ? 0.5 : isSunset ? 1.5 : 1.9}
+        intensity={
+          isNight ? 0.5 : isSummitActive ? 0.25 : isSunset ? 1.5 : 1.9
+        }
         position={isSunset ? [10, 5, 5] : [5, 10, 5]}
         castShadow={castDirectionalShadow}
         shadow-mapSize={[1024, 1024]}

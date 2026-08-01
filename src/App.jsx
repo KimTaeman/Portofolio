@@ -56,10 +56,10 @@ function App() {
   const [campusDetailId, setCampusDetailId] = useState(null)
   const [mountainMarkerId, setMountainMarkerId] = useState(null)
   const outfit = getCharacterOutfit(scrollOffset)
+  const isSummitActive = scrollOffset >= SCENE_RANGES.summit.start
   const isSunset =
     !isNight &&
-    scrollOffset >= SCENE_RANGES.campus.start &&
-    scrollOffset < SCENE_RANGES.summit.start
+    scrollOffset >= SCENE_RANGES.campus.start
   const skyColor = isNight
     ? '#1E1B4B'
     : isSunset
@@ -110,6 +110,7 @@ function App() {
             <Playground
               isNight={isNight}
               isSunset={isSunset}
+              isSummitActive={isSummitActive}
               castDirectionalShadow={scrollOffset >= playgroundEnd}
             />
 
@@ -127,7 +128,11 @@ function App() {
             />
 
             {/* Scene 4: The Summit (Future & Contact) */}
-            <Summit position={scenePosition('summit')} isNight={isNight} />
+            <Summit
+              position={scenePosition('summit')}
+              isNight={isNight}
+              isActive={isSummitActive}
+            />
           </ScrollControls>
         </Canvas>
       </div>

@@ -57,8 +57,8 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Scene 4: The Summit (Future & Contact)
 * **Scroll Range:** `70% - 100%`
-* **The World:** A rugged soft-clay rock crown above a translucent sea of clouds and slowly rolling mist, framed by massive blue-gray peaks deep beyond the climb.
-* **Camera Payoff (The Reveal):** As the character reaches the peak, the camera swings into a rear hero view that frames the character against the vista. The character settles into a quiet breathing and surveying idle loop, and the user can then orbit continuously around the summit through 360 degrees.
+* **The World:** A rugged soft-clay rock crown dressed with alpine grass, loose stone, and small edge pines above a translucent sea of clouds and slowly rolling mist. Massive blue-gray peaks and a glowing sunset sit deep beyond the climb.
+* **Camera Payoff (The Reveal):** As the character reaches the peak, the camera swings into a rear hero view that frames the character against the vista. A timed performance raises both arms in victory, surveys the landscape, and settles into a relaxed hand-behind-head pose with calm breathing. The user can then orbit continuously around the summit through 360 degrees.
 * **Interactions:**
   * **Day/Night Toggle:** A ☀️/🌙 icon swaps the lighting. Night mode features a starry sky and glowing city lights below.
   * **Contact CTA:** A compact, minimizable glass HUD appears at the bottom-left after the summit camera settles, exposing icon-based Email, GitHub, and LinkedIn actions without blocking the character or orbit view.
@@ -123,7 +123,7 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 - [ ] **Scene 1 (The Slide):** Set up main `<Canvas>` and `<ScrollControls>`. Link scroll to slide animation and text overlay.
 - [ ] **Scene 2 (Path & Hobbies):** Animate camera along path. Build model swap behind tree. Add clickable hobby props and Laptop modal.
 - [ ] **Scene 3 (Retro Camera):** Code scroll pause at viewpoint. Trigger camera pull animation, flash effect, and 2D Polaroid gallery overlay.
-- [ ] **Scene 4 (Summit & Polish):** Animate summit reveal camera path. Implement Day/Night environment map toggle and Telescope Contact form.
+- [x] **Scene 4 (Summit & Contact):** Animate the summit reveal, multi-phase character performance, Day/Night presentation, 360-degree orbit, and minimizable contact HUD.
 
 ### Phase 5: Launch
 - [ ] **Performance Optimization:** Add `<Suspense>` loading screen and compress models for smooth 60fps.

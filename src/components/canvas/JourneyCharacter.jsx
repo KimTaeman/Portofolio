@@ -40,6 +40,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
   const rightArmRef = useRef()
   const leftLegRef = useRef()
   const rightLegRef = useRef()
+  const summitArrivalTimeRef = useRef(null)
   const scroll = useScroll()
 
   useFrame((state, delta) => {
@@ -100,6 +101,14 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     let rightArmZ = 0.08
     let leftLegX
     let rightLegX
+    let summitHeadTargetY = null
+    let torsoBreathScale = 1
+
+    if (offset < SUMMIT_SEQUENCE.haltEnd) {
+      summitArrivalTimeRef.current = null
+    } else if (summitArrivalTimeRef.current === null) {
+      summitArrivalTimeRef.current = state.clock.elapsedTime
+    }
 
     if (offset < PLAYGROUND_MOTION_OFFSETS.waveEnd) {
       posePositionY = SEATED_POSE_Y
@@ -198,14 +207,76 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       } else if (isHiking) {
         posePositionY = Math.abs(walkCycle) * 0.045 * summitWalkFade
       } else if (offset >= SUMMIT_SEQUENCE.haltEnd) {
-        const idleTime = state.clock.elapsedTime
-        const armSway = Math.sin(idleTime * 0.65) * 0.12
-        posePositionY = Math.sin(idleTime * 1.15) * 0.006
-        poseRotationZ = Math.sin(idleTime * 0.45) * 0.008
-        leftArmX = armSway
-        rightArmX = -armSway
-        leftArmZ = -0.1 + Math.sin(idleTime * 0.5) * 0.025
-        rightArmZ = 0.1 - Math.sin(idleTime * 0.5) * 0.025
+        const summitElapsed =
+          state.clock.elapsedTime - summitArrivalTimeRef.current
+
+        if (summitElapsed < 2) {
+          const victoryProgress = THREE.MathUtils.smootherstep(
+            summitElapsed,
+            0,
+            2,
+          )
+          leftArmX = THREE.MathUtils.lerp(0, -0.18, victoryProgress)
+          rightArmX = THREE.MathUtils.lerp(0, -0.18, victoryProgress)
+          leftArmZ = THREE.MathUtils.lerp(-0.08, -2.3, victoryProgress)
+          rightArmZ = THREE.MathUtils.lerp(0.08, 2.3, victoryProgress)
+          summitHeadTargetY = 0
+        } else if (summitElapsed < 4.5) {
+          const armLowerProgress = THREE.MathUtils.smootherstep(
+            summitElapsed,
+            2,
+            3.1,
+          )
+          leftArmX = THREE.MathUtils.lerp(-0.18, 0, armLowerProgress)
+          rightArmX = THREE.MathUtils.lerp(-0.18, 0, armLowerProgress)
+          leftArmZ = THREE.MathUtils.lerp(-2.3, -0.55, armLowerProgress)
+          rightArmZ = THREE.MathUtils.lerp(2.3, 0.55, armLowerProgress)
+
+          const surveyProgress = THREE.MathUtils.clamp(
+            (summitElapsed - 2) / 2.5,
+            0,
+            1,
+          )
+          if (surveyProgress < 1 / 3) {
+            summitHeadTargetY = THREE.MathUtils.lerp(
+              0,
+              -0.3,
+              surveyProgress * 3,
+            )
+          } else if (surveyProgress < 2 / 3) {
+            summitHeadTargetY = THREE.MathUtils.lerp(
+              -0.3,
+              0.3,
+              (surveyProgress - 1 / 3) * 3,
+            )
+          } else {
+            summitHeadTargetY = THREE.MathUtils.lerp(
+              0.3,
+              0,
+              (surveyProgress - 2 / 3) * 3,
+            )
+          }
+        } else {
+          const relaxedProgress = THREE.MathUtils.smootherstep(
+            summitElapsed,
+            4.5,
+            6,
+          )
+          leftArmX = THREE.MathUtils.lerp(0, 0.28, relaxedProgress)
+          rightArmX = THREE.MathUtils.lerp(0, -0.62, relaxedProgress)
+          leftArmZ = THREE.MathUtils.lerp(-0.55, -0.32, relaxedProgress)
+          rightArmZ = THREE.MathUtils.lerp(0.55, 2.48, relaxedProgress)
+          summitHeadTargetY = 0
+          torsoBreathScale =
+            1 +
+            Math.sin((summitElapsed - 4.5) * 2) *
+              0.02 *
+              relaxedProgress
+          posePositionY =
+            Math.sin((summitElapsed - 4.5) * 1.1) *
+            0.005 *
+            relaxedProgress
+        }
       }
     }
 
@@ -220,7 +291,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     )
     const isSummitIdle = offset >= SUMMIT_SEQUENCE.haltEnd
     const headTargetY = isSummitIdle
-      ? Math.sin(state.clock.elapsedTime * 0.5) * 0.2
+      ? (summitHeadTargetY ?? 0)
       : landmarkProximity * 0.34
     headRef.current.rotation.y = THREE.MathUtils.damp(
       headRef.current.rotation.y,
@@ -234,9 +305,6 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       8,
       delta,
     )
-    const torsoBreathScale = isSummitIdle
-      ? 1 + Math.sin(state.clock.elapsedTime * 2) * 0.02
-      : 1
     torsoRef.current.scale.set(1, torsoBreathScale, 1)
     poseRef.current.position.y = posePositionY
     poseRef.current.scale.set(poseScaleX, poseScaleY, poseScaleZ)
