@@ -18,7 +18,7 @@ The project is a functional continuous-scrollytelling prototype. The character n
 - The Mountain project prompt uses a testable trigger/reset range, explicit dismissal, Escape support, and re-arm behavior.
 - The current procedural art pass uses rounded chibi geometry, high-roughness clay materials, warm studio/outdoor lighting, shadows, atmospheric depth, and bold overlay typography.
 - Scene 1 includes an opening wave, seated slide pose, accelerated fall, airborne pose, squash-and-hop landing, reverse-scroll behavior, and transition into the Campus walk.
-- The Summit has alpine edge dressing, a translucent moving cloud sea, animated mist, a warm sunset and massive deep-background peaks, a timed three-phase victory sequence, a 360-degree orbit, and a minimizable icon-based contact HUD.
+- The Summit has alpine edge dressing, a translucent moving cloud sea, animated mist, high drifting clouds, flapping birds, an oversized sunset behind massive peaks, an articulated three-phase victory/shielding sequence, a 360-degree orbit, and a minimizable icon-based contact HUD.
 
 ## Known prototype limitations
 
@@ -74,7 +74,7 @@ The project is a functional continuous-scrollytelling prototype. The character n
 
 ### 6. Finish Scene 4 — Summit and contact
 
-- [x] Add the three-phase victory/survey/relaxed sequence, alpine dressing, rocky peak, rolling mist, moving cloud sea, sunset, and deep-background vista.
+- [x] Add the three-phase victory/survey/shielding sequence, alpine dressing, rocky peak, rolling mist, moving cloud layers, birds, sunset, and deep-background vista.
 - [x] Add continuous 360-degree summit orbit controls with a ground-safe vertical limit.
 - [x] Replace the telescope concept with a minimizable cinematic contact HUD and direct contact actions.
 - Add real contact calls to action and links.

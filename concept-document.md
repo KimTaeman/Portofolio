@@ -57,8 +57,8 @@ This portfolio is a **scrollytelling experience**. The user's scroll controls th
 
 ### Scene 4: The Summit (Future & Contact)
 * **Scroll Range:** `70% - 100%`
-* **The World:** A rugged soft-clay rock crown dressed with alpine grass, loose stone, and small edge pines above a translucent sea of clouds and slowly rolling mist. Massive blue-gray peaks and a glowing sunset sit deep beyond the climb.
-* **Camera Payoff (The Reveal):** As the character reaches the peak, the camera swings into a rear hero view that frames the character against the vista. A timed performance raises both arms in victory, surveys the landscape, and settles into a relaxed hand-behind-head pose with calm breathing. The user can then orbit continuously around the summit through 360 degrees.
+* **The World:** A rugged soft-clay rock crown dressed with alpine grass, loose stone, and small edge pines above a translucent sea of clouds and slowly rolling mist. Massive blue-gray peaks sit in front of an oversized sunset, with drifting high clouds and a small flock of birds completing the sky.
+* **Camera Payoff (The Reveal):** As the character reaches the peak, the camera swings into a rear hero view that frames the character against the vista. A timed performance raises both arms in victory, surveys the landscape, and settles into a confident hand-on-hip pose while the articulated right forearm shields the eyes from the sunset. The user can then orbit continuously around the summit through 360 degrees.
 * **Interactions:**
   * **Day/Night Toggle:** A ☀️/🌙 icon swaps the lighting. Night mode features a starry sky and glowing city lights below.
   * **Contact CTA:** A compact, minimizable glass HUD appears at the bottom-left after the summit camera settles, exposing icon-based Email, GitHub, and LinkedIn actions without blocking the character or orbit view.

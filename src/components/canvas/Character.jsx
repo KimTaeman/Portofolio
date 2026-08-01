@@ -380,7 +380,14 @@ function UniversityUniform({ partRefs, colors }) {
   )
 }
 
-function HikerArm({ armRef, name, position, rotation, colors }) {
+function HikerArm({
+  armRef,
+  forearmRef,
+  name,
+  position,
+  rotation,
+  colors,
+}) {
   return (
     <group ref={armRef} name={name} position={position} rotation={rotation}>
       <Capsule
@@ -391,22 +398,24 @@ function HikerArm({ armRef, name, position, rotation, colors }) {
       >
         <ClayMaterial color={colors.hikerOrange} />
       </Capsule>
-      <Capsule
-        args={[0.14, 0.28, 8, 16]}
-        position={[0, -0.48, 0]}
-        castShadow
-        receiveShadow
-      >
-        <ClayMaterial color={colors.skin} />
-      </Capsule>
-      <Sphere
-        args={[0.16, 20, 16]}
-        position={[0, -0.73, 0.02]}
-        castShadow
-        receiveShadow
-      >
-        <ClayMaterial color={colors.skin} />
-      </Sphere>
+      <group ref={forearmRef} name={`${name}Forearm`} position={[0, -0.32, 0]}>
+        <Capsule
+          args={[0.14, 0.28, 8, 16]}
+          position={[0, -0.16, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.skin} />
+        </Capsule>
+        <Sphere
+          args={[0.16, 20, 16]}
+          position={[0, -0.41, 0.02]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.skin} />
+        </Sphere>
+      </group>
     </group>
   )
 }
@@ -455,7 +464,7 @@ function HikerLeg({ legRef, name, position, colors }) {
 }
 
 function HikerUniform({ partRefs, colors }) {
-  const { torso, leftArm, rightArm, leftLeg, rightLeg } = partRefs
+  const { torso, leftArm, rightArm, rightForearm, leftLeg, rightLeg } = partRefs
 
   return (
     <group name="hikerUniform">
@@ -537,6 +546,7 @@ function HikerUniform({ partRefs, colors }) {
       />
       <HikerArm
         armRef={rightArm}
+        forearmRef={rightForearm}
         name="rightArm"
         position={[0.57, 2.22, 0]}
         rotation={[0, 0, 0.12]}

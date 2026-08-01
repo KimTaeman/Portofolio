@@ -38,6 +38,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
   const headRef = useRef()
   const leftArmRef = useRef()
   const rightArmRef = useRef()
+  const rightForearmRef = useRef()
   const leftLegRef = useRef()
   const rightLegRef = useRef()
   const summitArrivalTimeRef = useRef(null)
@@ -99,6 +100,9 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     let rightArmX = 0
     let leftArmZ = -0.08
     let rightArmZ = 0.08
+    let rightForearmX = 0
+    let rightForearmZ = 0
+    let rightForearmY = -0.32
     let leftLegX
     let rightLegX
     let summitHeadTargetY = null
@@ -263,9 +267,16 @@ export default function JourneyCharacter({ outfit = 'school' }) {
             6,
           )
           leftArmX = THREE.MathUtils.lerp(0, 0.28, relaxedProgress)
-          rightArmX = THREE.MathUtils.lerp(0, -0.62, relaxedProgress)
+          rightArmX = THREE.MathUtils.lerp(0, -0.38, relaxedProgress)
           leftArmZ = THREE.MathUtils.lerp(-0.55, -0.32, relaxedProgress)
-          rightArmZ = THREE.MathUtils.lerp(0.55, 2.48, relaxedProgress)
+          rightArmZ = THREE.MathUtils.lerp(0.55, 2.85, relaxedProgress)
+          rightForearmX = THREE.MathUtils.lerp(0, -0.45, relaxedProgress)
+          rightForearmZ = THREE.MathUtils.lerp(0, 1.2, relaxedProgress)
+          rightForearmY = THREE.MathUtils.lerp(
+            -0.32,
+            -0.42,
+            relaxedProgress,
+          )
           summitHeadTargetY = 0
           torsoBreathScale =
             1 +
@@ -310,6 +321,14 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     poseRef.current.scale.set(poseScaleX, poseScaleY, poseScaleZ)
     leftArmRef.current.rotation.set(leftArmX, 0, leftArmZ)
     rightArmRef.current.rotation.set(rightArmX, 0, rightArmZ)
+    if (rightForearmRef.current) {
+      rightForearmRef.current.position.y = rightForearmY
+      rightForearmRef.current.rotation.set(
+        rightForearmX,
+        0,
+        rightForearmZ,
+      )
+    }
     leftLegRef.current.rotation.x = leftLegX
     rightLegRef.current.rotation.x = rightLegX
   })
@@ -326,6 +345,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
             head: headRef,
             leftArm: leftArmRef,
             rightArm: rightArmRef,
+            rightForearm: rightForearmRef,
             leftLeg: leftLegRef,
             rightLeg: rightLegRef,
           }}

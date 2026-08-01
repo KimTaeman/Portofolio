@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Cone, Cylinder, Sphere } from '@react-three/drei'
+import { Box, Cone, Cylinder, Sphere } from '@react-three/drei'
 
 // Summit-local coordinates. With the scene origin at world Z -77, these peaks
 // occupy the world-space Z -100…-150 horizon band.
@@ -82,6 +82,19 @@ const EDGE_PINES = Object.freeze([
   [-2.1, 0.18, -5.05, 0.62],
   [2.25, 0.18, -5.15, 0.68],
   [4.75, 0.18, -3.25, 0.76],
+])
+
+const SKY_CLOUDS = Object.freeze([
+  [-34, 24, 16, 1.25, 1.05],
+  [-10, 35, -5, 1.6, 0.82],
+  [17, 29, -19, 1.35, 0.94],
+  [39, 37, 8, 1.5, 0.74],
+])
+
+const BIRDS = Object.freeze([
+  [-17, 23, -47, 0.72, 0],
+  [-9, 25, -50, 0.58, 1.7],
+  [-2, 22, -44, 0.64, 3.2],
 ])
 
 function ClayMaterial({
@@ -191,6 +204,116 @@ function SeaOfClouds({ isNight }) {
           scale={scale}
           isNight={isNight}
         />
+      ))}
+    </group>
+  )
+}
+
+function FloatingSkyClouds({ isNight }) {
+  const cloudRefs = useRef([])
+
+  useFrame((state, delta) => {
+    cloudRefs.current.forEach((cloud, index) => {
+      if (!cloud) return
+      const speed = SKY_CLOUDS[index][4]
+      cloud.position.x += speed * delta
+      if (cloud.position.x > 58) cloud.position.x = -58
+    })
+  })
+
+  return (
+    <group name="floatingSkyClouds">
+      {SKY_CLOUDS.map(([x, y, z, scale], cloudIndex) => (
+        <group
+          ref={(cloud) => {
+            cloudRefs.current[cloudIndex] = cloud
+          }}
+          key={`sky-cloud-${cloudIndex}`}
+          position={[x, y, z]}
+          scale={scale}
+        >
+          {[
+            [0, 0, 0, 1.8],
+            [-1.45, -0.08, 0.12, 1.18],
+            [1.5, -0.05, -0.08, 1.3],
+            [0.35, 0.7, 0, 1.12],
+          ].map(([cx, cy, cz, radius], sphereIndex) => (
+            <Sphere
+              key={`${cx}-${sphereIndex}`}
+              args={[radius, 20, 16]}
+              position={[cx, cy, cz]}
+              scale={[1.35, 0.72, 0.78]}
+              renderOrder={-1}
+            >
+              <ClayMaterial
+                color="#FFFFFF"
+                emissive={isNight ? '#C7D2FE' : '#FFFFFF'}
+                emissiveIntensity={0.08}
+                opacity={0.8}
+              />
+            </Sphere>
+          ))}
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function FlyingBirds() {
+  const birdRefs = useRef([])
+  const leftWingRefs = useRef([])
+  const rightWingRefs = useRef([])
+
+  useFrame((state, delta) => {
+    const time = state.clock.elapsedTime
+
+    birdRefs.current.forEach((bird, index) => {
+      if (!bird) return
+      bird.position.x += (1.3 + index * 0.16) * delta
+      if (bird.position.x > 42) bird.position.x = -42
+
+      const flap = Math.sin(time * 8 + BIRDS[index][4]) * 0.58
+      if (leftWingRefs.current[index]) {
+        leftWingRefs.current[index].rotation.x = flap
+      }
+      if (rightWingRefs.current[index]) {
+        rightWingRefs.current[index].rotation.x = -flap
+      }
+    })
+  })
+
+  return (
+    <group name="summitBirds">
+      {BIRDS.map(([x, y, z, scale], index) => (
+        <group
+          ref={(bird) => {
+            birdRefs.current[index] = bird
+          }}
+          key={`bird-${index}`}
+          position={[x, y, z]}
+          scale={scale}
+        >
+          <Box
+            ref={(wing) => {
+              leftWingRefs.current[index] = wing
+            }}
+            args={[0.82, 0.075, 0.18]}
+            position={[-0.36, 0.12, 0]}
+            rotation={[0, 0, 0.38]}
+          >
+            <meshStandardMaterial color="#111111" roughness={1} metalness={0} />
+          </Box>
+          <Box
+            ref={(wing) => {
+              rightWingRefs.current[index] = wing
+            }}
+            args={[0.82, 0.075, 0.18]}
+            position={[0.36, 0.12, 0]}
+            rotation={[0, 0, -0.38]}
+          >
+            <meshStandardMaterial color="#111111" roughness={1} metalness={0} />
+          </Box>
+        </group>
       ))}
     </group>
   )
@@ -373,6 +496,8 @@ export default function Summit({
       <RollingMist isNight={isNight} />
 
       <SeaOfClouds isNight={isNight} />
+      <FloatingSkyClouds isNight={isNight} />
+      <FlyingBirds />
 
       <group name="distantMountainSkyline">
         {DISTANT_PEAKS.map((peak, index) => (
@@ -381,8 +506,12 @@ export default function Summit({
       </group>
 
       {!isNight && (
-        <Sphere name="sunsetSun" args={[8, 32, 24]} position={[0, 9, -73]}>
-          <meshBasicMaterial color="#FF7F50" fog={false} />
+        <Sphere
+          name="sunsetSun"
+          args={[40, 32, 32]}
+          position={[0, 9, -173]}
+        >
+          <meshBasicMaterial color="#FF8C00" fog={false} />
         </Sphere>
       )}
     </group>
