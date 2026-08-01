@@ -9,6 +9,9 @@ import {
 } from '@react-three/drei'
 import * as THREE from 'three'
 import {
+  getMountainTrailHeightAtZ,
+  MOUNTAIN_CORNER,
+  MOUNTAIN_ORIGIN_Z,
   MOUNTAIN_PROJECT_MARKERS,
   MOUNTAIN_TRAIL_STONES,
 } from '../../../config/narrativeTimeline'
@@ -23,7 +26,8 @@ const RIDGE_MASSES = Object.freeze([
 ])
 
 const STONE_COLORS = ['#FDF6E3', '#E0D8C8', '#FFD1BD']
-const STONE_HEIGHT = 10
+const STONE_HEIGHT = 0.72
+const STONE_EMBED_DEPTH = 0.18
 
 const FOOTHILL_CHERRY_TREES = Object.freeze([
   [-3.8, 39, 0.82, -0.08],
@@ -55,21 +59,63 @@ const FOOTHILL_BUSHES = Object.freeze([
 ])
 
 const RIGHT_PINE_TREES = Object.freeze([
-  [4.6, 38, 0.82],
-  [6.7, 32, 1.04],
-  [5.1, 26, 0.9],
-  [7.2, 19.5, 1.14],
-  [4.9, 12.5, 0.96],
-  [6.8, 5.5, 1.08],
+  [4.3, 41, 0.8],
+  [6.4, 38, 1.08],
+  [8.2, 35, 0.94],
+  [4.9, 31.5, 1.16],
+  [7.2, 28, 0.86],
+  [9, 24.5, 1.06],
+  [5.5, 21, 0.92],
+  [8.1, 17.5, 1.18],
+  [6, 13.5, 0.82],
+  [8.7, 9, 1.1],
 ])
 
 const RIGHT_BOULDERS = Object.freeze([
-  [7.6, 35, 0.82],
-  [4.4, 30, 1.08],
-  [7.8, 23, 1.32],
-  [5.2, 16, 0.9],
-  [7.4, 9, 1.18],
+  [8.8, 39.5, 0.9],
+  [5.1, 35, 1.12],
+  [8.4, 30, 1.28],
+  [5.5, 25.5, 0.94],
+  [8.7, 20, 1.22],
+  [5.8, 15.5, 1.02],
+  [8.5, 11, 1.16],
 ])
+
+const getLocalTrailHeight = (localZ) =>
+  getMountainTrailHeightAtZ(MOUNTAIN_ORIGIN_Z + localZ) -
+  MOUNTAIN_CORNER.y
+
+const SLOPE_PINE_TREES = Object.freeze(
+  Array.from({ length: 16 }, (_, index) => {
+    const z = -1.4 - index * 1.88
+    const side = index % 2 === 0 ? -1 : 1
+    return Object.freeze({
+      position: [
+        side * (3.55 + (index % 3) * 0.62),
+        getLocalTrailHeight(z),
+        z,
+      ],
+      scale: 0.64 + (index % 4) * 0.09,
+    })
+  }),
+)
+
+const SLOPE_BOULDERS = Object.freeze(
+  Array.from({ length: 12 }, (_, index) => {
+    const z = -2.4 - index * 2.42
+    const side = index % 2 === 0 ? 1 : -1
+    const scale = 0.5 + (index % 4) * 0.13
+    return Object.freeze({
+      position: [
+        side * (2.75 + (index % 3) * 0.55),
+        getLocalTrailHeight(z) + scale * 0.36,
+        z,
+      ],
+      scale,
+      rotationY: index * 0.67,
+    })
+  }),
+)
 
 function ClayMaterial({ color, emissive = '#000000', emissiveIntensity = 0 }) {
   return (
@@ -166,7 +212,7 @@ function FoothillPineTree({ position, scale }) {
           castShadow
           receiveShadow
         >
-          <ClayMaterial color="#4E6E5D" />
+          <ClayMaterial color="#2D4C3B" />
         </Cone>
       ))}
     </group>
@@ -293,7 +339,7 @@ export default function Mountain({
             args={[1.05, 1.15, STONE_HEIGHT, 24]}
             position={[
               stone.x,
-              stone.topY - STONE_HEIGHT / 2,
+              stone.topY - STONE_HEIGHT / 2 - STONE_EMBED_DEPTH,
               stone.z,
             ]}
             rotation={[0, stone.rotationY, 0]}
@@ -307,6 +353,34 @@ export default function Mountain({
           >
             <ClayMaterial color={STONE_COLORS[index % STONE_COLORS.length]} />
           </Cylinder>
+        ))}
+      </group>
+
+      <group name="mountainSlopeDressing">
+        {SLOPE_PINE_TREES.map((tree, index) => (
+          <FoothillPineTree
+            key={`slope-pine-${index}`}
+            position={tree.position}
+            scale={tree.scale}
+          />
+        ))}
+
+        {SLOPE_BOULDERS.map((boulder, index) => (
+          <Sphere
+            key={`slope-boulder-${index}`}
+            args={[1, 18, 14]}
+            position={boulder.position}
+            scale={[
+              boulder.scale * 1.18,
+              boulder.scale * 0.72,
+              boulder.scale,
+            ]}
+            rotation={[0.06, boulder.rotationY, -0.05]}
+            castShadow
+            receiveShadow
+          >
+            <ClayMaterial color="#808080" />
+          </Sphere>
         ))}
       </group>
 
@@ -370,7 +444,7 @@ export default function Mountain({
               castShadow
               receiveShadow
             >
-              <ClayMaterial color="#AFAFAF" />
+              <ClayMaterial color="#808080" />
             </Sphere>
           ))}
         </group>

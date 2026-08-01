@@ -192,10 +192,10 @@ export const MOUNTAIN_PATH = Object.freeze({
   cameraTransitionStart: SCENE_RANGES.mountain.start,
   cameraTransitionEnd: 0.53,
   climbHeight: 18,
-  cameraHeight: 1.5,
-  cameraDistance: 8,
-  lookHeight: 6,
-  lookAhead: 15,
+  cameraHeight: 0.8,
+  cameraDistance: 6,
+  lookHeight: 8,
+  lookAhead: 20,
 })
 
 export const MOUNTAIN_PROJECT_MARKERS = Object.freeze([
