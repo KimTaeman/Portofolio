@@ -5,15 +5,16 @@ import {
   Cone,
   Cylinder,
   Dodecahedron,
-  Html,
   Sphere,
   useScroll,
 } from '@react-three/drei'
 import * as THREE from 'three'
 import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
+import { PROJECTS } from '../../../data/projects'
 import {
   getCharacterPositionAtOffset,
   getMountainTransitionTopY,
+  MOUNTAIN_CHARACTER_GROUND_OFFSET,
   MOUNTAIN_ORIGIN_Z,
   MOUNTAIN_PATH,
   MOUNTAIN_TRANSITION,
@@ -42,45 +43,6 @@ const WATERFALL_SOURCE_ROCKS = Object.freeze([
   { position: [18.4, 10.2, -24], scale: [1.45, 0.5, 1.05] },
   { position: [20, 10.6, -24.08], scale: [1.65, 0.58, 1.18] },
   { position: [21.6, 10.7, -24], scale: [1.35, 0.46, 1] },
-])
-
-const PROJECTS = Object.freeze([
-  {
-    number: '01',
-    title: 'CSFD',
-    description: 'Full-stack React and Express application.',
-    accent: '#E5A9A9',
-  },
-  {
-    number: '02',
-    title: 'UniShare',
-    description: 'Cross-platform Flutter community platform.',
-    accent: '#7FB7A3',
-  },
-  {
-    number: '03',
-    title: 'Dummy Project',
-    description: 'A future product experience and case study.',
-    accent: '#D5B4E8',
-  },
-  {
-    number: '04',
-    title: 'Dummy Project',
-    description: 'A future interactive web project.',
-    accent: '#F0B67F',
-  },
-  {
-    number: '05',
-    title: 'Dummy Project',
-    description: 'A future mobile or open-source project.',
-    accent: '#8CB8D8',
-  },
-  {
-    number: '06',
-    title: 'Dummy Project',
-    description: 'A future experiment and technical write-up.',
-    accent: '#A9C978',
-  },
 ])
 
 const CLIFF_MASSES = Object.freeze(
@@ -388,21 +350,21 @@ const PROJECT_BALLOONS = Object.freeze(
     const side = index % 2 ? 1 : -1
     const perpendicularX = Math.cos(stone.rotationY)
     const perpendicularZ = -Math.sin(stone.rotationY)
-    const sideOffset = 9 + (index % 3) * 0.75
+    const sideOffset = 7 + (index % 3) * 0.55
 
     return Object.freeze({
       ...project,
       phase: index * 0.83,
-      cardPosition: Object.freeze([side * 3.8, 4.8, 1.2]),
+      triggerPosition: Object.freeze([
+        stone.x,
+        stone.topY + MOUNTAIN_CHARACTER_GROUND_OFFSET,
+        stone.z,
+      ]),
       basePosition: Object.freeze([
         stone.x + perpendicularX * sideOffset * side,
         stone.topY + 9.5 + (index % 2) * 0.9,
         stone.z + perpendicularZ * sideOffset * side,
       ]),
-      worldZ:
-        MOUNTAIN_ORIGIN_Z +
-        stone.z +
-        perpendicularZ * sideOffset * side,
     })
   }),
 )
@@ -458,6 +420,9 @@ const TRANSITION_ROCK_LAYOUT = Object.freeze(
 )
 
 const balloonCharacterPosition = new THREE.Vector3()
+const balloonTriggerWorldPosition = new THREE.Vector3()
+const mountainWorldOrigin = new THREE.Vector3()
+const PROJECT_PROXIMITY_RADIUS = 5
 
 function FlatMaterial({
   color,
@@ -792,34 +757,73 @@ function Flora() {
   )
 }
 
-function ProjectBalloons() {
+function ProjectBalloons({
+  worldOrigin,
+  onProjectProximityChange = () => {},
+}) {
   const scroll = useScroll()
   const balloonRefs = useRef([])
-  const cardRefs = useRef([])
+  const balloonMaterialRefs = useRef([])
+  const activeIndexRef = useRef(-1)
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     getCharacterPositionAtOffset(scroll.offset, balloonCharacterPosition)
+    mountainWorldOrigin.fromArray(worldOrigin)
     const isOnTrail =
       scroll.offset >= MOUNTAIN_PATH.trailStart &&
       scroll.offset <= MOUNTAIN_PATH.end
+    let nextActiveIndex = -1
+    let nearestDistance = PROJECT_PROXIMITY_RADIUS
+
+    PROJECT_BALLOONS.forEach((balloon, index) => {
+      if (!isOnTrail) return
+      balloonTriggerWorldPosition
+        .fromArray(balloon.triggerPosition)
+        .add(mountainWorldOrigin)
+      const distance = balloonCharacterPosition.distanceTo(
+        balloonTriggerWorldPosition,
+      )
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nextActiveIndex = index
+      }
+    })
+
+    if (nextActiveIndex !== activeIndexRef.current) {
+      activeIndexRef.current = nextActiveIndex
+      const activeProject =
+        nextActiveIndex >= 0 ? PROJECT_BALLOONS[nextActiveIndex] : null
+      onProjectProximityChange(activeProject?.id ?? null)
+    }
 
     PROJECT_BALLOONS.forEach((balloon, index) => {
       const balloonGroup = balloonRefs.current[index]
-      const card = cardRefs.current[index]
+      const isActive = index === nextActiveIndex
+      const bob =
+        Math.sin(state.clock.elapsedTime * 0.75 + balloon.phase) * 0.48
       if (balloonGroup) {
-        balloonGroup.position.y =
-          balloon.basePosition[1] +
-          Math.sin(state.clock.elapsedTime * 0.75 + balloon.phase) * 0.48
+        balloonGroup.position.y = balloon.basePosition[1] + bob
+        const pulseTarget = isActive
+          ? 1 + Math.sin(state.clock.elapsedTime * 2.2 + balloon.phase) * 0.055
+          : 1
+        const pulseScale = THREE.MathUtils.damp(
+          balloonGroup.scale.x,
+          pulseTarget,
+          7,
+          delta,
+        )
+        balloonGroup.scale.setScalar(pulseScale)
       }
-      if (!card) return
 
-      const zDistance = Math.abs(balloonCharacterPosition.z - balloon.worldZ)
-      const proximity = isOnTrail
-        ? 1 - THREE.MathUtils.smoothstep(zDistance, 2.8, 7.5)
-        : 0
-      card.style.opacity = proximity.toFixed(3)
-      card.style.visibility = proximity > 0.01 ? 'visible' : 'hidden'
-      card.style.transform = `translateY(${(1 - proximity) * 10}px) scale(${0.96 + proximity * 0.04})`
+      const balloonMaterial = balloonMaterialRefs.current[index]
+      if (balloonMaterial) {
+        balloonMaterial.emissiveIntensity = THREE.MathUtils.damp(
+          balloonMaterial.emissiveIntensity,
+          isActive ? 0.38 : 0,
+          8,
+          delta,
+        )
+      }
     })
   })
 
@@ -839,7 +843,17 @@ function ProjectBalloons() {
             scale={[2.5, 3.1, 2.5]}
             castShadow
           >
-            <FlatMaterial color={balloon.accent} />
+            <meshStandardMaterial
+              ref={(material) => {
+                balloonMaterialRefs.current[index] = material
+              }}
+              color={balloon.accent}
+              emissive={balloon.accent}
+              emissiveIntensity={0}
+              roughness={1}
+              metalness={0}
+              flatShading
+            />
           </Sphere>
           <Cylinder
             args={[0.045, 0.045, 1.35, 6]}
@@ -856,45 +870,16 @@ function ProjectBalloons() {
           <Box args={[1.3, 0.8, 1]} position={[0, -4.75, 0]} castShadow>
             <FlatMaterial color="#8B5A2B" />
           </Box>
-
-          <Html
-            transform
-            sprite
-            center
-            occlude={false}
-            distanceFactor={10}
-            position={balloon.cardPosition}
-            style={{ pointerEvents: 'none' }}
-          >
-            <article
-              ref={(element) => {
-                cardRefs.current[index] = element
-              }}
-              className="invisible w-[260px] rounded-[22px] border border-white/90 bg-white/95 p-5 text-left text-[#3E3A36] opacity-0 shadow-[0_18px_50px_rgba(58,53,48,0.2)] transition-[opacity,transform] duration-200"
-              aria-label={`Project ${balloon.number}: ${balloon.title}`}
-            >
-              <div
-                className="mb-4 h-1.5 w-10 rounded-full"
-                style={{ backgroundColor: balloon.accent }}
-              />
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8A817A]">
-                Project {balloon.number}
-              </p>
-              <h3 className="mt-2 text-xl font-semibold leading-tight">
-                {balloon.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#6C655F]">
-                {balloon.description}
-              </p>
-            </article>
-          </Html>
         </group>
       ))}
     </group>
   )
 }
 
-export default function Mountain({ position = [0, 0, MOUNTAIN_ORIGIN_Z] }) {
+export default function Mountain({
+  position = [0, 0, MOUNTAIN_ORIGIN_Z],
+  onProjectProximityChange = () => {},
+}) {
   return (
     <group name="mountainBase" position={position}>
       <TransitionCorridor />
@@ -940,7 +925,10 @@ export default function Mountain({ position = [0, 0, MOUNTAIN_ORIGIN_Z] }) {
       <SuspensionBridge />
       <Flora />
 
-      <ProjectBalloons />
+      <ProjectBalloons
+        worldOrigin={position}
+        onProjectProximityChange={onProjectProximityChange}
+      />
     </group>
   )
 }

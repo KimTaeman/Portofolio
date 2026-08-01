@@ -11,6 +11,9 @@ import Summit from './components/canvas/scenes/Summit'
 import UIOverlay from './components/ui/overlays/UIOverlay'
 import CampusDetailCard from './components/ui/overlays/CampusDetailCard'
 import CampusProximityOverlay from './components/ui/overlays/CampusProximityOverlay'
+import ProjectDetailModal from './components/ui/overlays/ProjectDetailModal'
+import ProjectTeaserCard from './components/ui/overlays/ProjectTeaserCard'
+import { PROJECTS } from './data/projects'
 import {
   CAMPUS_PATH,
   CAMERA_KEYFRAMES,
@@ -52,6 +55,8 @@ function App() {
   const [isNight, setIsNight] = useState(false)
   const [scrollOffset, setScrollOffset] = useState(0)
   const [campusDetailId, setCampusDetailId] = useState(null)
+  const [nearbyProjectId, setNearbyProjectId] = useState(null)
+  const [projectDetail, setProjectDetail] = useState(null)
   const outfit = getCharacterOutfit(scrollOffset)
   const isSummitActive = scrollOffset >= SCENE_RANGES.summit.start
   const isSunset =
@@ -72,6 +77,28 @@ function App() {
     setCampusDetailId(null)
     setIsLocked(false)
   }, [])
+
+  const handleProjectSelect = useCallback((projectId) => {
+    const project = PROJECTS.find(({ id }) => id === projectId)
+    if (!project) return
+    setProjectDetail(project)
+    setIsLocked(true)
+  }, [])
+
+  const handleProjectClose = useCallback(() => {
+    setProjectDetail(null)
+    setIsLocked(false)
+  }, [])
+
+  const handleProjectProximityChange = useCallback((projectId) => {
+    setNearbyProjectId((currentId) =>
+      currentId === projectId ? currentId : projectId,
+    )
+  }, [])
+
+  const nearbyProject = nearbyProjectId
+    ? PROJECTS.find(({ id }) => id === nearbyProjectId) ?? null
+    : null
 
   return (
     <div className="relative isolate h-screen w-screen overflow-hidden bg-[#FDF6E3]">
@@ -119,7 +146,10 @@ function App() {
             />
 
             {/* Scene 3: The Adventure Trail (Experience) */}
-            <Mountain position={scenePosition('mountain')} />
+            <Mountain
+              position={scenePosition('mountain')}
+              onProjectProximityChange={handleProjectProximityChange}
+            />
 
             {/* Scene 4: The Summit (Future & Contact) */}
             <Summit
@@ -146,6 +176,14 @@ function App() {
         <CampusDetailCard
           detailId={campusDetailId}
           onClose={handleCampusClose}
+        />
+        <ProjectTeaserCard
+          project={nearbyProject}
+          onViewDetails={handleProjectSelect}
+        />
+        <ProjectDetailModal
+          project={projectDetail}
+          onClose={handleProjectClose}
         />
       </div>
     </div>
