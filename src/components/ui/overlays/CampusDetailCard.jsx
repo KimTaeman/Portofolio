@@ -48,7 +48,7 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
     <AnimatePresence>
       {detail && (
         <motion.div
-          className={`pointer-events-auto fixed inset-0 z-20 flex items-center justify-center p-3 backdrop-blur-sm transition-colors duration-500 sm:p-5 ${isNightMode ? 'bg-[#0B0D17]/65' : 'bg-[#3E2723]/20'}`}
+          className="pointer-events-auto fixed inset-0 z-20 flex items-end justify-end p-3 sm:p-5 lg:p-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -59,10 +59,10 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
             aria-modal="true"
             aria-labelledby="campus-detail-title"
             aria-describedby="campus-detail-description"
-            className={`max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[1.5rem] border p-5 shadow-[0_24px_80px_rgba(15,23,42,0.32)] transition-colors duration-500 sm:rounded-[2rem] sm:p-7 md:p-9 ${isNightMode ? 'border-white/15 bg-[#1E293B]/95 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4] text-[#3E2723]'}`}
-            initial={{ opacity: 0, scale: 0.94, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            className={`max-h-[min(34rem,calc(100dvh-1.5rem))] w-full max-w-[390px] overflow-y-auto rounded-[1.5rem] border p-5 shadow-[0_24px_80px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-colors duration-500 sm:rounded-[1.75rem] sm:p-7 ${isNightMode ? 'border-white/15 bg-[#1E293B]/90 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4]/90 text-[#3E2723]'}`}
+            initial={{ opacity: 0, scale: 0.96, x: 24, y: 14 }}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, x: 18, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 24 }}
             onMouseDown={(event) => event.stopPropagation()}
           >

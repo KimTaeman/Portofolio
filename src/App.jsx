@@ -12,7 +12,6 @@ import Mountain from './components/canvas/scenes/Mountain'
 import Summit from './components/canvas/scenes/Summit'
 import UIOverlay from './components/ui/overlays/UIOverlay'
 import CampusDetailCard from './components/ui/overlays/CampusDetailCard'
-import CampusProximityOverlay from './components/ui/overlays/CampusProximityOverlay'
 import ProjectDetailModal from './components/ui/overlays/ProjectDetailModal'
 import ProjectTeaserCard from './components/ui/overlays/ProjectTeaserCard'
 import { PROJECTS } from './data/projects'
@@ -68,6 +67,7 @@ function InfiniteGround({ visible = true }) {
 
 function App() {
   const { isNightMode, toggleNightMode } = useDayNight()
+  const sceneHtmlPortalRef = useRef(null)
   const [isLocked, setIsLocked] = useState(false)
   const [scrollOffset, setScrollOffset] = useState(0)
   const [campusDetailId, setCampusDetailId] = useState(null)
@@ -77,6 +77,9 @@ function App() {
   const areCampusParticlesActive =
     scrollOffset >= SCENE_RANGES.playground.end - 0.04 &&
     scrollOffset <= SCENE_RANGES.campus.end + 0.03
+  const isCampusSceneActive =
+    scrollOffset >= SCENE_RANGES.campus.start &&
+    scrollOffset < SCENE_RANGES.campus.end
   const areSummitParticlesActive =
     scrollOffset >= SCENE_RANGES.summit.start - 0.04
 
@@ -154,6 +157,8 @@ function App() {
                 position={scenePosition('campus')}
                 onSelect={handleCampusSelect}
                 areParticlesActive={areCampusParticlesActive}
+                isSceneActive={isCampusSceneActive}
+                htmlPortal={sceneHtmlPortalRef}
               />
 
               {/* Scene 3: The Adventure Trail (Experience) */}
@@ -171,6 +176,11 @@ function App() {
             <Preload all />
           </Suspense>
         </Canvas>
+        <div
+          ref={sceneHtmlPortalRef}
+          className="pointer-events-none absolute inset-0 z-[1] overflow-hidden"
+          aria-hidden="true"
+        />
       </div>
 
       <Loader
@@ -212,10 +222,6 @@ function App() {
 
       <div className="pointer-events-none fixed inset-0 z-10">
         <UIOverlay scrollOffset={scrollOffset} />
-        <CampusProximityOverlay
-          scrollOffset={scrollOffset}
-          onSelect={handleCampusSelect}
-        />
 
         <button
           type="button"

@@ -671,4 +671,9 @@ export const CAMPUS_CAMERA_TRACKING = Object.freeze({
   start: SCENE_RANGES.campus.start,
   end: 0.48,
   characterFrameOffsetX: 1.6,
+  // Aim through the character rather than at the path. This keeps the feet
+  // near the lower quarter of the frame without filling the shot with grass.
+  heightAbovePath: 3.6,
+  lookHeightAbovePath: 1.55,
+  fov: 45,
 })

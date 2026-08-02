@@ -4,6 +4,7 @@ import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import {
   CAMPUS_CAMERA_TRACKING,
+  CAMPUS_PATH,
   CAMERA_KEYFRAMES,
   getCharacterPositionAtOffset,
   getNearestCampusProximity,
@@ -216,6 +217,17 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
       desiredFov = 48 + Math.sin(fallProgress * Math.PI) * 2.5
     }
 
+    const isCampusTracking =
+      offset >= CAMPUS_CAMERA_TRACKING.start &&
+      offset <= CAMPUS_CAMERA_TRACKING.end
+    if (isCampusTracking) {
+      desiredCameraPosition.y =
+        CAMPUS_PATH.surfaceY + CAMPUS_CAMERA_TRACKING.heightAbovePath
+      desiredLookTarget.y =
+        CAMPUS_PATH.surfaceY + CAMPUS_CAMERA_TRACKING.lookHeightAbovePath
+      desiredFov = CAMPUS_CAMERA_TRACKING.fov
+    }
+
     if (
       offset >= MOUNTAIN_PATH.cameraTransitionStart &&
       offset <= MOUNTAIN_PATH.end
@@ -363,10 +375,7 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
     const rotationDamping =
       1 - Math.exp(-(isCinematicCamera ? 4.2 : 8) * delta)
     camera.position.lerp(desiredCameraPosition, positionDamping)
-    if (
-      offset >= CAMPUS_CAMERA_TRACKING.start &&
-      offset <= CAMPUS_CAMERA_TRACKING.end
-    ) {
+    if (isCampusTracking) {
       camera.position.x = desiredCameraPosition.x
     }
     if (isCinematicCamera) {

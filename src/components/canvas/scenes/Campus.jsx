@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { RoundedBox, useCursor, useScroll } from '@react-three/drei'
+import { Html, RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
 import useDayNight from '../../../hooks/useDayNight'
 import {
   CAMPUS_LANDMARKS,
   CAMPUS_PATH,
-  getCampusLandmarkProximity,
 } from '../../../config/narrativeTimeline'
 
 const pseudoRandom = (index, salt) => {
@@ -465,22 +464,43 @@ function VintageLampPost({ position, isNight }) {
   )
 }
 
-function ProximityLandmark({ children, landmark, onSelect, bobAmount = 0.15 }) {
-  const [isHovered, setIsHovered] = useState(false)
-  const anchorRef = useRef()
+function ClickableLandmark({
+  children,
+  landmark,
+  onSelect,
+  bobAmount = 0.15,
+  hotspotY = 2.5,
+  hitboxSize = [2.4, 3, 2.2],
+  isSceneActive = false,
+  htmlPortal,
+}) {
+  const isHoveredRef = useRef(false)
+  const previousCursorRef = useRef('')
   const floatingRef = useRef()
-  const scroll = useScroll()
-  useCursor(isHovered, 'pointer', 'auto')
+  const hotspotRef = useRef()
+  const badgeRef = useRef()
+  const { isNightMode } = useDayNight()
+
+  useEffect(() => {
+    if (!isSceneActive && isHoveredRef.current) {
+      isHoveredRef.current = false
+      document.body.style.cursor = previousCursorRef.current
+    }
+    return () => {
+      if (!isHoveredRef.current) return
+      isHoveredRef.current = false
+      document.body.style.cursor = previousCursorRef.current
+    }
+  }, [isSceneActive])
 
   useFrame((state, delta) => {
-    if (!anchorRef.current || !floatingRef.current) return
+    if (!floatingRef.current) return
 
     const elapsed = state.clock.elapsedTime
-    const proximity = getCampusLandmarkProximity(scroll.offset, landmark)
     floatingRef.current.position.y =
       Math.sin(elapsed * landmark.bobSpeed + landmark.bobPhase) * bobAmount
 
-    const targetScale = isHovered ? 1.06 : 1 + proximity * 0.025
+    const targetScale = isHoveredRef.current ? 1.06 : 1
     const damping = 1 - Math.exp(-10 * delta)
     floatingRef.current.scale.x +=
       (targetScale - floatingRef.current.scale.x) * damping
@@ -488,30 +508,135 @@ function ProximityLandmark({ children, landmark, onSelect, bobAmount = 0.15 }) {
       (targetScale - floatingRef.current.scale.y) * damping
     floatingRef.current.scale.z +=
       (targetScale - floatingRef.current.scale.z) * damping
+
+    if (!isSceneActive || !hotspotRef.current || !badgeRef.current) return
+
+    const pulseWave = Math.sin(elapsed * 2.8 + landmark.bobPhase)
+    const hotspotPulse =
+      (isHoveredRef.current ? 1.24 : 1.04) + pulseWave * 0.12
+    hotspotRef.current.scale.setScalar(hotspotPulse)
+    hotspotRef.current.position.y = hotspotY + pulseWave * 0.07
+    badgeRef.current.position.y =
+      hotspotY + 0.62 +
+      Math.sin(elapsed * 1.8 + landmark.bobPhase) * 0.1
   })
 
   return (
     <group
-      ref={anchorRef}
+      name={`${landmark.id}ClickableLandmark`}
       position={[landmark.localX, 0, landmark.z]}
       onClick={(event) => {
+        if (!isSceneActive) return
         event.stopPropagation()
         onSelect(landmark.id)
       }}
       onPointerEnter={(event) => {
+        if (!isSceneActive) return
         event.stopPropagation()
-        setIsHovered(true)
+        if (!isHoveredRef.current) {
+          previousCursorRef.current = document.body.style.cursor
+        }
+        isHoveredRef.current = true
+        document.body.style.cursor = 'pointer'
       }}
-      onPointerLeave={() => setIsHovered(false)}
+      onPointerLeave={() => {
+        if (!isHoveredRef.current) return
+        isHoveredRef.current = false
+        document.body.style.cursor = previousCursorRef.current
+      }}
     >
+      {isSceneActive && (
+        <>
+          <mesh
+            name={`${landmark.id}ClickTarget`}
+            position={[0, hitboxSize[1] * 0.5, 0]}
+          >
+            <boxGeometry args={hitboxSize} />
+            <meshBasicMaterial
+              transparent
+              opacity={0}
+              depthWrite={false}
+              colorWrite={false}
+            />
+          </mesh>
+
+          <group
+            ref={hotspotRef}
+            name={`${landmark.id}ClickHotspot`}
+            position={[0, hotspotY, 0.45]}
+          >
+            <mesh>
+              <torusGeometry args={[0.3, 0.065, 8, 24]} />
+              <ClayMaterial
+                color="#FFE066"
+                emissive="#FF9F1C"
+                emissiveIntensity={0.95}
+              />
+            </mesh>
+            <mesh>
+              <sphereGeometry args={[0.095, 8, 6]} />
+              <ClayMaterial
+                color="#FFFFFF"
+                emissive="#FFE066"
+                emissiveIntensity={0.9}
+              />
+            </mesh>
+            <pointLight
+              color="#FFD15C"
+              intensity={0.35}
+              distance={2.4}
+              decay={2}
+            />
+          </group>
+
+          {/* This local group keeps Drei's DOM projection anchored to the
+              owning landmark instead of the campus or world origin. */}
+          <group
+            ref={badgeRef}
+            name={`${landmark.id}HintBadge`}
+            position={[0, hotspotY + 0.62, 0.45]}
+          >
+            <Html
+              center
+              occlude={false}
+              portal={htmlPortal}
+              zIndexRange={[30, 0]}
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              <div
+                aria-hidden="true"
+                className={`pointer-events-none flex whitespace-nowrap rounded-full border px-3 py-1.5 font-sans text-[0.68rem] font-semibold tracking-[0.04em] shadow-[0_8px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition-colors duration-500 ${
+                  isNightMode
+                    ? 'border-white/20 bg-[#1E293B]/90 text-[#F8FAFC]'
+                    : 'border-white/90 bg-[#FFF9F4]/95 text-[#3E2723]'
+                }`}
+              >
+                <span className="relative mr-2 flex size-2 items-center justify-center self-center">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#FFD15C] opacity-70" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-[#E88C47]" />
+                </span>
+                View
+              </div>
+            </Html>
+          </group>
+        </>
+      )}
+
       <group ref={floatingRef}>{children}</group>
     </group>
   )
 }
 
-function Easel({ onSelect }) {
+function Easel({ onSelect, isSceneActive, htmlPortal }) {
   return (
-    <ProximityLandmark landmark={EASEL_LANDMARK} onSelect={onSelect}>
+    <ClickableLandmark
+      landmark={EASEL_LANDMARK}
+      onSelect={onSelect}
+      hotspotY={2.65}
+      hitboxSize={[2.7, 3.2, 2]}
+      isSceneActive={isSceneActive}
+      htmlPortal={htmlPortal}
+    >
       <group name="easelLandmark" scale={1.18}>
         <mesh position={[-0.36, 0.68, 0]} rotation={[0, 0, 0.24]} castShadow>
           <cylinderGeometry args={[0.055, 0.055, 1.75, 6]} />
@@ -563,17 +688,21 @@ function Easel({ onSelect }) {
           ))}
         </group>
       </group>
-    </ProximityLandmark>
+    </ClickableLandmark>
   )
 }
 
-function BadmintonRacket({ onSelect }) {
+function BadmintonRacket({ onSelect, isSceneActive, htmlPortal }) {
   return (
     <>
-      <ProximityLandmark
+      <ClickableLandmark
         landmark={BADMINTON_LANDMARK}
         onSelect={onSelect}
         bobAmount={0}
+        hotspotY={2}
+        hitboxSize={[1.8, 2.6, 1.8]}
+        isSceneActive={isSceneActive}
+        htmlPortal={htmlPortal}
       >
         <group
           position={[0, 0, 0.02]}
@@ -599,7 +728,7 @@ function BadmintonRacket({ onSelect }) {
             <ClayMaterial color="#465577" />
           </mesh>
         </group>
-      </ProximityLandmark>
+      </ClickableLandmark>
 
       <group
         name="shuttlecock"
@@ -623,9 +752,16 @@ function BadmintonRacket({ onSelect }) {
   )
 }
 
-function SkillsLaptop({ onSelect }) {
+function SkillsLaptop({ onSelect, isSceneActive, htmlPortal }) {
   return (
-    <ProximityLandmark landmark={SKILLS_LANDMARK} onSelect={onSelect}>
+    <ClickableLandmark
+      landmark={SKILLS_LANDMARK}
+      onSelect={onSelect}
+      hotspotY={2.35}
+      hitboxSize={[3.2, 2.8, 2.2]}
+      isSceneActive={isSceneActive}
+      htmlPortal={htmlPortal}
+    >
       <group name="laptopBenchLandmark">
         <RoundedBox
           args={[2.1, 0.2, 0.72]}
@@ -724,7 +860,7 @@ function SkillsLaptop({ onSelect }) {
           </mesh>
         </group>
       </group>
-    </ProximityLandmark>
+    </ClickableLandmark>
   )
 }
 
@@ -789,6 +925,8 @@ export default function Campus({
   position = [0, 0, 0],
   onSelect = () => {},
   areParticlesActive = true,
+  isSceneActive = false,
+  htmlPortal,
 }) {
   const { isNightMode: isNight } = useDayNight()
 
@@ -839,9 +977,21 @@ export default function Campus({
       ))}
 
       {areParticlesActive && <FallingPetals isNight={isNight} />}
-      <Easel onSelect={onSelect} />
-      <BadmintonRacket onSelect={onSelect} />
-      <SkillsLaptop onSelect={onSelect} />
+      <Easel
+        onSelect={onSelect}
+        isSceneActive={isSceneActive}
+        htmlPortal={htmlPortal}
+      />
+      <BadmintonRacket
+        onSelect={onSelect}
+        isSceneActive={isSceneActive}
+        htmlPortal={htmlPortal}
+      />
+      <SkillsLaptop
+        onSelect={onSelect}
+        isSceneActive={isSceneActive}
+        htmlPortal={htmlPortal}
+      />
       <CampusSpringLights isNight={isNight} />
     </group>
   )
