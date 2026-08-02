@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
+import { Stars } from '@react-three/drei'
 import * as THREE from 'three'
 import useDayNight from '../../hooks/useDayNight'
 
@@ -57,6 +58,15 @@ const dampColor = (current, target, delta) => {
   )
 }
 
+const dampUniform = (uniform, target, delta) => {
+  uniform.value = THREE.MathUtils.damp(
+    uniform.value,
+    target,
+    THEME_DAMPING,
+    delta,
+  )
+}
+
 const createHaloTexture = () => {
   const size = 256
   const canvas = document.createElement('canvas')
@@ -97,6 +107,7 @@ export default function GlobalSceneEnvironment() {
   const directionalTargetRef = useRef()
   const celestialMaterialRef = useRef()
   const haloMaterialRef = useRef()
+  const starsRef = useRef()
   const haloTexture = useMemo(() => createHaloTexture(), [])
 
   useEffect(() => {
@@ -106,6 +117,25 @@ export default function GlobalSceneEnvironment() {
   }, [])
 
   useEffect(() => () => haloTexture.dispose(), [haloTexture])
+
+  useLayoutEffect(() => {
+    const material = starsRef.current?.material
+    if (!material || material.uniforms.nightOpacity) return
+
+    // Drei's Stars shader has no public opacity uniform. Add one once so the
+    // field can stay mounted and cross-fade without rebuilding its geometry.
+    material.uniforms.nightOpacity = { value: 0 }
+    material.fragmentShader = material.fragmentShader
+      .replace(
+        'uniform float fade;',
+        'uniform float fade;\nuniform float nightOpacity;',
+      )
+      .replace(
+        'gl_FragColor = vec4(vColor, opacity);',
+        'gl_FragColor = vec4(vColor, opacity * nightOpacity);',
+      )
+    material.needsUpdate = true
+  }, [])
 
   useFrame((_, delta) => {
     const target = isNightMode ? NIGHT : DAY
@@ -171,6 +201,14 @@ export default function GlobalSceneEnvironment() {
     if (haloMaterialRef.current) {
       dampColor(haloMaterialRef.current.color, target.halo, delta)
     }
+
+    const stars = starsRef.current
+    const starOpacity = stars?.material?.uniforms?.nightOpacity
+    if (stars && starOpacity) {
+      dampUniform(starOpacity, isNightMode ? 0.6 : 0, delta)
+      stars.position.copy(camera.position)
+      stars.visible = starOpacity.value > 0.001
+    }
   })
 
   return (
@@ -183,6 +221,18 @@ export default function GlobalSceneEnvironment() {
         color="#FFFFFF"
         groundColor="#8A817A"
         intensity={0.6}
+      />
+      <Stars
+        ref={starsRef}
+        name="deepNightStarfield"
+        count={1500}
+        depth={50}
+        factor={2}
+        fade
+        radius={100}
+        saturation={0}
+        speed={0}
+        visible={false}
       />
       <object3D ref={directionalTargetRef} />
       <directionalLight

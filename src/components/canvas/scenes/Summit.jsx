@@ -4,12 +4,11 @@ import {
   Cone,
   Cylinder,
   Dodecahedron,
+  Sparkles,
   Sphere,
-  useScroll,
 } from '@react-three/drei'
 import * as THREE from 'three'
 import useDayNight from '../../../hooks/useDayNight'
-import { SUMMIT_SEQUENCE } from '../../../config/narrativeTimeline'
 
 // These summit-local ranges sit between the plateau (world Z -187) and the
 // fixed celestial mesh (world Z -1000). Fog progressively softens each band.
@@ -190,21 +189,6 @@ const BIRD_FLOCK = Object.freeze([
   [18, 26, -110, 0.6, 4.2, 0.15],
   [14, 24, -99, 0.5, 5.15, 0.19],
 ])
-
-const CELEBRATION_PETAL_COUNT = 110
-const CELEBRATION_PETAL_DAY_COLOR = new THREE.Color('#FFB7C5')
-const CELEBRATION_PETAL_NIGHT_COLOR = new THREE.Color('#C084FC')
-
-const pseudoRandom = (index, salt) => {
-  const value = Math.sin((index + 1) * 12.9898 + salt * 78.233) * 43758.5453
-  return value - Math.floor(value)
-}
-
-const dampColor = (current, target, delta, damping = 2) => {
-  current.r = THREE.MathUtils.damp(current.r, target.r, damping, delta)
-  current.g = THREE.MathUtils.damp(current.g, target.g, damping, delta)
-  current.b = THREE.MathUtils.damp(current.b, target.b, damping, delta)
-}
 
 const createRidgelineGeometry = (ridge, depth) => {
   const positions = []
@@ -862,123 +846,6 @@ function ForegroundVistaFrame() {
   )
 }
 
-function SummitCelebrationPetals({ isNight }) {
-  const scroll = useScroll()
-  const petalsRef = useRef()
-  const materialRef = useRef()
-  const summitArrivalTimeRef = useRef(null)
-  const petalTransform = useMemo(() => new THREE.Object3D(), [])
-  const particleData = useMemo(
-    () =>
-      Array.from({ length: CELEBRATION_PETAL_COUNT }, (_, index) => ({
-        x: -13 + pseudoRandom(index, 31) * 26,
-        fallOffset: pseudoRandom(index, 32) * 11.5,
-        z: -8 + pseudoRandom(index, 33) * 16,
-        speed: 0.42 + pseudoRandom(index, 34) * 0.5,
-        drift: 0.35 + pseudoRandom(index, 35) * 0.65,
-        phase: pseudoRandom(index, 36) * Math.PI * 2,
-        scale: 0.68 + pseudoRandom(index, 37) * 0.72,
-      })),
-    [],
-  )
-
-  useEffect(() => {
-    petalsRef.current?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-  }, [])
-
-  useFrame((state, delta) => {
-    const petals = petalsRef.current
-    const material = materialRef.current
-    if (!petals || !material) return
-
-    const elapsed = state.clock.elapsedTime
-    if (scroll.offset < SUMMIT_SEQUENCE.haltEnd) {
-      summitArrivalTimeRef.current = null
-    } else if (summitArrivalTimeRef.current === null) {
-      summitArrivalTimeRef.current = elapsed
-    }
-
-    // JourneyCharacter's one-shot victory lasts two seconds; begin the
-    // continuous petalfall as it blends into the final breathing idle loop.
-    const isCelebrating =
-      summitArrivalTimeRef.current !== null &&
-      elapsed - summitArrivalTimeRef.current >= 2
-    material.opacity = THREE.MathUtils.damp(
-      material.opacity,
-      isCelebrating ? 0.72 : 0,
-      2,
-      delta,
-    )
-    material.emissiveIntensity = THREE.MathUtils.damp(
-      material.emissiveIntensity,
-      isCelebrating ? (isNight ? 0.32 : 0.08) : 0,
-      2,
-      delta,
-    )
-    dampColor(
-      material.color,
-      isNight
-        ? CELEBRATION_PETAL_NIGHT_COLOR
-        : CELEBRATION_PETAL_DAY_COLOR,
-      delta,
-    )
-    petals.visible = material.opacity > 0.01
-    if (!petals.visible) return
-
-    const fallHeight = 11.5
-
-    particleData.forEach((particle, index) => {
-      const y =
-        0.55 +
-        fallHeight -
-        (particle.fallOffset + elapsed * particle.speed) % fallHeight
-      const sway = Math.sin(elapsed * particle.drift + particle.phase)
-
-      petalTransform.position.set(
-        particle.x + sway * 0.75,
-        y,
-        particle.z + Math.cos(elapsed * 0.38 + particle.phase) * 0.4,
-      )
-      petalTransform.rotation.set(
-        elapsed * 0.75 + particle.phase,
-        elapsed * 0.42 + particle.phase * 0.5,
-        sway * 0.7,
-      )
-      petalTransform.scale.setScalar(particle.scale)
-      petalTransform.updateMatrix()
-      petals.setMatrixAt(index, petalTransform.matrix)
-    })
-
-    petals.instanceMatrix.needsUpdate = true
-  })
-
-  return (
-    <instancedMesh
-      ref={petalsRef}
-      name="summitCelebrationPetals"
-      args={[undefined, undefined, CELEBRATION_PETAL_COUNT]}
-      frustumCulled={false}
-      visible={false}
-      renderOrder={3}
-    >
-      <circleGeometry args={[0.11, 5]} />
-      <meshStandardMaterial
-        ref={materialRef}
-        color="#FFB7C5"
-        emissive="#C084FC"
-        emissiveIntensity={0}
-        roughness={1}
-        metalness={0}
-        flatShading
-        side={THREE.DoubleSide}
-        transparent
-        opacity={0}
-        depthWrite={false}
-      />
-    </instancedMesh>
-  )
-}
-
 function RollingMist({ isNight }) {
   const mistRefs = useRef([])
 
@@ -1036,7 +903,17 @@ export default function Summit({
       <AlpineDecoration />
       <ForegroundVistaFrame />
       <RollingMist isNight={isNight} />
-      <SummitCelebrationPetals isNight={isNight} />
+      <Sparkles
+        name="summitFireflies"
+        position={[0, 3.5, 0]}
+        color="#FFEA8C"
+        count={40}
+        noise={0.2}
+        scale={15}
+        size={3}
+        speed={0.4}
+        opacity={isNight ? 1 : 0.04}
+      />
 
       <ValleyFloorAndRiver isNight={isNight} />
       <SeaOfClouds isNight={isNight} />
