@@ -78,7 +78,12 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     build: {
       rollupOptions: {
+        preserveEntrySignatures: 'allow-extension',
         output: {
+          // Required when explicit groups do not recursively absorb their
+          // dependencies; this preserves ESM initialization order between
+          // Drei, Fiber, and Three in production builds.
+          strictExecutionOrder: true,
           codeSplitting: {
             includeDependenciesRecursively: false,
             maxSize: 450_000,
