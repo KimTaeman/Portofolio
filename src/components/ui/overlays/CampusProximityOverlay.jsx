@@ -20,7 +20,10 @@ const getActiveLandmark = (scrollOffset) => {
   return activeStrength > 0.015 ? activeLandmark : null
 }
 
-export default function CampusProximityOverlay({ scrollOffset = 0 }) {
+export default function CampusProximityOverlay({
+  scrollOffset = 0,
+  onSelect = () => {},
+}) {
   const { isNightMode } = useDayNight()
   const activeLandmark = getActiveLandmark(scrollOffset)
   const prefersReducedMotion = useReducedMotion()
@@ -32,6 +35,7 @@ export default function CampusProximityOverlay({ scrollOffset = 0 }) {
     <div
       className="pointer-events-none fixed bottom-3 left-1/2 z-30 w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2 md:bottom-auto md:left-auto md:right-[7%] md:top-[26%] md:translate-x-0"
       aria-live="polite"
+      aria-label="Nearby campus landmark"
     >
       <AnimatePresence mode="wait">
         {activeLandmark && (
@@ -43,9 +47,9 @@ export default function CampusProximityOverlay({ scrollOffset = 0 }) {
             transition={transition}
             className={`max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl border px-5 py-4 shadow-[0_20px_55px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors duration-500 sm:rounded-3xl sm:px-6 sm:py-5 ${isNightMode ? 'border-white/15 bg-[#1E293B]/90 text-[#F8FAFC]' : 'border-white/90 bg-[#FFF9F4]/95 text-[#3E2723]'}`}
           >
-            <p className={`mb-2 font-serif text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
+            <h2 className={`mb-2 font-serif text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
               {activeLandmark.title}
-            </p>
+            </h2>
             <p className="font-sans text-sm font-medium leading-relaxed sm:text-base">
               {activeLandmark.text}
             </p>
@@ -59,6 +63,14 @@ export default function CampusProximityOverlay({ scrollOffset = 0 }) {
                 ))}
               </ul>
             )}
+            <button
+              type="button"
+              onClick={() => onSelect(activeLandmark.id)}
+              aria-label={`View details for ${activeLandmark.title}`}
+              className={`pointer-events-auto mt-4 inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2.5 font-sans text-sm font-semibold transition-all duration-500 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'bg-[#F8FAFC] text-[#1E293B] hover:bg-white' : 'bg-[#3E2723] text-[#FFF9F4] hover:bg-[#8A817A]'}`}
+            >
+              View details
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

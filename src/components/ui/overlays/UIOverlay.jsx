@@ -30,19 +30,17 @@ const CONTACT_ACTIONS = [
   {
     label: 'Email',
     icon: FaEnvelope,
-    href: import.meta.env.VITE_CONTACT_EMAIL
-      ? `mailto:${import.meta.env.VITE_CONTACT_EMAIL}`
-      : null,
+    href: 'mailto:haymanayemya@gmail.com',
   },
   {
     label: 'GitHub',
     icon: FaGithub,
-    href: import.meta.env.VITE_GITHUB_URL || null,
+    href: 'https://github.com/KimTaeman',
   },
   {
     label: 'LinkedIn',
     icon: FaLinkedinIn,
-    href: import.meta.env.VITE_LINKEDIN_URL || null,
+    href: 'https://th.linkedin.com/in/nanghaymanayemya',
   },
 ]
 
@@ -102,27 +100,12 @@ function ContactPill({ label, href, icon: Icon }) {
     transition: { type: 'spring', stiffness: 320, damping: 22 },
   }
 
-  if (!href) {
-    return (
-      <motion.button
-        type="button"
-        aria-disabled="true"
-        aria-label={label}
-        title={`Add the ${label} URL in the Vite contact environment variables`}
-        className={className}
-        {...motionProps}
-      >
-        <Icon aria-hidden="true" size={20} strokeWidth={1.8} />
-      </motion.button>
-    )
-  }
-
   const isExternal = href.startsWith('http')
   return (
     <motion.a
       href={href}
       target={isExternal ? '_blank' : undefined}
-      rel={isExternal ? 'noreferrer' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
       aria-label={label}
       title={label}
       className={className}
@@ -158,8 +141,9 @@ export default function UIOverlay({ scrollOffset = 0 }) {
       >
         <AnimatePresence mode="wait" initial={false}>
           {!isSummit && (
-            <motion.div
+            <motion.section
               key={activeScene}
+              aria-labelledby={`scene-heading-${activeScene}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity, y: 0 }}
               exit={{ opacity: 0, y: -12, transition: { duration: 0 } }}
@@ -170,6 +154,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
                 {SCENE_LABELS[activeScene]}
               </p>
               <h1
+                id={`scene-heading-${activeScene}`}
                 className={`text-left ${ELEGANT_SERIF_CLASS} text-[clamp(1.65rem,7vw,2.25rem)] font-semibold leading-[1.14] tracking-[-0.025em] transition-colors duration-500 sm:text-[clamp(1.9rem,3.2vw,2.25rem)] ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
               >
                 {content.headline}
@@ -181,7 +166,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
                   {content.body}
                 </p>
               )}
-            </motion.div>
+            </motion.section>
           )}
 
           {showSummitHud && !isMinimized && (
@@ -216,14 +201,14 @@ export default function UIOverlay({ scrollOffset = 0 }) {
                 {SCENE_CONTENT.summit.body}
               </p>
 
-              {/* <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
+              <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
                 <p className={`${ELEGANT_SERIF_CLASS} text-lg font-semibold transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
                   Nang Hayman Aye Mya
                 </p>
                 <p className={`mt-1 font-sans text-xs font-medium uppercase tracking-[0.12em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                   Computer Science, KMUTT
                 </p>
-              </div> */}
+              </div>
 
               <div
                 className="mt-5 flex w-full gap-3"

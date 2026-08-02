@@ -25,9 +25,9 @@ export default function ProjectTeaserCard({ project, onViewDetails }) {
             <p className={`font-serif text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
               Project {project.number}
             </p>
-            <h3 className="mt-2 font-serif text-xl font-semibold leading-tight sm:text-2xl">
+            <h2 className="mt-2 font-serif text-xl font-semibold leading-tight sm:text-2xl">
               {project.title}
-            </h3>
+            </h2>
             <p className={`mt-3 font-sans text-sm leading-relaxed transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
               {project.subtitle}
             </p>

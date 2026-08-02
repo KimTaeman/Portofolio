@@ -113,7 +113,7 @@ function App() {
     : null
 
   return (
-    <div
+    <main
       className={`relative isolate h-screen w-screen overflow-hidden font-sans transition-colors duration-500 ${
         isNightMode ? 'bg-[#0B0D17]' : 'bg-[#FFF0E5]'
       }`}
@@ -212,7 +212,10 @@ function App() {
 
       <div className="pointer-events-none fixed inset-0 z-10">
         <UIOverlay scrollOffset={scrollOffset} />
-        <CampusProximityOverlay scrollOffset={scrollOffset} />
+        <CampusProximityOverlay
+          scrollOffset={scrollOffset}
+          onSelect={handleCampusSelect}
+        />
 
         <button
           type="button"
@@ -246,7 +249,7 @@ function App() {
           onClose={handleProjectClose}
         />
       </div>
-    </div>
+    </main>
   )
 }
 
