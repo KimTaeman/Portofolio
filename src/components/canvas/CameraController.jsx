@@ -41,6 +41,7 @@ const summitOrbitTarget = new THREE.Vector3()
 const fallCharacterPosition = new THREE.Vector3()
 const fallCameraPosition = new THREE.Vector3()
 const fallLookTarget = new THREE.Vector3()
+const campusCharacterPosition = new THREE.Vector3()
 const responsiveCameraOffset = new THREE.Vector3()
 const SCROLL_REPORT_INTERVAL_MS = 50
 const noop = () => {}
@@ -221,6 +222,11 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
       offset >= CAMPUS_CAMERA_TRACKING.start &&
       offset <= CAMPUS_CAMERA_TRACKING.end
     if (isCampusTracking) {
+      getCharacterPositionAtOffset(offset, campusCharacterPosition)
+      desiredCameraPosition.x =
+        campusCharacterPosition.x +
+        CAMPUS_CAMERA_TRACKING.characterFrameOffsetX
+      desiredLookTarget.x = desiredCameraPosition.x
       desiredCameraPosition.y =
         CAMPUS_PATH.surfaceY + CAMPUS_CAMERA_TRACKING.heightAbovePath
       desiredLookTarget.y =

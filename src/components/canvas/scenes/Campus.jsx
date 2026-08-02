@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Html, RoundedBox } from '@react-three/drei'
+import { Html, RoundedBox, useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import LowPolyGrassMaterial from '../LowPolyGrassMaterial'
 import useDayNight from '../../../hooks/useDayNight'
 import {
   CAMPUS_LANDMARKS,
   CAMPUS_PATH,
+  getCharacterXAtOffset,
+  SCENE_RANGES,
 } from '../../../config/narrativeTimeline'
 
 const pseudoRandom = (index, salt) => {
@@ -61,16 +63,30 @@ const CHERRY_TREE_LAYOUT = TREE_X_POSITIONS.map((x, index) => {
   ]
 }).filter(([x, , z]) => !isInsideTurnClearance(x, z))
 
+const LAMP_TREE_CLEARANCE = 2.15
+const LAMP_LANDMARK_CLEARANCE = 2.2
+const isInsideTreeClearance = (x, z) =>
+  CHERRY_TREE_LAYOUT.some(([treeX, , treeZ]) =>
+    Math.hypot(x - treeX, z - treeZ) < LAMP_TREE_CLEARANCE
+  )
+const isInsideLandmarkClearance = (x, z) =>
+  CAMPUS_LANDMARKS.some(({ localX, z: landmarkZ }) =>
+    Math.hypot(x - localX, z - landmarkZ) < LAMP_LANDMARK_CLEARANCE
+  )
+
+// A sparse rear-edge rhythm keeps the path illuminated without placing poles
+// between the camera and the interactive props.
 const LAMP_LAYOUT = [
-  [-4.8, 1.05],
-  [-9, -3.5],
-  [-3, -3.35],
-  [2, -3.55],
-  [7, -3.4],
-  [10, -3.25],
+  [-11.8, -2],
+  [-6.8, -2.1],
+  [-2.4, -2.05],
+  [2.6, -2.1],
 ].filter(
   ([x, z]) =>
-    !isInsideTurnClearance(x, z) && !isInsideLandingClearance(x, z),
+    !isInsideTurnClearance(x, z) &&
+    !isInsideLandingClearance(x, z) &&
+    !isInsideTreeClearance(x, z) &&
+    !isInsideLandmarkClearance(x, z),
 )
 
 const PATH_JOINT_X_POSITIONS = Object.freeze(
@@ -82,6 +98,9 @@ const BADMINTON_LANDMARK = CAMPUS_LANDMARKS.find(
   ({ id }) => id === 'badminton',
 )
 const SKILLS_LANDMARK = CAMPUS_LANDMARKS.find(({ id }) => id === 'skills')
+const BADGE_REVEAL_LEAD_DISTANCE = 3.25
+const BADGE_REVEAL_TRAILING_DISTANCE = 2.4
+const BADGE_REVEAL_START = SCENE_RANGES.campus.fadeInEnd + 0.015
 
 const PETAL_COUNT = 150
 const MATERIAL_DAMPING = 2
@@ -479,6 +498,9 @@ function ClickableLandmark({
   const floatingRef = useRef()
   const hotspotRef = useRef()
   const badgeRef = useRef()
+  const badgeElementRef = useRef()
+  const badgeVisibilityRef = useRef(0)
+  const scroll = useScroll()
   const { isNightMode } = useDayNight()
 
   useEffect(() => {
@@ -509,12 +531,42 @@ function ClickableLandmark({
     floatingRef.current.scale.z +=
       (targetScale - floatingRef.current.scale.z) * damping
 
-    if (!isSceneActive || !hotspotRef.current || !badgeRef.current) return
+    if (!isSceneActive) {
+      badgeVisibilityRef.current = 0
+      return
+    }
+    if (!hotspotRef.current || !badgeRef.current) return
+
+    const characterX = getCharacterXAtOffset(scroll.offset)
+    const landmarkDistance = landmark.worldX - characterX
+    const isInsideRevealWindow =
+      scroll.offset >= BADGE_REVEAL_START &&
+      landmarkDistance <= BADGE_REVEAL_LEAD_DISTANCE &&
+      landmarkDistance >= -BADGE_REVEAL_TRAILING_DISTANCE
+    badgeVisibilityRef.current = THREE.MathUtils.damp(
+      badgeVisibilityRef.current,
+      isInsideRevealWindow ? 1 : 0,
+      7,
+      delta,
+    )
+
+    const badgeVisibility = badgeVisibilityRef.current
+    if (badgeElementRef.current) {
+      badgeElementRef.current.style.opacity = `${badgeVisibility}`
+      badgeElementRef.current.style.visibility =
+        badgeVisibility > 0.01 ? 'visible' : 'hidden'
+      badgeElementRef.current.style.transform = `translate3d(0, ${
+        (1 - badgeVisibility) * 8
+      }px, 0) scale(${0.96 + badgeVisibility * 0.04})`
+    }
 
     const pulseWave = Math.sin(elapsed * 2.8 + landmark.bobPhase)
     const hotspotPulse =
       (isHoveredRef.current ? 1.24 : 1.04) + pulseWave * 0.12
-    hotspotRef.current.scale.setScalar(hotspotPulse)
+    hotspotRef.current.visible = badgeVisibility > 0.01
+    hotspotRef.current.scale.setScalar(
+      hotspotPulse * (0.72 + badgeVisibility * 0.28),
+    )
     hotspotRef.current.position.y = hotspotY + pulseWave * 0.07
     badgeRef.current.position.y =
       hotspotY + 0.62 +
@@ -564,6 +616,7 @@ function ClickableLandmark({
             ref={hotspotRef}
             name={`${landmark.id}ClickHotspot`}
             position={[0, hotspotY, 0.45]}
+            visible={false}
           >
             <mesh>
               <torusGeometry args={[0.3, 0.065, 8, 24]} />
@@ -604,12 +657,20 @@ function ClickableLandmark({
               style={{ pointerEvents: 'none', userSelect: 'none' }}
             >
               <div
+                ref={badgeElementRef}
                 aria-hidden="true"
                 className={`pointer-events-none flex whitespace-nowrap rounded-full border px-3 py-1.5 font-sans text-[0.68rem] font-semibold tracking-[0.04em] shadow-[0_8px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition-colors duration-500 ${
                   isNightMode
                     ? 'border-white/20 bg-[#1E293B]/90 text-[#F8FAFC]'
                     : 'border-white/90 bg-[#FFF9F4]/95 text-[#3E2723]'
                 }`}
+                style={{
+                  opacity: 0,
+                  visibility: 'hidden',
+                  transform: 'translate3d(0, 8px, 0) scale(0.96)',
+                  transformOrigin: 'center',
+                  willChange: 'opacity, transform',
+                }}
               >
                 <span className="relative mr-2 flex size-2 items-center justify-center self-center">
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#FFD15C] opacity-70" />

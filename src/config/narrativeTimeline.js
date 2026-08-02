@@ -20,11 +20,15 @@ export const CAMPUS_PATH = Object.freeze({
   groundY: -10,
   surfaceY: -9.81,
   characterZ: 3.42,
-  walkStart: 0.2,
+  // A short, quiet entrance gives the Scene 2 copy time to settle before the
+  // first interactive landmark enters the character's immediate space.
+  walkStart: 0.21,
   walkEnd: 0.48,
-  startX: 2,
+  startX: -2,
   endX: 19,
 })
+
+const CAMPUS_CAMERA_FRAME_OFFSET_X = 1.6
 
 export const MOUNTAIN_CORNER = Object.freeze({
   x: CAMPUS_PATH.endX,
@@ -187,7 +191,9 @@ export const CAMPUS_LANDMARKS = Object.freeze([
     title: 'Off Screen, On Court',
     worldX: 3.2,
     localX: -4.8,
-    z: -3.7,
+    // Sit just beyond the foreground edge of the stone path so the racket is
+    // readable in silhouette and cannot be hidden by the rear lamp row.
+    z: 1.6,
     proximityRadius: 1.55,
     bobSpeed: 1.7,
     bobPhase: 1.8,
@@ -300,6 +306,21 @@ export const CHARACTER_KEYFRAMES = [
     rotationY: Math.PI / 2,
   },
   {
+    t: 0.285,
+    position: [3.2, CAMPUS_PATH.surfaceY, CAMPUS_PATH.characterZ],
+    rotationY: Math.PI / 2,
+  },
+  {
+    t: 0.36,
+    position: [8, CAMPUS_PATH.surfaceY, CAMPUS_PATH.characterZ],
+    rotationY: Math.PI / 2,
+  },
+  {
+    t: 0.43,
+    position: [14, CAMPUS_PATH.surfaceY, CAMPUS_PATH.characterZ],
+    rotationY: Math.PI / 2,
+  },
+  {
     t: CAMPUS_PATH.walkEnd,
     position: [CAMPUS_PATH.endX, CAMPUS_PATH.surfaceY, CAMPUS_PATH.characterZ],
     rotationY: Math.PI / 2,
@@ -357,8 +378,18 @@ export const CAMERA_KEYFRAMES = [
     target: [2, PLAYGROUND_PLATEAU_Y + 0.7, 3.42],
     fov: 48,
   },
-  { t: 0.19, position: [4, -7.2, 9.82], target: [3.6, -9.4, 3.42], fov: 48 },
-  { t: 0.2, position: [3.6, -7, 12], target: [3.6, -9.4, 3.42], fov: 48 },
+  {
+    t: 0.19,
+    position: [CAMPUS_PATH.startX + 2, -7.2, 9.82],
+    target: [CAMPUS_PATH.startX + CAMPUS_CAMERA_FRAME_OFFSET_X, -9.4, 3.42],
+    fov: 48,
+  },
+  {
+    t: 0.2,
+    position: [CAMPUS_PATH.startX + CAMPUS_CAMERA_FRAME_OFFSET_X, -7, 12],
+    target: [CAMPUS_PATH.startX + CAMPUS_CAMERA_FRAME_OFFSET_X, -9.4, 3.42],
+    fov: 48,
+  },
   {
     t: 0.46,
     position: [CAMPUS_PATH.endX + 0.4, -7, 12],
@@ -670,7 +701,7 @@ export const getNearestCampusProximity = (offset) => {
 export const CAMPUS_CAMERA_TRACKING = Object.freeze({
   start: SCENE_RANGES.campus.start,
   end: 0.48,
-  characterFrameOffsetX: 1.6,
+  characterFrameOffsetX: CAMPUS_CAMERA_FRAME_OFFSET_X,
   // Aim through the character rather than at the path. This keeps the feet
   // near the lower quarter of the frame without filling the shot with grass.
   heightAbovePath: 3.6,

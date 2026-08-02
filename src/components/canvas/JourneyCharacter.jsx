@@ -226,12 +226,15 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       leftLegX = THREE.MathUtils.lerp(0.38, 0, landingProgress)
       rightLegX = THREE.MathUtils.lerp(-0.38, 0, landingProgress)
     } else {
-      const isWalking = offset < 0.5
+      const isWalking =
+        offset >= CAMPUS_PATH.walkStart && offset < MOUNTAIN_PATH.start
       const isHiking =
         offset >= MOUNTAIN_PATH.start && offset < SUMMIT_SEQUENCE.haltEnd
       const isMoving = isWalking || isHiking
       const stride = isHiking ? 0.72 : 0.38
-      const motionOffset = isHiking ? offset - 0.5 : offset - 0.2
+      const motionOffset = isHiking
+        ? offset - MOUNTAIN_PATH.start
+        : offset - CAMPUS_PATH.walkStart
       const walkCycle = Math.sin(motionOffset * (isHiking ? 170 : 52))
       const summitWalkFade = isHiking
         ? 1 -
