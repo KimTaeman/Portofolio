@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react'
+import { Suspense, useCallback, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ScrollControls } from '@react-three/drei'
+import { Loader, Preload, ScrollControls } from '@react-three/drei'
 import { FaMoon, FaSun } from 'react-icons/fa'
 import * as THREE from 'three'
 import CameraController from './components/canvas/CameraController'
@@ -31,6 +31,11 @@ const scenePosition = (sceneId) =>
 const initialCamera = CAMERA_KEYFRAMES[0]
 const DAY_GROUND_COLOR = new THREE.Color('#EAF4D3')
 const NIGHT_GROUND_COLOR = new THREE.Color('#25254D')
+const showInitialLoader = () => true
+const formatLoadingProgress = (progress) =>
+  progress >= 100
+    ? 'Ready'
+    : `Preparing your journey · ${Math.round(progress)}%`
 
 function InfiniteGround({ visible = true }) {
   const { isNightMode } = useDayNight()
@@ -124,39 +129,79 @@ function App() {
             gl.toneMappingExposure = 1.05
           }}
         >
-          <GlobalSceneEnvironment />
-          <InfiniteGround
-            visible={scrollOffset < SCENE_RANGES.campus.start}
-          />
-
-          <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
-            <CameraController onScrollOffsetChange={setScrollOffset} />
-            <JourneyCharacter outfit={outfit} />
-
-            {/* Scene 1: The Playground (Introduction) */}
-            <Playground
-              position={scenePosition('playground')}
+          <Suspense fallback={null}>
+            <GlobalSceneEnvironment />
+            <InfiniteGround
+              visible={scrollOffset < SCENE_RANGES.campus.start}
             />
 
-            {/* Scene 2: The Campus Path (Skills & Hobbies) */}
-            <Campus
-              position={scenePosition('campus')}
-              onSelect={handleCampusSelect}
-            />
+            <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
+              <CameraController onScrollOffsetChange={setScrollOffset} />
+              <JourneyCharacter outfit={outfit} />
 
-            {/* Scene 3: The Adventure Trail (Experience) */}
-            <Mountain
-              position={scenePosition('mountain')}
-              onProjectProximityChange={handleProjectProximityChange}
-            />
+              {/* Scene 1: The Playground (Introduction) */}
+              <Playground
+                position={scenePosition('playground')}
+              />
 
-            {/* Scene 4: The Summit (Future & Contact) */}
-            <Summit
-              position={scenePosition('summit')}
-            />
-          </ScrollControls>
+              {/* Scene 2: The Campus Path (Skills & Hobbies) */}
+              <Campus
+                position={scenePosition('campus')}
+                onSelect={handleCampusSelect}
+              />
+
+              {/* Scene 3: The Adventure Trail (Experience) */}
+              <Mountain
+                position={scenePosition('mountain')}
+                onProjectProximityChange={handleProjectProximityChange}
+              />
+
+              {/* Scene 4: The Summit (Future & Contact) */}
+              <Summit
+                position={scenePosition('summit')}
+              />
+            </ScrollControls>
+            <Preload all />
+          </Suspense>
         </Canvas>
       </div>
+
+      <Loader
+        initialState={showInitialLoader}
+        dataInterpolation={formatLoadingProgress}
+        containerStyles={{
+          background: isNightMode ? '#0B0D17' : '#FFF0E5',
+          transition: 'opacity 500ms ease, background-color 500ms ease',
+        }}
+        innerStyles={{
+          width: 'min(260px, 68vw)',
+          height: 8,
+          overflow: 'hidden',
+          borderRadius: 999,
+          background: isNightMode
+            ? 'rgba(148, 163, 184, 0.18)'
+            : 'rgba(62, 39, 35, 0.12)',
+          boxShadow: isNightMode
+            ? '0 16px 48px rgba(0, 0, 0, 0.32)'
+            : '0 16px 48px rgba(62, 39, 35, 0.12)',
+        }}
+        barStyles={{
+          height: '100%',
+          borderRadius: 999,
+          background: isNightMode ? '#A3C2FF' : '#E88C47',
+          transition: 'transform 250ms ease, background-color 500ms ease',
+        }}
+        dataStyles={{
+          marginTop: '1rem',
+          color: isNightMode ? '#F8FAFC' : '#3E2723',
+          fontFamily: 'var(--font-sans)',
+          fontSize: '0.72rem',
+          fontWeight: 600,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          transition: 'color 500ms ease',
+        }}
+      />
 
       <div className="pointer-events-none fixed inset-0 z-10">
         <UIOverlay scrollOffset={scrollOffset} />

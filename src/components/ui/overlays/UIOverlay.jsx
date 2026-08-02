@@ -216,14 +216,14 @@ export default function UIOverlay({ scrollOffset = 0 }) {
                 {SCENE_CONTENT.summit.body}
               </p>
 
-              <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
+              {/* <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
                 <p className={`${ELEGANT_SERIF_CLASS} text-lg font-semibold transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
                   Nang Hayman Aye Mya
                 </p>
                 <p className={`mt-1 font-sans text-xs font-medium uppercase tracking-[0.12em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                   Computer Science, KMUTT
                 </p>
-              </div>
+              </div> */}
 
               <div
                 className="mt-5 flex w-full gap-3"
@@ -249,7 +249,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               aria-label="Expand contact panel"
             >
               <span className={`h-2 w-2 rounded-full transition-colors duration-500 ${isNightMode ? 'bg-[#94A3B8]' : 'bg-[#8A817A]'}`} />
-              Connect Me
+              Connect Me!
             </motion.button>
           )}
         </AnimatePresence>
