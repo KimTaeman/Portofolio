@@ -146,7 +146,7 @@ export default function GlobalSceneEnvironment() {
   return (
     <>
       <color ref={backgroundRef} attach="background" args={['#FFF0E5']} />
-      <fog ref={fogRef} attach="fog" args={['#FFF0E5', 100, 500]} />
+      <fog ref={fogRef} attach="fog" args={['#FFF0E5', 50, 400]} />
       <ambientLight ref={ambientRef} color="#FFEDD9" intensity={0.8} />
       <hemisphereLight
         ref={hemisphereRef}

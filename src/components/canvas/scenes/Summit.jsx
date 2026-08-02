@@ -1,17 +1,85 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Cone, Cylinder, Sphere } from '@react-three/drei'
+import { Cone, Cylinder, Dodecahedron, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 import useDayNight from '../../../hooks/useDayNight'
 
-// Summit-local coordinates. With the scene origin at world Z -77, these peaks
-// occupy the world-space Z -100…-150 horizon band.
-const DISTANT_PEAKS = Object.freeze([
-  [-62, -19, -23, 18, 60, '#8FA3B8'],
-  [-31, -23, -38, 22, 68, '#8399AE'],
-  [0, -20, -50, 21, 64, '#91A6B9'],
-  [33, -25, -62, 23, 72, '#7F95AA'],
-  [64, -18, -73, 18, 58, '#95A9BA'],
+// These summit-local ranges sit between the plateau (world Z -187) and the
+// fixed celestial mesh (world Z -1000). Fog progressively softens each band.
+const DISTANT_MOUNTAIN_LAYERS = Object.freeze([
+  Object.freeze({
+    name: 'nearSilhouette',
+    z: -118,
+    baseY: -38,
+    depth: 22,
+    dayColor: '#71635E',
+    nightColor: '#292A35',
+    ridge: Object.freeze([
+      [-128, 19],
+      [-112, 27],
+      [-96, 22],
+      [-78, 39],
+      [-61, 29],
+      [-43, 48],
+      [-24, 34],
+      [-7, 44],
+      [12, 31],
+      [31, 52],
+      [50, 36],
+      [69, 46],
+      [88, 28],
+      [108, 38],
+      [128, 21],
+    ]),
+  }),
+  Object.freeze({
+    name: 'middleRoseRange',
+    z: -238,
+    baseY: -42,
+    depth: 30,
+    dayColor: '#C79F98',
+    nightColor: '#343241',
+    ridge: Object.freeze([
+      [-145, 30],
+      [-123, 47],
+      [-101, 35],
+      [-78, 61],
+      [-55, 45],
+      [-32, 70],
+      [-9, 50],
+      [15, 65],
+      [39, 43],
+      [63, 74],
+      [87, 48],
+      [111, 62],
+      [132, 39],
+      [148, 31],
+    ]),
+  }),
+  Object.freeze({
+    name: 'farPeachRange',
+    z: -368,
+    baseY: -46,
+    depth: 38,
+    dayColor: '#F0C9C1',
+    nightColor: '#272838',
+    ridge: Object.freeze([
+      [-165, 38],
+      [-139, 56],
+      [-113, 44],
+      [-87, 73],
+      [-60, 52],
+      [-33, 83],
+      [-7, 59],
+      [20, 78],
+      [48, 55],
+      [76, 88],
+      [104, 61],
+      [132, 74],
+      [158, 47],
+      [174, 39],
+    ]),
+  }),
 ])
 
 const MIST_LAYERS = Object.freeze([
@@ -89,10 +157,22 @@ const EDGE_PINES = Object.freeze([
 ])
 
 const SKY_CLOUDS = Object.freeze([
-  [-34, 24, 16, 1.25, 1.05],
-  [-10, 35, -5, 1.6, 0.82],
-  [17, 29, -19, 1.35, 0.94],
-  [39, 37, 8, 1.5, 0.74],
+  [-42, 36, -125, 3.2, 0.42],
+  [-16, 47, -172, 3.8, 0.3],
+  [21, 40, -143, 3.45, 0.36],
+  [44, 51, -205, 4.05, 0.25],
+])
+
+const FOREGROUND_PINES = Object.freeze([
+  [-9.2, -0.82, -2.7, 1.72],
+  [9.35, -0.86, -3.15, 1.82],
+  [-10.1, -0.98, 2.1, 1.42],
+])
+
+const FOREGROUND_ROCKS = Object.freeze([
+  [-8.35, -0.66, 1.25, 2.1, 1.35, 1.7],
+  [8.65, -0.72, 1.05, 2.35, 1.48, 1.8],
+  [9.8, -0.88, -4.9, 1.65, 1.2, 1.4],
 ])
 
 const BIRD_FLOCK = Object.freeze([
@@ -103,6 +183,135 @@ const BIRD_FLOCK = Object.freeze([
   [18, 26, -110, 0.6, 4.2, 0.15],
   [14, 24, -99, 0.5, 5.15, 0.19],
 ])
+
+const createRidgelineGeometry = (ridge, depth) => {
+  const positions = []
+  const indices = []
+  const halfDepth = depth / 2
+
+  ridge.forEach(([x, height], index) => {
+    const jitter = ((index * 7) % 5 - 2) * 0.85
+    const backHeight = height * (0.9 + (index % 3) * 0.025)
+
+    positions.push(
+      x,
+      0,
+      halfDepth + jitter,
+      x,
+      height,
+      halfDepth * 0.22 + jitter * 0.35,
+      x,
+      backHeight,
+      -halfDepth + jitter * 0.28,
+      x,
+      0,
+      -halfDepth + jitter * 0.42,
+    )
+  })
+
+  for (let index = 0; index < ridge.length - 1; index += 1) {
+    const current = index * 4
+    const next = (index + 1) * 4
+
+    // Front slope, back slope, ridge cap, and an unseen floor make each range
+    // a proper low-poly volume rather than a camera-facing silhouette.
+    indices.push(
+      current,
+      next,
+      next + 1,
+      current,
+      next + 1,
+      current + 1,
+      current + 3,
+      current + 2,
+      next + 2,
+      current + 3,
+      next + 2,
+      next + 3,
+      current + 1,
+      next + 1,
+      next + 2,
+      current + 1,
+      next + 2,
+      current + 2,
+      current,
+      current + 3,
+      next + 3,
+      current,
+      next + 3,
+      next,
+    )
+  }
+
+  const last = (ridge.length - 1) * 4
+  indices.push(
+    0,
+    1,
+    2,
+    0,
+    2,
+    3,
+    last,
+    last + 2,
+    last + 1,
+    last,
+    last + 3,
+    last + 2,
+  )
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(positions, 3),
+  )
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+  geometry.computeBoundingBox()
+  geometry.computeBoundingSphere()
+  return geometry
+}
+
+const createRiverRibbonGeometry = (curve, segments = 64) => {
+  const positions = []
+  const indices = []
+  const point = new THREE.Vector3()
+  const tangent = new THREE.Vector3()
+  const side = new THREE.Vector3()
+
+  for (let index = 0; index <= segments; index += 1) {
+    const progress = index / segments
+    curve.getPoint(progress, point)
+    curve.getTangent(progress, tangent)
+    side.set(-tangent.z, 0, tangent.x).normalize()
+
+    const halfWidth = THREE.MathUtils.lerp(4.2, 1.5, progress)
+    positions.push(
+      point.x + side.x * halfWidth,
+      point.y,
+      point.z + side.z * halfWidth,
+      point.x - side.x * halfWidth,
+      point.y,
+      point.z - side.z * halfWidth,
+    )
+
+    if (index < segments) {
+      const current = index * 2
+      const next = (index + 1) * 2
+      indices.push(current, next, next + 1, current, next + 1, current + 1)
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(positions, 3),
+  )
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+  geometry.computeBoundingBox()
+  geometry.computeBoundingSphere()
+  return geometry
+}
 
 function ClayMaterial({
   color,
@@ -117,6 +326,7 @@ function ClayMaterial({
       emissiveIntensity={emissiveIntensity}
       roughness={1}
       metalness={0}
+      flatShading
       transparent={opacity < 1}
       opacity={opacity}
       depthWrite={opacity === 1}
@@ -142,6 +352,7 @@ function AnimatedClayMaterial({ isNight, dayColor, nightColor }) {
       color={dayColor}
       roughness={1}
       metalness={0}
+      flatShading
     />
   )
 }
@@ -189,6 +400,7 @@ function AnimatedAtmosphereMaterial({
       emissiveIntensity={dayEmissiveIntensity}
       roughness={1}
       metalness={0}
+      flatShading
       transparent
       opacity={opacity}
       depthWrite={false}
@@ -296,6 +508,39 @@ function SeaOfClouds({ isNight }) {
   )
 }
 
+function CloudCluster({ cloudRef, position, scale, isNight }) {
+  return (
+    <group ref={cloudRef} name="lowPolyCloudCluster" position={position} scale={scale}>
+      {[
+        [0, 0, 0, 1.45, 0.72, 0.82],
+        [-1.1, -0.08, 0.1, 1.05, 0.58, 0.68],
+        [1.18, -0.04, -0.08, 1.12, 0.62, 0.72],
+        [-0.3, 0.62, -0.06, 0.92, 0.7, 0.66],
+        [0.62, 0.45, 0.08, 0.86, 0.64, 0.62],
+      ].map(([x, y, z, sx, sy, sz], index) => (
+        <Dodecahedron
+          key={`${x}-${z}-${index}`}
+          args={[1, 0]}
+          position={[x, y, z]}
+          scale={[sx, sy, sz]}
+          rotation={[index * 0.09, index * 0.28, -index * 0.04]}
+        >
+          <AnimatedAtmosphereMaterial
+            isNight={isNight}
+            dayColor="#FFF5E6"
+            nightColor="#AAB7D1"
+            dayEmissive="#FFF5E6"
+            nightEmissive="#8CA8FF"
+            dayEmissiveIntensity={0.06}
+            nightEmissiveIntensity={0.1}
+            opacity={0.88}
+          />
+        </Dodecahedron>
+      ))}
+    </group>
+  )
+}
+
 function FloatingSkyClouds({ isNight }) {
   const cloudRefs = useRef([])
 
@@ -311,38 +556,15 @@ function FloatingSkyClouds({ isNight }) {
   return (
     <group name="floatingSkyClouds">
       {SKY_CLOUDS.map(([x, y, z, scale], cloudIndex) => (
-        <group
-          ref={(cloud) => {
+        <CloudCluster
+          cloudRef={(cloud) => {
             cloudRefs.current[cloudIndex] = cloud
           }}
           key={`sky-cloud-${cloudIndex}`}
           position={[x, y, z]}
           scale={scale}
-        >
-          {[
-            [0, 0, 0, 1.8],
-            [-1.45, -0.08, 0.12, 1.18],
-            [1.5, -0.05, -0.08, 1.3],
-            [0.35, 0.7, 0, 1.12],
-          ].map(([cx, cy, cz, radius], sphereIndex) => (
-            <Sphere
-              key={`${cx}-${sphereIndex}`}
-              args={[radius, 20, 16]}
-              position={[cx, cy, cz]}
-              scale={[1.35, 0.72, 0.78]}
-              renderOrder={-1}
-            >
-              <AnimatedAtmosphereMaterial
-                isNight={isNight}
-                nightColor="#B7C1D8"
-                nightEmissive="#8CA8FF"
-                dayEmissiveIntensity={0.08}
-                nightEmissiveIntensity={0.12}
-                opacity={0.8}
-              />
-            </Sphere>
-          ))}
-        </group>
+          isNight={isNight}
+        />
       ))}
     </group>
   )
@@ -514,30 +736,106 @@ function AlpineDecoration() {
   )
 }
 
-function DistantPeak({ peak, isNight }) {
-  const [x, y, z, radius, height, color] = peak
+function MountainRangeLayer({ layer, isNight }) {
+  const geometry = useMemo(
+    () => createRidgelineGeometry(layer.ridge, layer.depth),
+    [layer],
+  )
+
+  useEffect(() => () => geometry.dispose(), [geometry])
 
   return (
-    <group position={[x, y, z]}>
-      <mesh receiveShadow>
-        <coneGeometry args={[radius, height, 7]} />
+    <mesh
+      name={layer.name}
+      geometry={geometry}
+      position={[0, layer.baseY, layer.z]}
+      receiveShadow
+    >
+      <AnimatedClayMaterial
+        isNight={isNight}
+        dayColor={layer.dayColor}
+        nightColor={layer.nightColor}
+      />
+    </mesh>
+  )
+}
+
+function ValleyFloorAndRiver({ isNight }) {
+  const riverCurve = useMemo(
+    () =>
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-22, 0.2, -8),
+        new THREE.Vector3(-30, -0.1, -48),
+        new THREE.Vector3(-8, 0.14, -88),
+        new THREE.Vector3(22, -0.08, -128),
+        new THREE.Vector3(-4, 0.12, -172),
+        new THREE.Vector3(28, -0.12, -226),
+      ]),
+    [],
+  )
+  const riverGeometry = useMemo(
+    () => createRiverRibbonGeometry(riverCurve),
+    [riverCurve],
+  )
+
+  useEffect(() => () => riverGeometry.dispose(), [riverGeometry])
+
+  return (
+    <group name="distantValley">
+      <mesh
+        name="lowPolyValleyFloor"
+        position={[0, -38, -120]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[190, 300, 1, 1]} />
         <AnimatedClayMaterial
           isNight={isNight}
-          dayColor={color}
-          nightColor="#374151"
+          dayColor="#536F4A"
+          nightColor="#25372F"
         />
       </mesh>
-      <Sphere
-        args={[1, 18, 14]}
-        position={[0, height * 0.31, 0.1]}
-        scale={[height * 0.16, height * 0.055, height * 0.12]}
+
+      <mesh
+        name="windingValleyRiver"
+        geometry={riverGeometry}
+        position={[0, -37.92, 0]}
+        receiveShadow
       >
-        <AnimatedClayMaterial
-          isNight={isNight}
-          dayColor="#FFF7F0"
-          nightColor="#CBD5E1"
+        <ClayMaterial
+          color="#43C6CE"
+          emissive="#167D86"
+          emissiveIntensity={0.18}
         />
-      </Sphere>
+      </mesh>
+    </group>
+  )
+}
+
+function ForegroundVistaFrame() {
+  return (
+    <group name="summitForegroundFrame">
+      {FOREGROUND_PINES.map(([x, y, z, scale], index) => (
+        <AlpinePine
+          key={`foreground-pine-${index}`}
+          position={[x, y, z]}
+          scale={scale}
+        />
+      ))}
+
+      {FOREGROUND_ROCKS.map(([x, y, z, sx, sy, sz], index) => (
+        <Dodecahedron
+          key={`foreground-rock-${index}`}
+          args={[1, 0]}
+          position={[x, y, z]}
+          scale={[sx, sy, sz]}
+          rotation={[0.08 + index * 0.04, index * 0.7, -0.09]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={index % 2 ? '#777D80' : '#666D71'} />
+        </Dodecahedron>
+      ))}
     </group>
   )
 }
@@ -597,15 +895,21 @@ export default function Summit({
     <group name="summitScene" position={position}>
       <RockyPeak isNight={isNight} />
       <AlpineDecoration />
+      <ForegroundVistaFrame />
       <RollingMist isNight={isNight} />
 
+      <ValleyFloorAndRiver isNight={isNight} />
       <SeaOfClouds isNight={isNight} />
       <FloatingSkyClouds isNight={isNight} />
       <BirdFlock />
 
       <group name="distantMountainSkyline">
-        {DISTANT_PEAKS.map((peak, index) => (
-          <DistantPeak key={`${peak[0]}-${peak[2]}-${index}`} peak={peak} isNight={isNight} />
+        {DISTANT_MOUNTAIN_LAYERS.map((layer) => (
+          <MountainRangeLayer
+            key={layer.name}
+            layer={layer}
+            isNight={isNight}
+          />
         ))}
       </group>
 
