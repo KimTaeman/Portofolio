@@ -152,8 +152,8 @@ export default function UIOverlay({ scrollOffset = 0 }) {
       <div
         className={
           isSummit
-            ? 'absolute bottom-5 left-5 w-[min(400px,calc(100vw-2.5rem))] sm:bottom-10 sm:left-10'
-            : 'absolute left-[5%] top-1/2 w-[min(350px,90vw)] -translate-y-1/2'
+            ? 'absolute bottom-3 left-3 right-3 w-auto max-w-[400px] sm:bottom-10 sm:left-10 sm:right-auto sm:w-[min(400px,calc(100vw-2.5rem))]'
+            : 'absolute left-4 right-4 top-[44%] w-auto max-w-[350px] -translate-y-1/2 sm:left-[5%] sm:right-auto sm:top-1/2 sm:w-[min(350px,90vw)]'
         }
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -166,17 +166,17 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               transition={entranceTransition}
               className={`scene-copy-scrim ${isNightMode ? 'scene-copy-scrim--night' : ''}`}
             >
-              <p className={`mb-4 text-left font-serif text-xs font-semibold uppercase tracking-[0.18em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
+              <p className={`mb-3 text-left font-serif text-[0.68rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-500 sm:mb-4 sm:text-xs ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                 {SCENE_LABELS[activeScene]}
               </p>
               <h1
-                className={`text-left ${ELEGANT_SERIF_CLASS} text-[clamp(1.9rem,3.2vw,2.25rem)] font-semibold leading-[1.14] tracking-[-0.025em] transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
+                className={`text-left ${ELEGANT_SERIF_CLASS} text-[clamp(1.65rem,7vw,2.25rem)] font-semibold leading-[1.14] tracking-[-0.025em] transition-colors duration-500 sm:text-[clamp(1.9rem,3.2vw,2.25rem)] ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
               >
                 {content.headline}
               </h1>
               {content.body && (
                 <p
-                  className={`mt-5 max-w-[330px] text-left font-sans text-base font-normal leading-relaxed transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
+                  className={`mt-4 max-w-[330px] text-left font-sans text-sm font-normal leading-relaxed transition-colors duration-500 sm:mt-5 sm:text-base ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
                 >
                   {content.body}
                 </p>
@@ -192,7 +192,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               animate={{ opacity, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.97 }}
               transition={entranceTransition}
-              className={`pointer-events-auto relative rounded-[1.6rem] border px-6 py-6 text-left shadow-[0_24px_70px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-colors duration-500 ${isNightMode ? 'border-white/15 bg-[#1E293B]/80 text-[#F8FAFC]' : 'border-white/70 bg-[#FFF9F4]/65 text-[#3E2723]'}`}
+              className={`pointer-events-auto relative max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[1.4rem] border px-5 py-5 text-left shadow-[0_24px_70px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-colors duration-500 sm:rounded-[1.6rem] sm:px-6 sm:py-6 ${isNightMode ? 'border-white/15 bg-[#1E293B]/80 text-[#F8FAFC]' : 'border-white/70 bg-[#FFF9F4]/65 text-[#3E2723]'}`}
               style={{ pointerEvents: opacity > 0.08 ? 'auto' : 'none' }}
             >
               <button
@@ -208,7 +208,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
                 {SCENE_LABELS.summit}
               </p>
               <h1
-                className={`pr-7 text-left font-serif text-[clamp(1.75rem,3vw,2.2rem)] font-semibold leading-[1.12] tracking-[-0.025em] transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
+                className={`pr-7 text-left font-serif text-[clamp(1.5rem,7vw,2.2rem)] font-semibold leading-[1.12] tracking-[-0.025em] transition-colors duration-500 sm:text-[clamp(1.75rem,3vw,2.2rem)] ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
               >
                 {SCENE_CONTENT.summit.headline}
               </h1>

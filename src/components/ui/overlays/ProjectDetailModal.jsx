@@ -22,7 +22,7 @@ export default function ProjectDetailModal({ project, onClose = () => {} }) {
     <AnimatePresence>
       {project && (
         <motion.div
-          className={`pointer-events-auto fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4 backdrop-blur-md transition-colors duration-500 md:p-8 ${isNightMode ? 'bg-[#0B0D17]/75' : 'bg-[#3E2723]/45'}`}
+          className={`pointer-events-auto fixed inset-0 z-50 grid place-items-center overflow-y-auto p-3 backdrop-blur-md transition-colors duration-500 sm:p-4 md:p-8 ${isNightMode ? 'bg-[#0B0D17]/75' : 'bg-[#3E2723]/45'}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -33,21 +33,21 @@ export default function ProjectDetailModal({ project, onClose = () => {} }) {
             aria-modal="true"
             aria-labelledby="project-detail-title"
             aria-describedby="project-detail-description"
-            className={`my-auto w-full max-w-4xl rounded-[2rem] border p-6 shadow-[0_32px_100px_rgba(15,23,42,0.42)] transition-colors duration-500 md:p-10 ${isNightMode ? 'border-white/15 bg-[#1E293B]/95 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4] text-[#3E2723]'}`}
+            className={`my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl overflow-y-auto rounded-[1.5rem] border p-5 shadow-[0_32px_100px_rgba(15,23,42,0.42)] transition-colors duration-500 sm:rounded-[2rem] sm:p-6 md:p-10 ${isNightMode ? 'border-white/15 bg-[#1E293B]/95 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4] text-[#3E2723]'}`}
             initial={{ opacity: 0, scale: 0.94, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 16 }}
             transition={{ type: 'spring', stiffness: 280, damping: 25 }}
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <header className="flex items-start justify-between gap-6">
+            <header className="flex items-start justify-between gap-3 sm:gap-6">
               <div>
                 <p className={`font-serif text-xs font-semibold uppercase tracking-[0.18em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                   Project {project.number}
                 </p>
                 <h2
                   id="project-detail-title"
-                  className="mt-3 font-serif text-4xl font-semibold tracking-[-0.035em] md:text-5xl"
+                  className="mt-3 font-serif text-3xl font-semibold tracking-[-0.035em] sm:text-4xl md:text-5xl"
                 >
                   {project.title}
                 </h2>

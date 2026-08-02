@@ -788,6 +788,7 @@ function CampusSpringLights({ isNight }) {
 export default function Campus({
   position = [0, 0, 0],
   onSelect = () => {},
+  areParticlesActive = true,
 }) {
   const { isNightMode: isNight } = useDayNight()
 
@@ -837,7 +838,7 @@ export default function Campus({
         <VintageLampPost key={`${x}-${z}`} position={[x, 0, z]} isNight={isNight} />
       ))}
 
-      <FallingPetals isNight={isNight} />
+      {areParticlesActive && <FallingPetals isNight={isNight} />}
       <Easel onSelect={onSelect} />
       <BadmintonRacket onSelect={onSelect} />
       <SkillsLaptop onSelect={onSelect} />

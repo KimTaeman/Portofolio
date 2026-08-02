@@ -894,6 +894,7 @@ function RollingMist({ isNight }) {
 
 export default function Summit({
   position = [0, 0, 0],
+  areParticlesActive = true,
 }) {
   const { isNightMode: isNight } = useDayNight()
 
@@ -903,22 +904,24 @@ export default function Summit({
       <AlpineDecoration />
       <ForegroundVistaFrame />
       <RollingMist isNight={isNight} />
-      <Sparkles
-        name="summitFireflies"
-        position={[0, 3.5, 0]}
-        color="#FFEA8C"
-        count={40}
-        noise={0.2}
-        scale={15}
-        size={3}
-        speed={0.4}
-        opacity={isNight ? 1 : 0.04}
-      />
+      {areParticlesActive && (
+        <Sparkles
+          name="summitFireflies"
+          position={[0, 3.5, 0]}
+          color="#FFEA8C"
+          count={40}
+          noise={0.2}
+          scale={15}
+          size={3}
+          speed={0.4}
+          opacity={isNight ? 1 : 0.04}
+        />
+      )}
 
       <ValleyFloorAndRiver isNight={isNight} />
       <SeaOfClouds isNight={isNight} />
       <FloatingSkyClouds isNight={isNight} />
-      <BirdFlock />
+      {areParticlesActive && <BirdFlock />}
 
       <group name="distantMountainSkyline">
         {DISTANT_MOUNTAIN_LAYERS.map((layer) => (

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
@@ -40,6 +40,9 @@ const summitOrbitTarget = new THREE.Vector3()
 const fallCharacterPosition = new THREE.Vector3()
 const fallCameraPosition = new THREE.Vector3()
 const fallLookTarget = new THREE.Vector3()
+const responsiveCameraOffset = new THREE.Vector3()
+const SCROLL_REPORT_INTERVAL_MS = 50
+const noop = () => {}
 
 const getSegment = (offset) => {
   for (let i = 0; i < CAMERA_STOPS.length - 1; i += 1) {
@@ -53,11 +56,12 @@ const getSegment = (offset) => {
   }
 }
 
-export default function CameraController({ onScrollOffsetChange = () => {} }) {
+export default function CameraController({ onScrollOffsetChange = noop }) {
   const scroll = useScroll()
   const { events, gl } = useThree()
-  const [isLookAroundActive, setIsLookAroundActive] = useState(false)
   const isLookAroundActiveRef = useRef(false)
+  const latestScrollOffsetRef = useRef(0)
+  const reportedScrollOffsetRef = useRef(-1)
   const interactionElementRef = useRef(null)
   const lookYawRef = useRef(0)
   const lookPitchRef = useRef(0)
@@ -157,22 +161,29 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
   }, [events.connected, gl])
 
   useEffect(() => {
-    const eventElement = interactionElementRef.current
-    if (!eventElement) return undefined
-
-    eventElement.style.cursor = isLookAroundActive ? 'grab' : ''
-    eventElement.style.touchAction = isLookAroundActive ? 'pan-y' : ''
-
-    return () => {
-      eventElement.style.cursor = ''
-      eventElement.style.touchAction = ''
+    const reportScrollOffset = () => {
+      const nextOffset = latestScrollOffsetRef.current
+      if (
+        Math.abs(nextOffset - reportedScrollOffsetRef.current) < 0.0005
+      ) {
+        return
+      }
+      reportedScrollOffsetRef.current = nextOffset
+      onScrollOffsetChange(nextOffset)
     }
-  }, [events.connected, gl, isLookAroundActive])
+
+    reportScrollOffset()
+    const intervalId = window.setInterval(
+      reportScrollOffset,
+      SCROLL_REPORT_INTERVAL_MS,
+    )
+    return () => window.clearInterval(intervalId)
+  }, [onScrollOffsetChange])
 
   useFrame((state, delta) => {
     const { camera } = state
     const offset = scroll.offset
-    onScrollOffsetChange(offset)
+    latestScrollOffsetRef.current = offset
 
     const { start, end } = getSegment(offset)
     const range = end.t - start.t
@@ -287,7 +298,11 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
     const isLookAroundActive = offset >= SUMMIT_LOOK_AROUND.start
     if (isLookAroundActive !== isLookAroundActiveRef.current) {
       isLookAroundActiveRef.current = isLookAroundActive
-      setIsLookAroundActive(isLookAroundActive)
+      const eventElement = interactionElementRef.current
+      if (eventElement) {
+        eventElement.style.cursor = isLookAroundActive ? 'grab' : ''
+        eventElement.style.touchAction = isLookAroundActive ? 'pan-y' : ''
+      }
 
       if (!isLookAroundActive) {
         dragRef.current.isDragging = false
@@ -318,6 +333,22 @@ export default function CameraController({ onScrollOffsetChange = () => {} }) {
       desiredCameraPosition.x += pointerRef.current.x * 0.32
       desiredCameraPosition.y += pointerRef.current.y * 0.18
       desiredCameraPosition.z -= getNearestCampusProximity(offset) * 0.65
+    }
+
+    const aspect = state.size.width / Math.max(state.size.height, 1)
+    const portraitAmount = THREE.MathUtils.clamp(
+      (0.9 - aspect) / 0.45,
+      0,
+      1,
+    )
+    if (portraitAmount > 0) {
+      responsiveCameraOffset
+        .subVectors(desiredCameraPosition, desiredLookTarget)
+        .multiplyScalar(1 + portraitAmount * 0.38)
+      desiredCameraPosition
+        .copy(desiredLookTarget)
+        .add(responsiveCameraOffset)
+      desiredFov += portraitAmount * 9
     }
 
     const isMountainClimb =

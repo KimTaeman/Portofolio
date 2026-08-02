@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   Box,
@@ -424,6 +424,7 @@ const balloonCharacterPosition = new THREE.Vector3()
 const balloonTriggerWorldPosition = new THREE.Vector3()
 const mountainWorldOrigin = new THREE.Vector3()
 const PROJECT_PROXIMITY_RADIUS = 5
+const PROJECT_REPORT_INTERVAL_MS = 80
 
 function FlatMaterial({
   color,
@@ -767,6 +768,24 @@ function ProjectBalloons({
   const balloonRefs = useRef([])
   const balloonMaterialRefs = useRef([])
   const activeIndexRef = useRef(-1)
+  const activeProjectIdRef = useRef(null)
+  const reportedProjectIdRef = useRef(undefined)
+
+  useEffect(() => {
+    const reportActiveProject = () => {
+      const projectId = activeProjectIdRef.current
+      if (projectId === reportedProjectIdRef.current) return
+      reportedProjectIdRef.current = projectId
+      onProjectProximityChange(projectId)
+    }
+
+    reportActiveProject()
+    const intervalId = window.setInterval(
+      reportActiveProject,
+      PROJECT_REPORT_INTERVAL_MS,
+    )
+    return () => window.clearInterval(intervalId)
+  }, [onProjectProximityChange])
 
   useFrame((state, delta) => {
     getCharacterPositionAtOffset(scroll.offset, balloonCharacterPosition)
@@ -795,7 +814,7 @@ function ProjectBalloons({
       activeIndexRef.current = nextActiveIndex
       const activeProject =
         nextActiveIndex >= 0 ? PROJECT_BALLOONS[nextActiveIndex] : null
-      onProjectProximityChange(activeProject?.id ?? null)
+      activeProjectIdRef.current = activeProject?.id ?? null
     }
 
     PROJECT_BALLOONS.forEach((balloon, index) => {

@@ -74,6 +74,11 @@ function App() {
   const [nearbyProjectId, setNearbyProjectId] = useState(null)
   const [projectDetail, setProjectDetail] = useState(null)
   const outfit = getCharacterOutfit(scrollOffset)
+  const areCampusParticlesActive =
+    scrollOffset >= SCENE_RANGES.playground.end - 0.04 &&
+    scrollOffset <= SCENE_RANGES.campus.end + 0.03
+  const areSummitParticlesActive =
+    scrollOffset >= SCENE_RANGES.summit.start - 0.04
 
   const handleCampusSelect = useCallback((detailId) => {
     setCampusDetailId(detailId)
@@ -148,6 +153,7 @@ function App() {
               <Campus
                 position={scenePosition('campus')}
                 onSelect={handleCampusSelect}
+                areParticlesActive={areCampusParticlesActive}
               />
 
               {/* Scene 3: The Adventure Trail (Experience) */}
@@ -159,6 +165,7 @@ function App() {
               {/* Scene 4: The Summit (Future & Contact) */}
               <Summit
                 position={scenePosition('summit')}
+                areParticlesActive={areSummitParticlesActive}
               />
             </ScrollControls>
             <Preload all />
@@ -210,7 +217,7 @@ function App() {
         <button
           type="button"
           onClick={toggleNightMode}
-          className={`pointer-events-auto fixed right-6 top-6 grid size-12 place-items-center rounded-full border p-3 shadow-[0_12px_32px_rgba(15,23,42,0.2)] backdrop-blur-md transition-all duration-500 hover:-translate-y-0.5 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${
+          className={`pointer-events-auto fixed right-3 top-3 grid size-11 place-items-center rounded-full border p-2.5 shadow-[0_12px_32px_rgba(15,23,42,0.2)] backdrop-blur-md transition-all duration-500 hover:-translate-y-0.5 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 sm:right-6 sm:top-6 sm:size-12 sm:p-3 ${
             isNightMode
               ? 'border-white/15 bg-[#1E293B]/85 text-[#F8FAFC] hover:bg-[#334155]'
               : 'border-white/70 bg-[#FFF9F4]/85 text-[#3E2723] hover:bg-[#FFF9F4]'
