@@ -21,8 +21,8 @@ const SCENE_CONTENT = {
     headline: "I put my skills to the test. Here's what I've built and where I've been.",
   },
   summit: {
-    headline: 'Ready to conquer the next challenge.',
-    body: "Whether it is architecting full-stack systems or crafting cross-platform mobile experiences, let's build something amazing together.",
+    headline: 'Let’s build what’s next.',
+    body: 'I’m a Computer Science student looking for real problems, thoughtful teams, and room to grow. I’m open to collaborations, mentorship, internships, and roles where I can contribute while learning fast.',
   },
 }
 
@@ -50,7 +50,7 @@ const SCENE_LABELS = {
   playground: '01 ABOUT ME',
   campus: '02 SKILLS',
   mountain: '03 EXPERIENCES',
-  summit: '04 - THE SUMMIT',
+  summit: '04 — NEXT HORIZON',
 }
 
 // Scene headings and the final signature deliberately share one font token.
@@ -216,14 +216,14 @@ export default function UIOverlay({ scrollOffset = 0 }) {
                 {SCENE_CONTENT.summit.body}
               </p>
 
-              {/* <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
+              <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
                 <p className={`${ELEGANT_SERIF_CLASS} text-lg font-semibold transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
                   Nang Hayman Aye Mya
                 </p>
                 <p className={`mt-1 font-sans text-xs font-medium uppercase tracking-[0.12em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                   Computer Science, KMUTT
                 </p>
-              </div> */}
+              </div>
 
               <div
                 className="mt-5 flex w-full gap-3"
@@ -249,7 +249,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               aria-label="Expand contact panel"
             >
               <span className={`h-2 w-2 rounded-full transition-colors duration-500 ${isNightMode ? 'bg-[#94A3B8]' : 'bg-[#8A817A]'}`} />
-              Connect / Contact
+              Connect Me
             </motion.button>
           )}
         </AnimatePresence>

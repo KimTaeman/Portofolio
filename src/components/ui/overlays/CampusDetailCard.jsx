@@ -1,24 +1,31 @@
 import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import useDayNight from '../../../hooks/useDayNight'
+import { CAMPUS_LANDMARKS } from '../../../config/narrativeTimeline'
 
-const CAMPUS_DETAILS = {
+const CAMPUS_DETAIL_META = {
   easel: {
-    eyebrow: 'Hobby · Creative practice',
-    title: 'Visual exploration',
-    body: 'Sketching and visual studies keep my interface work playful, observant, and open to new ideas.',
+    eyebrow: 'Hobby · Traditional art',
   },
   badminton: {
     eyebrow: 'Hobby · Movement',
-    title: 'Rhythm and focus',
-    body: 'Badminton is a reminder that consistent practice, fast feedback, and a good reset make better work.',
   },
   skills: {
     eyebrow: 'Skills · Technical foundation',
-    title: 'Building for the web',
-    body: 'This is the space for an approved stack: languages, frameworks, databases, and the tools that support each project.',
   },
 }
+
+const CAMPUS_DETAILS = Object.fromEntries(
+  CAMPUS_LANDMARKS.map(({ id, title, text, techList }) => [
+    id,
+    {
+      ...CAMPUS_DETAIL_META[id],
+      title,
+      body: text,
+      techList,
+    },
+  ]),
+)
 
 export default function CampusDetailCard({ detailId, onClose = () => {} }) {
   const { isNightMode } = useDayNight()
@@ -85,17 +92,15 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
             >
               {detail.body}
             </p>
-            {detailId === 'skills' && (
-              <div className="mt-7 flex flex-wrap gap-2" aria-label="Example skills">
-                {['Frontend systems', 'Interactive 3D', 'Accessible UI'].map((skill) => (
-                  <span
-                    key={skill}
-                    className={`rounded-full px-3 py-1.5 font-sans text-xs font-semibold transition-colors duration-500 ${isNightMode ? 'bg-[#334155] text-[#94A3B8]' : 'bg-[#E9DDC9] text-[#3E2723]'}`}
-                  >
-                    {skill}
-                  </span>
+            {detail.techList?.length > 0 && (
+              <ul
+                className={`mt-5 list-inside list-disc space-y-2 font-sans text-sm font-medium transition-colors duration-500 ${isNightMode ? 'text-[#E2E8F0] marker:text-[#94A3B8]' : 'text-[#3E2723] marker:text-[#8A817A]'}`}
+                aria-label="Core technologies"
+              >
+                {detail.techList.map((technology) => (
+                  <li key={technology}>{technology}</li>
                 ))}
-              </div>
+              </ul>
             )}
           </motion.section>
         </motion.div>

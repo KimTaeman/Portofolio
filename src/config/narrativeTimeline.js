@@ -184,6 +184,7 @@ export const MOUNTAIN_TRAIL_STONES = Object.freeze(
 export const CAMPUS_LANDMARKS = Object.freeze([
   Object.freeze({
     id: 'badminton',
+    title: 'Off Screen, On Court',
     worldX: 3.2,
     localX: -4.8,
     z: -3.7,
@@ -191,10 +192,11 @@ export const CAMPUS_LANDMARKS = Object.freeze([
     bobSpeed: 1.7,
     bobPhase: 1.8,
     labelY: 2.15,
-    text: 'When I need a break from coding, I enjoy staying active on the badminton court.',
+    text: "I love playing badminton. It's my favourite sport to clear my head and relax.",
   }),
   Object.freeze({
     id: 'easel',
+    title: 'Quiet Focus',
     worldX: 8,
     localX: 0,
     z: -0.65,
@@ -202,10 +204,11 @@ export const CAMPUS_LANDMARKS = Object.freeze([
     bobSpeed: 1.55,
     bobPhase: 0,
     labelY: 2.15,
-    text: 'I love designing visual experiences and practicing traditional art.',
+    text: 'Drawing is my way to find calm. It teaches me patience and how to appreciate the small details, keeping me grounded when I return to the screen.',
   }),
   Object.freeze({
     id: 'skills',
+    title: 'Where Ideas Take Shape',
     worldX: 14,
     localX: 6,
     z: -2.35,
@@ -213,7 +216,12 @@ export const CAMPUS_LANDMARKS = Object.freeze([
     bobSpeed: 1.45,
     bobPhase: 3.4,
     labelY: 1.9,
-    text: 'My laptop is where ideas become thoughtful, useful software.',
+    text: 'Code is my favorite tool for problem-solving. I spend most of my time building full-stack web solutions and mobile apps using my core stack:',
+    techList: [
+      'React & Express (Full-Stack Web)',
+      'Flutter & Dart (Mobile)',
+      'Java & C# (Foundations)',
+    ],
   }),
 ])
 

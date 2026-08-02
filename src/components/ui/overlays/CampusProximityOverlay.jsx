@@ -5,12 +5,6 @@ import {
   getCampusLandmarkProximity,
 } from '../../../config/narrativeTimeline'
 
-const LANDMARK_LABELS = Object.freeze({
-  easel: 'Creative practice',
-  badminton: 'Life beyond code',
-  skills: 'Ideas into software',
-})
-
 const getActiveLandmark = (scrollOffset) => {
   let activeLandmark = null
   let activeStrength = 0
@@ -50,11 +44,21 @@ export default function CampusProximityOverlay({ scrollOffset = 0 }) {
             className={`rounded-3xl border px-6 py-5 shadow-[0_20px_55px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors duration-500 ${isNightMode ? 'border-white/15 bg-[#1E293B]/90 text-[#F8FAFC]' : 'border-white/90 bg-[#FFF9F4]/95 text-[#3E2723]'}`}
           >
             <p className={`mb-2 font-serif text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
-              {LANDMARK_LABELS[activeLandmark.id]}
+              {activeLandmark.title}
             </p>
             <p className="font-sans text-base font-medium leading-relaxed">
               {activeLandmark.text}
             </p>
+            {activeLandmark.techList?.length > 0 && (
+              <ul
+                className={`mt-3 list-inside list-disc space-y-1 font-sans text-sm font-medium transition-colors duration-500 ${isNightMode ? 'text-[#E2E8F0] marker:text-[#94A3B8]' : 'text-[#3E2723] marker:text-[#8A817A]'}`}
+                aria-label="Core technologies"
+              >
+                {activeLandmark.techList.map((technology) => (
+                  <li key={technology}>{technology}</li>
+                ))}
+              </ul>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
