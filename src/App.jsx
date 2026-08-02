@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ScrollControls } from '@react-three/drei'
+import { FaMoon, FaSun } from 'react-icons/fa'
 import * as THREE from 'three'
 import CameraController from './components/canvas/CameraController'
 import GlobalSceneEnvironment from './components/canvas/GlobalSceneEnvironment'
@@ -164,14 +165,20 @@ function App() {
         <button
           type="button"
           onClick={toggleNightMode}
-          className={`pointer-events-auto fixed right-6 top-6 rounded-full border px-5 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.16em] shadow-[0_12px_32px_rgba(15,23,42,0.2)] backdrop-blur-md transition-all duration-500 hover:-translate-y-0.5 ${
+          className={`pointer-events-auto fixed right-6 top-6 grid size-12 place-items-center rounded-full border p-3 shadow-[0_12px_32px_rgba(15,23,42,0.2)] backdrop-blur-md transition-all duration-500 hover:-translate-y-0.5 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${
             isNightMode
               ? 'border-white/15 bg-[#1E293B]/85 text-[#F8FAFC] hover:bg-[#334155]'
               : 'border-white/70 bg-[#FFF9F4]/85 text-[#3E2723] hover:bg-[#FFF9F4]'
           }`}
           aria-pressed={isNightMode}
+          aria-label={isNightMode ? 'Switch to day mode' : 'Switch to night mode'}
+          title={isNightMode ? 'Switch to day mode' : 'Switch to night mode'}
         >
-          {isNightMode ? 'Switch to Day' : 'Switch to Night'}
+          {isNightMode ? (
+            <FaSun aria-hidden="true" size={20} />
+          ) : (
+            <FaMoon aria-hidden="true" size={20} />
+          )}
         </button>
 
         <CampusDetailCard
