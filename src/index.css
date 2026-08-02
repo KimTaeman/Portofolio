@@ -25,3 +25,60 @@ body {
 button {
   font: inherit;
 }
+
+/* Localized readability treatment for the main left-side scene copy. The
+   pseudo-elements keep the scrim separate from layout and pointer handling. */
+.scene-copy-scrim {
+  position: relative;
+  isolation: isolate;
+  text-shadow: 0 2px 12px rgba(255, 249, 244, 0.9);
+  transition: text-shadow 500ms ease;
+}
+
+.scene-copy-scrim > * {
+  position: relative;
+  z-index: 1;
+}
+
+.scene-copy-scrim::before,
+.scene-copy-scrim::after {
+  position: absolute;
+  z-index: 0;
+  inset: -2rem -7rem -2rem -2rem;
+  border-radius: 3rem;
+  content: "";
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity 500ms ease;
+}
+
+.scene-copy-scrim::before {
+  background: radial-gradient(
+    circle at left center,
+    rgba(255, 249, 244, 0.75) 0%,
+    rgba(255, 249, 244, 0) 70%
+  );
+  opacity: 1;
+}
+
+.scene-copy-scrim::after {
+  background: radial-gradient(
+    circle at left center,
+    rgba(30, 41, 59, 0.8) 0%,
+    rgba(30, 41, 59, 0) 70%
+  );
+  opacity: 0;
+}
+
+.scene-copy-scrim--night {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.scene-copy-scrim--night::before {
+  opacity: 0;
+}
+
+.scene-copy-scrim--night::after {
+  opacity: 1;
+}

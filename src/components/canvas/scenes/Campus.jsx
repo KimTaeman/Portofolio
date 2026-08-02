@@ -85,8 +85,13 @@ const BADMINTON_LANDMARK = CAMPUS_LANDMARKS.find(
 const SKILLS_LANDMARK = CAMPUS_LANDMARKS.find(({ id }) => id === 'skills')
 
 const PETAL_COUNT = 150
+const MATERIAL_DAMPING = 2
 const LAMP_DAY_COLOR = new THREE.Color('#FFF6E0')
-const LAMP_NIGHT_COLOR = new THREE.Color('#FFE8A3')
+const LAMP_NIGHT_COLOR = new THREE.Color('#FFD580')
+const LAMP_DAY_EMISSIVE = new THREE.Color('#FFD15C')
+const LAMP_NIGHT_EMISSIVE = new THREE.Color('#FFD580')
+const PETAL_DAY_COLOR = new THREE.Color('#FFB7C5')
+const SAKURA_NIGHT_COLOR = new THREE.Color('#C084FC')
 const PETAL_BOUNDS = Object.freeze({
   minX: -13,
   maxX: 13,
@@ -95,6 +100,27 @@ const PETAL_BOUNDS = Object.freeze({
   minZ: -8,
   maxZ: 4,
 })
+
+const dampColor = (current, target, delta) => {
+  current.r = THREE.MathUtils.damp(
+    current.r,
+    target.r,
+    MATERIAL_DAMPING,
+    delta,
+  )
+  current.g = THREE.MathUtils.damp(
+    current.g,
+    target.g,
+    MATERIAL_DAMPING,
+    delta,
+  )
+  current.b = THREE.MathUtils.damp(
+    current.b,
+    target.b,
+    MATERIAL_DAMPING,
+    delta,
+  )
+}
 
 function ClayMaterial({
   color,
@@ -121,13 +147,57 @@ function ClayMaterial({
   )
 }
 
-function CherryBlossomTree({ position, scale, variant, canopyLean }) {
-  const palette =
-    variant === 1
-      ? ['#FFC0CB', '#FFB7C5']
-      : variant === 2
-        ? ['#FFD0D9', '#FFB7C5']
-        : ['#FFB7C5', '#FFC0CB']
+function SakuraCanopyMaterial({ color, materialRef }) {
+  return (
+    <meshStandardMaterial
+      ref={materialRef}
+      color={color}
+      emissive="#C084FC"
+      emissiveIntensity={0}
+      roughness={1}
+      metalness={0}
+      flatShading
+    />
+  )
+}
+
+function CherryBlossomTree({
+  position,
+  scale,
+  variant,
+  canopyLean,
+  isNight,
+}) {
+  const canopyMaterialRefs = useRef([])
+  const canopyColors = useMemo(() => {
+    const palette =
+      variant === 1
+        ? ['#FFC0CB', '#FFB7C5']
+        : variant === 2
+          ? ['#FFD0D9', '#FFB7C5']
+          : ['#FFB7C5', '#FFC0CB']
+
+    return [palette[0], palette[1], palette[1], palette[0], palette[1]].map(
+      (color) => new THREE.Color(color),
+    )
+  }, [variant])
+
+  useFrame((_, delta) => {
+    canopyMaterialRefs.current.forEach((material, index) => {
+      if (!material) return
+      dampColor(
+        material.color,
+        isNight ? SAKURA_NIGHT_COLOR : canopyColors[index],
+        delta,
+      )
+      material.emissiveIntensity = THREE.MathUtils.damp(
+        material.emissiveIntensity,
+        isNight ? 0.22 : 0,
+        MATERIAL_DAMPING,
+        delta,
+      )
+    })
+  })
 
   return (
     <group position={position} scale={scale}>
@@ -142,31 +212,57 @@ function CherryBlossomTree({ position, scale, variant, canopyLean }) {
       >
         <mesh position={[0, 2.2, 0]} scale={[1.2, 0.9, 1]} castShadow>
           <dodecahedronGeometry args={[1, 0]} />
-          <ClayMaterial color={palette[0]} />
+          <SakuraCanopyMaterial
+            color={canopyColors[0]}
+            materialRef={(material) => {
+              canopyMaterialRefs.current[0] = material
+            }}
+          />
         </mesh>
         <mesh position={[-0.82, 2.14, 0.08]} scale={[0.82, 0.7, 0.76]} castShadow>
           <dodecahedronGeometry args={[1, 0]} />
-          <ClayMaterial color={palette[1]} />
+          <SakuraCanopyMaterial
+            color={canopyColors[1]}
+            materialRef={(material) => {
+              canopyMaterialRefs.current[1] = material
+            }}
+          />
         </mesh>
         <mesh position={[0.82, 2.16, 0.03]} scale={[0.84, 0.72, 0.78]} castShadow>
           <dodecahedronGeometry args={[1, 0]} />
-          <ClayMaterial color={palette[1]} />
+          <SakuraCanopyMaterial
+            color={canopyColors[2]}
+            materialRef={(material) => {
+              canopyMaterialRefs.current[2] = material
+            }}
+          />
         </mesh>
         <mesh position={[-0.34, 2.85, -0.06]} scale={[0.74, 0.65, 0.7]} castShadow>
           <dodecahedronGeometry args={[1, 0]} />
-          <ClayMaterial color={palette[0]} />
+          <SakuraCanopyMaterial
+            color={canopyColors[3]}
+            materialRef={(material) => {
+              canopyMaterialRefs.current[3] = material
+            }}
+          />
         </mesh>
         <mesh position={[0.38, 2.78, 0.05]} scale={[0.76, 0.63, 0.72]} castShadow>
           <dodecahedronGeometry args={[1, 0]} />
-          <ClayMaterial color={palette[1]} />
+          <SakuraCanopyMaterial
+            color={canopyColors[4]}
+            materialRef={(material) => {
+              canopyMaterialRefs.current[4] = material
+            }}
+          />
         </mesh>
       </group>
     </group>
   )
 }
 
-function FallingPetals() {
+function FallingPetals({ isNight }) {
   const petalsRef = useRef()
+  const petalMaterialRef = useRef()
   const petalTransform = useMemo(() => new THREE.Object3D(), [])
   const particleData = useMemo(() => {
     const horizontalOffsets = new Float32Array(PETAL_COUNT)
@@ -212,9 +308,23 @@ function FallingPetals() {
     petalsRef.current?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
   }, [])
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const petals = petalsRef.current
     if (!petals) return
+
+    if (petalMaterialRef.current) {
+      dampColor(
+        petalMaterialRef.current.color,
+        isNight ? SAKURA_NIGHT_COLOR : PETAL_DAY_COLOR,
+        delta,
+      )
+      petalMaterialRef.current.emissiveIntensity = THREE.MathUtils.damp(
+        petalMaterialRef.current.emissiveIntensity,
+        isNight ? 0.28 : 0,
+        MATERIAL_DAMPING,
+        delta,
+      )
+    }
 
     const elapsed = state.clock.elapsedTime
     const {
@@ -264,7 +374,10 @@ function FallingPetals() {
     >
       <circleGeometry args={[0.085, 5]} />
       <meshStandardMaterial
+        ref={petalMaterialRef}
         color="#FFB7C5"
+        emissive="#C084FC"
+        emissiveIntensity={0}
         roughness={1}
         metalness={0}
         flatShading
@@ -282,24 +395,29 @@ function VintageLampPost({ position, isNight }) {
   const pointLightRef = useRef()
 
   useFrame((_, delta) => {
-    const alpha = 1 - Math.exp(-delta / 0.65)
     if (bulbMaterialRef.current) {
-      bulbMaterialRef.current.color.lerp(
+      dampColor(
+        bulbMaterialRef.current.color,
         isNight ? LAMP_NIGHT_COLOR : LAMP_DAY_COLOR,
-        alpha,
+        delta,
+      )
+      dampColor(
+        bulbMaterialRef.current.emissive,
+        isNight ? LAMP_NIGHT_EMISSIVE : LAMP_DAY_EMISSIVE,
+        delta,
       )
       bulbMaterialRef.current.emissiveIntensity = THREE.MathUtils.damp(
         bulbMaterialRef.current.emissiveIntensity,
-        isNight ? 1.1 : 0.06,
-        2.4,
+        isNight ? 1.35 : 0.06,
+        MATERIAL_DAMPING,
         delta,
       )
     }
     if (pointLightRef.current) {
       pointLightRef.current.intensity = THREE.MathUtils.damp(
         pointLightRef.current.intensity,
-        isNight ? 1.5 : 0,
-        2.4,
+        isNight ? 1.2 : 0,
+        MATERIAL_DAMPING,
         delta,
       )
     }
@@ -337,9 +455,9 @@ function VintageLampPost({ position, isNight }) {
       </mesh>
       <pointLight
         ref={pointLightRef}
-        color="#FFD15C"
+        color="#FFD580"
         intensity={0}
-        distance={4.4}
+        distance={5}
         decay={2}
         position={[0, 2.2, 0]}
       />
@@ -711,6 +829,7 @@ export default function Campus({
           scale={scale}
           variant={variant}
           canopyLean={canopyLean}
+          isNight={isNight}
         />
       ))}
 
@@ -718,7 +837,7 @@ export default function Campus({
         <VintageLampPost key={`${x}-${z}`} position={[x, 0, z]} isNight={isNight} />
       ))}
 
-      <FallingPetals />
+      <FallingPetals isNight={isNight} />
       <Easel onSelect={onSelect} />
       <BadmintonRacket onSelect={onSelect} />
       <SkillsLaptop onSelect={onSelect} />

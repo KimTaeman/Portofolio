@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import Character from './Character'
+import useDayNight from '../../hooks/useDayNight'
 import {
   CAMPUS_PATH,
   CHARACTER_KEYFRAMES,
@@ -12,14 +13,18 @@ import {
   getNearestCampusProximity,
   MOUNTAIN_PATH,
   PLAYGROUND_MOTION_OFFSETS,
+  PLAYGROUND_SLIDE_ROTATION_X,
   SUMMIT_SEQUENCE,
 } from '../../config/narrativeTimeline'
 
 const currentPosition = new THREE.Vector3()
 const nextPosition = new THREE.Vector3()
-// Calibrated against the top of the angled slide: the skirt/hip volume
-// intersects the surface by a few millimetres instead of hovering above it.
-const SEATED_POSE_Y = -0.65
+// The original seated offset was tuned for the thinner placeholder. The
+// volumetric skirt and legs need this extra clearance above the slide surface.
+const BASE_SEATED_POSE_Y = -0.65
+const SLIDE_SURFACE_CLEARANCE_Y = 0.36
+const SLIDE_SEATED_POSE_Y =
+  BASE_SEATED_POSE_Y + SLIDE_SURFACE_CLEARANCE_Y
 const SEATED_LEG_ROTATION_X = -1.22
 
 const getSegment = (offset) => {
@@ -36,7 +41,9 @@ const getSegment = (offset) => {
 }
 
 export default function JourneyCharacter({ outfit = 'school' }) {
+  const { isNightMode } = useDayNight()
   const characterRef = useRef()
+  const characterLightRef = useRef()
   const poseRef = useRef()
   const torsoRef = useRef()
   const headRef = useRef()
@@ -130,7 +137,9 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     }
 
     if (offset < PLAYGROUND_MOTION_OFFSETS.waveEnd) {
-      posePositionY = SEATED_POSE_Y
+      // Hold the hips low and the legs forward: this is the dedicated seated
+      // pose at the slide entrance, not the standing idle pose.
+      posePositionY = BASE_SEATED_POSE_Y
       leftLegX = SEATED_LEG_ROTATION_X
       rightLegX = SEATED_LEG_ROTATION_X
       rightArmX = Math.sin(state.clock.elapsedTime * 7) * 0.42
@@ -147,8 +156,21 @@ export default function JourneyCharacter({ outfit = 'school' }) {
         PLAYGROUND_MOTION_OFFSETS.waveEnd,
         0.055,
       )
-      posePositionY = SEATED_POSE_Y
-      poseRotationX = THREE.MathUtils.lerp(0, -0.22, slideProgress)
+      const slideContactBlend = THREE.MathUtils.smootherstep(
+        slideProgress,
+        0,
+        1,
+      )
+      posePositionY = THREE.MathUtils.lerp(
+        BASE_SEATED_POSE_Y,
+        SLIDE_SEATED_POSE_Y,
+        slideContactBlend,
+      )
+      poseRotationX = THREE.MathUtils.lerp(
+        0,
+        PLAYGROUND_SLIDE_ROTATION_X,
+        slideContactBlend,
+      )
       leftArmX = THREE.MathUtils.lerp(0, -0.72, slideProgress)
       rightArmX = THREE.MathUtils.lerp(
         Math.sin(state.clock.elapsedTime * 7) * 0.42,
@@ -170,11 +192,15 @@ export default function JourneyCharacter({ outfit = 'school' }) {
         PLAYGROUND_MOTION_OFFSETS.groundContact,
       )
       posePositionY = THREE.MathUtils.lerp(
-        SEATED_POSE_Y,
+        SLIDE_SEATED_POSE_Y,
         0,
         fallProgress,
       )
-      poseRotationX = THREE.MathUtils.lerp(-0.22, 0.16, fallProgress)
+      poseRotationX = THREE.MathUtils.lerp(
+        PLAYGROUND_SLIDE_ROTATION_X,
+        0.16,
+        fallProgress,
+      )
       poseRotationZ = Math.sin(fallProgress * Math.PI) * 0.08
       leftArmX = THREE.MathUtils.lerp(-0.72, 0.15, fallProgress)
       rightArmX = THREE.MathUtils.lerp(-0.72, -0.15, fallProgress)
@@ -309,10 +335,28 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     }
     leftLegRef.current.rotation.x = leftLegX
     rightLegRef.current.rotation.x = rightLegX
+
+    if (characterLightRef.current) {
+      characterLightRef.current.intensity = THREE.MathUtils.damp(
+        characterLightRef.current.intensity,
+        isNightMode ? 0.7 : 0,
+        2,
+        delta,
+      )
+    }
   })
 
   return (
     <group ref={characterRef}>
+      <pointLight
+        ref={characterLightRef}
+        name="characterMoonlightFill"
+        color="#A3C2FF"
+        intensity={0}
+        distance={9}
+        decay={2}
+        position={[0, 2, 2]}
+      />
       <group ref={poseRef}>
         <Character
           outfit={outfit}

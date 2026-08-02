@@ -16,6 +16,7 @@ import useDayNight from '../../../hooks/useDayNight'
 import {
   CAMPUS_PATH,
   PLAYGROUND_MOTION_OFFSETS,
+  PLAYGROUND_SLIDE_ROTATION_X,
 } from '../../../config/narrativeTimeline'
 
 const COLORS = Object.freeze({
@@ -572,7 +573,6 @@ export default function Playground({
   position = [0, 20, 0],
 }) {
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
-  const slideRotationX = -0.35
 
   return (
     <>
@@ -593,7 +593,7 @@ export default function Playground({
           <Box
             args={[1.18, 0.38, 4.15]}
             position={[slidePosition.x, slidePosition.y, slidePosition.z]}
-            rotation={[slideRotationX, 0, 0]}
+            rotation={[PLAYGROUND_SLIDE_ROTATION_X, 0, 0]}
             castShadow
             receiveShadow
           >
@@ -603,7 +603,7 @@ export default function Playground({
           <Cylinder
             args={[0.1, 0.1, 4.15, 8]}
             position={[-2.48, 1.42, -1.5]}
-            rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
+            rotation={[Math.PI / 2 + PLAYGROUND_SLIDE_ROTATION_X, 0, 0]}
             castShadow
           >
             <ClayMaterial color={COLORS.slideRail} />
@@ -611,7 +611,7 @@ export default function Playground({
           <Cylinder
             args={[0.1, 0.1, 4.15, 8]}
             position={[-1.52, 1.42, -1.5]}
-            rotation={[Math.PI / 2 + slideRotationX, 0, 0]}
+            rotation={[Math.PI / 2 + PLAYGROUND_SLIDE_ROTATION_X, 0, 0]}
             castShadow
           >
             <ClayMaterial color={COLORS.slideRail} />

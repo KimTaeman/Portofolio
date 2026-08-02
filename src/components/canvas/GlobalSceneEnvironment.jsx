@@ -20,12 +20,12 @@ const DAY = Object.freeze({
 const NIGHT = Object.freeze({
   sky: new THREE.Color('#0B0D17'),
   directional: new THREE.Color('#8CA8FF'),
-  directionalIntensity: 0.65,
-  ambient: new THREE.Color('#1A1025'),
-  ambientIntensity: 0.7,
+  directionalIntensity: 1,
+  ambient: new THREE.Color('#2B2B4A'),
+  ambientIntensity: 0.8,
   hemisphereSky: new THREE.Color('#8CA8FF'),
-  hemisphereGround: new THREE.Color('#1A1025'),
-  hemisphereIntensity: 0.45,
+  hemisphereGround: new THREE.Color('#232740'),
+  hemisphereIntensity: 0.6,
   celestial: new THREE.Color('#E5EDFF'),
   celestialGlow: new THREE.Color('#B8CBFF'),
   halo: new THREE.Color('#B8CBFF'),
@@ -33,6 +33,29 @@ const NIGHT = Object.freeze({
 
 const lightOffset = new THREE.Vector3(10, 14, 8)
 const CELESTIAL_POSITION = Object.freeze([80, 90, -1000])
+// A damping factor of 2 reaches about 95% of the target after 1.5 seconds.
+const THEME_DAMPING = 2
+
+const dampColor = (current, target, delta) => {
+  current.r = THREE.MathUtils.damp(
+    current.r,
+    target.r,
+    THEME_DAMPING,
+    delta,
+  )
+  current.g = THREE.MathUtils.damp(
+    current.g,
+    target.g,
+    THEME_DAMPING,
+    delta,
+  )
+  current.b = THREE.MathUtils.damp(
+    current.b,
+    target.b,
+    THEME_DAMPING,
+    delta,
+  )
+}
 
 const createHaloTexture = () => {
   const size = 256
@@ -86,41 +109,45 @@ export default function GlobalSceneEnvironment() {
 
   useFrame((_, delta) => {
     const target = isNightMode ? NIGHT : DAY
-    const colorAlpha = 1 - Math.exp(-delta / 0.65)
 
-    backgroundRef.current?.lerp(target.sky, colorAlpha)
-    fogRef.current?.color.lerp(target.sky, colorAlpha)
+    if (backgroundRef.current) {
+      dampColor(backgroundRef.current, target.sky, delta)
+    }
+    if (fogRef.current) {
+      dampColor(fogRef.current.color, target.sky, delta)
+    }
 
     if (ambientRef.current) {
-      ambientRef.current.color.lerp(target.ambient, colorAlpha)
+      dampColor(ambientRef.current.color, target.ambient, delta)
       ambientRef.current.intensity = THREE.MathUtils.damp(
         ambientRef.current.intensity,
         target.ambientIntensity,
-        2.4,
+        THEME_DAMPING,
         delta,
       )
     }
 
     if (hemisphereRef.current) {
-      hemisphereRef.current.color.lerp(target.hemisphereSky, colorAlpha)
-      hemisphereRef.current.groundColor.lerp(
+      dampColor(hemisphereRef.current.color, target.hemisphereSky, delta)
+      dampColor(
+        hemisphereRef.current.groundColor,
         target.hemisphereGround,
-        colorAlpha,
+        delta,
       )
       hemisphereRef.current.intensity = THREE.MathUtils.damp(
         hemisphereRef.current.intensity,
         target.hemisphereIntensity,
-        2.4,
+        THEME_DAMPING,
         delta,
       )
     }
 
     if (directionalRef.current) {
-      directionalRef.current.color.lerp(target.directional, colorAlpha)
+      dampColor(directionalRef.current.color, target.directional, delta)
       directionalRef.current.intensity = THREE.MathUtils.damp(
         directionalRef.current.intensity,
         target.directionalIntensity,
-        2.4,
+        THEME_DAMPING,
         delta,
       )
       directionalRef.current.position.copy(camera.position).add(lightOffset)
@@ -133,14 +160,17 @@ export default function GlobalSceneEnvironment() {
     }
 
     if (celestialMaterialRef.current) {
-      celestialMaterialRef.current.color.lerp(target.celestial, colorAlpha)
-      celestialMaterialRef.current.emissive.lerp(
+      dampColor(celestialMaterialRef.current.color, target.celestial, delta)
+      dampColor(
+        celestialMaterialRef.current.emissive,
         target.celestialGlow,
-        colorAlpha,
+        delta,
       )
     }
 
-    haloMaterialRef.current?.color.lerp(target.halo, colorAlpha)
+    if (haloMaterialRef.current) {
+      dampColor(haloMaterialRef.current.color, target.halo, delta)
+    }
   })
 
   return (

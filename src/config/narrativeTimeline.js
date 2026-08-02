@@ -13,6 +13,7 @@ export const PLAYGROUND_SLIDE_EXIT = Object.freeze([
   PLAYGROUND_PLATEAU_Y + 0.91,
   3.42,
 ])
+export const PLAYGROUND_SLIDE_ROTATION_X = -0.35
 
 export const CAMPUS_PATH = Object.freeze({
   centerX: 8,

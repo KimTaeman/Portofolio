@@ -53,6 +53,9 @@ const SCENE_LABELS = {
   summit: '04 - THE SUMMIT',
 }
 
+// Scene headings and the final signature deliberately share one font token.
+const ELEGANT_SERIF_CLASS = 'font-serif'
+
 const getActiveScene = (offset) => {
   const scene = SCENES.find(({ id }) => offset < SCENE_RANGES[id].end)
   return scene?.id ?? SCENES[SCENES.length - 1].id
@@ -161,12 +164,13 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               animate={{ opacity, y: 0 }}
               exit={{ opacity: 0, y: -12, transition: { duration: 0 } }}
               transition={entranceTransition}
+              className={`scene-copy-scrim ${isNightMode ? 'scene-copy-scrim--night' : ''}`}
             >
               <p className={`mb-4 text-left font-serif text-xs font-semibold uppercase tracking-[0.18em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
                 {SCENE_LABELS[activeScene]}
               </p>
               <h1
-                className={`text-left font-serif text-[clamp(1.9rem,3.2vw,2.25rem)] font-semibold leading-[1.14] tracking-[-0.025em] transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
+                className={`text-left ${ELEGANT_SERIF_CLASS} text-[clamp(1.9rem,3.2vw,2.25rem)] font-semibold leading-[1.14] tracking-[-0.025em] transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
               >
                 {content.headline}
               </h1>
@@ -213,7 +217,7 @@ export default function UIOverlay({ scrollOffset = 0 }) {
               </p>
 
               <div className={`mt-5 border-t pt-4 transition-colors duration-500 ${isNightMode ? 'border-white/15' : 'border-[#8A817A]/25'}`}>
-                <p className={`font-serif text-lg font-semibold transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
+                <p className={`${ELEGANT_SERIF_CLASS} text-lg font-semibold transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
                   Nang Hayman Aye Mya
                 </p>
                 <p className={`mt-1 font-sans text-xs font-medium uppercase tracking-[0.12em] transition-colors duration-500 ${isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}`}>
