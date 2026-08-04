@@ -5,6 +5,7 @@ import {
   Cone,
   Cylinder,
   Dodecahedron,
+  Html,
   Sphere,
   useScroll,
 } from '@react-three/drei'
@@ -15,9 +16,9 @@ import useDayNight from '../../../hooks/useDayNight'
 import {
   getCharacterPositionAtOffset,
   getMountainTransitionTopY,
-  MOUNTAIN_CHARACTER_GROUND_OFFSET,
   MOUNTAIN_ORIGIN_Z,
   MOUNTAIN_PATH,
+  MOUNTAIN_PROJECT_ANCHORS,
   MOUNTAIN_TRANSITION,
   MOUNTAIN_TRANSITION_STONES,
   MOUNTAIN_TRAIL_STONES,
@@ -332,40 +333,14 @@ const FLOWER_LAYOUT = Object.freeze(
   }),
 )
 
-const PROJECT_BALLOON_PROGRESS = Object.freeze([
-  0.12,
-  0.27,
-  0.41,
-  0.59,
-  0.74,
-  0.89,
-])
-
 const PROJECT_BALLOONS = Object.freeze(
   PROJECTS.map((project, index) => {
-    const progress = PROJECT_BALLOON_PROGRESS[index]
-    const stone =
-      MOUNTAIN_TRAIL_STONES[
-        Math.round(progress * (MOUNTAIN_TRAIL_STONES.length - 1))
-      ]
-    const side = index % 2 ? 1 : -1
-    const perpendicularX = Math.cos(stone.rotationY)
-    const perpendicularZ = -Math.sin(stone.rotationY)
-    const sideOffset = 7 + (index % 3) * 0.55
+    const anchor = MOUNTAIN_PROJECT_ANCHORS[index]
 
     return Object.freeze({
       ...project,
+      ...anchor,
       phase: index * 0.83,
-      triggerPosition: Object.freeze([
-        stone.x,
-        stone.topY + MOUNTAIN_CHARACTER_GROUND_OFFSET,
-        stone.z,
-      ]),
-      basePosition: Object.freeze([
-        stone.x + perpendicularX * sideOffset * side,
-        stone.topY + 9.5 + (index % 2) * 0.9,
-        stone.z + perpendicularZ * sideOffset * side,
-      ]),
     })
   }),
 )
@@ -762,11 +737,15 @@ function Flora() {
 function ProjectBalloons({
   worldOrigin,
   onProjectProximityChange = () => {},
+  onProjectSelect = () => {},
+  htmlPortal,
 }) {
   const { isNightMode } = useDayNight()
   const scroll = useScroll()
   const balloonRefs = useRef([])
   const balloonMaterialRefs = useRef([])
+  const badgeRefs = useRef([])
+  const badgeVisibilityRefs = useRef([])
   const activeIndexRef = useRef(-1)
   const activeProjectIdRef = useRef(null)
   const reportedProjectIdRef = useRef(undefined)
@@ -784,7 +763,10 @@ function ProjectBalloons({
       reportActiveProject,
       PROJECT_REPORT_INTERVAL_MS,
     )
-    return () => window.clearInterval(intervalId)
+    return () => {
+      window.clearInterval(intervalId)
+      document.body.style.cursor = ''
+    }
   }, [onProjectProximityChange])
 
   useFrame((state, delta) => {
@@ -845,6 +827,25 @@ function ProjectBalloons({
           delta,
         )
       }
+
+      const badge = badgeRefs.current[index]
+      const badgeVisibility = THREE.MathUtils.damp(
+        badgeVisibilityRefs.current[index] ?? 0,
+        isOnTrail ? 1 : 0,
+        7,
+        delta,
+      )
+      badgeVisibilityRefs.current[index] = badgeVisibility
+      if (badge) {
+        badge.style.opacity = `${badgeVisibility}`
+        badge.style.visibility =
+          badgeVisibility > 0.01 ? 'visible' : 'hidden'
+        badge.style.pointerEvents =
+          badgeVisibility > 0.35 ? 'auto' : 'none'
+        badge.style.transform = `translate3d(0, ${
+          (1 - badgeVisibility) * 8
+        }px, 0) scale(${0.96 + badgeVisibility * 0.04})`
+      }
     })
   })
 
@@ -858,6 +859,19 @@ function ProjectBalloons({
           key={balloon.number}
           name={`projectBalloon${balloon.number}`}
           position={balloon.basePosition}
+          userData={{ projectId: balloon.id }}
+          onClick={(event) => {
+            event.stopPropagation()
+            document.body.style.cursor = ''
+            onProjectSelect(balloon.id)
+          }}
+          onPointerEnter={(event) => {
+            event.stopPropagation()
+            document.body.style.cursor = 'pointer'
+          }}
+          onPointerLeave={() => {
+            document.body.style.cursor = ''
+          }}
         >
           <Sphere
             args={[1, 12, 9]}
@@ -891,6 +905,33 @@ function ProjectBalloons({
           <Box args={[1.3, 0.8, 1]} position={[0, -4.75, 0]} castShadow>
             <FlatMaterial color="#8B5A2B" />
           </Box>
+          <Html
+            center
+            position={[0, 4.15, 0]}
+            occlude={false}
+            portal={htmlPortal}
+            zIndexRange={[24, 0]}
+            style={{ pointerEvents: 'auto', userSelect: 'none' }}
+          >
+            <button
+              ref={(element) => {
+                badgeRefs.current[index] = element
+              }}
+              type="button"
+              onClick={() => onProjectSelect(balloon.id)}
+              className={`pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border px-4 py-2 font-sans text-xs font-semibold shadow-[0_10px_30px_rgba(15,23,42,0.24)] backdrop-blur-xl transition-[background-color,color,border-color,box-shadow] duration-500 hover:shadow-[0_14px_38px_rgba(15,23,42,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/20 bg-[#1E293B]/90 text-[#F8FAFC] hover:bg-[#334155]' : 'border-white/90 bg-[#FFF9F4]/90 text-[#3E2723] hover:bg-white'}`}
+              style={{
+                opacity: 0,
+                visibility: 'hidden',
+                transform: 'translate3d(0, 8px, 0) scale(0.96)',
+                transformOrigin: 'center',
+                willChange: 'opacity, transform',
+              }}
+              aria-label={`View ${balloon.title} project details`}
+            >
+              {balloon.shortTitle}
+            </button>
+          </Html>
         </group>
       ))}
     </group>
@@ -900,6 +941,8 @@ function ProjectBalloons({
 export default function Mountain({
   position = [0, 0, MOUNTAIN_ORIGIN_Z],
   onProjectProximityChange = () => {},
+  onProjectSelect = () => {},
+  htmlPortal,
 }) {
   return (
     <group name="mountainBase" position={position}>
@@ -949,6 +992,8 @@ export default function Mountain({
       <ProjectBalloons
         worldOrigin={position}
         onProjectProximityChange={onProjectProximityChange}
+        onProjectSelect={onProjectSelect}
+        htmlPortal={htmlPortal}
       />
     </group>
   )

@@ -10,7 +10,10 @@ import {
   getNearestCampusProximity,
   getPlaygroundFallPositionAtOffset,
   getPlaygroundFallProgress,
+  MOUNTAIN_CORNER,
+  MOUNTAIN_ORIGIN_Z,
   MOUNTAIN_PATH,
+  MOUNTAIN_PROJECT_ANCHORS,
   PLAYGROUND_MOTION_OFFSETS,
   SUMMIT_LOOK_AROUND,
   SUMMIT_SEQUENCE,
@@ -33,6 +36,8 @@ const mountainLookAheadPosition = new THREE.Vector3()
 const mountainForwardDirection = new THREE.Vector3()
 const trailingCameraPosition = new THREE.Vector3()
 const trailingLookTarget = new THREE.Vector3()
+const projectBalloonWorldPosition = new THREE.Vector3()
+const projectFramingTarget = new THREE.Vector3()
 const summitEntryCharacterPosition = new THREE.Vector3()
 const summitCharacterPosition = new THREE.Vector3()
 const summitEntryCameraPosition = new THREE.Vector3()
@@ -280,6 +285,47 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
         mountainCharacterPosition.z +
           mountainForwardDirection.z * MOUNTAIN_PATH.lookDistance,
       )
+
+      projectFramingTarget.set(0, 0, 0)
+      let projectFramingWeight = 0
+      let projectFramingStrength = 0
+      for (const anchor of MOUNTAIN_PROJECT_ANCHORS) {
+        const checkpointDistance = Math.abs(offset - anchor.t)
+        const checkpointStrength =
+          1 - THREE.MathUtils.smoothstep(checkpointDistance, 0.018, 0.058)
+        if (checkpointStrength <= 0) continue
+
+        projectBalloonWorldPosition.set(
+          MOUNTAIN_CORNER.x + anchor.basePosition[0],
+          MOUNTAIN_CORNER.y + anchor.basePosition[1],
+          MOUNTAIN_ORIGIN_Z + anchor.basePosition[2],
+        )
+        projectFramingTarget.addScaledVector(
+          projectBalloonWorldPosition,
+          checkpointStrength,
+        )
+        projectFramingWeight += checkpointStrength
+        projectFramingStrength = Math.max(
+          projectFramingStrength,
+          checkpointStrength,
+        )
+      }
+
+      if (projectFramingWeight > 0) {
+        projectFramingTarget.divideScalar(projectFramingWeight)
+        trailingCameraPosition.y += projectFramingStrength * 0.65
+        trailingCameraPosition.z += projectFramingStrength * 2.4
+        trailingLookTarget.lerp(
+          projectFramingTarget,
+          projectFramingStrength * 0.3,
+        )
+        desiredFov = THREE.MathUtils.lerp(
+          desiredFov,
+          52,
+          projectFramingStrength,
+        )
+      }
+
       desiredCameraPosition.lerp(trailingCameraPosition, cameraBlend)
       desiredLookTarget.lerp(trailingLookTarget, cameraBlend)
     }

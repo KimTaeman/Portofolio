@@ -1,10 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import useDayNight from '../../../hooks/useDayNight'
 
 export default function ProjectDetailModal({ project, onClose = () => {} }) {
   const { isNightMode } = useDayNight()
   const closeButtonRef = useRef(null)
+  const detailPoints = project?.bullets?.length
+    ? project.bullets
+    : project?.highlights?.length
+      ? [project.description, ...project.highlights]
+      : null
 
   useEffect(() => {
     if (!project) return undefined
@@ -63,15 +69,45 @@ export default function ProjectDetailModal({ project, onClose = () => {} }) {
               </button>
             </header>
 
-            <p className={`mt-5 font-sans text-lg font-medium transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
-              {project.subtitle}
-            </p>
-            <p
-              id="project-detail-description"
-              className={`mt-4 max-w-3xl font-sans text-base leading-relaxed transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
-            >
-              {project.description}
-            </p>
+            {project.subtitle && project.subtitle !== project.role && (
+              <p className={`mt-5 font-sans text-lg font-medium transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}>
+                {project.subtitle}
+              </p>
+            )}
+
+            {project.role && (
+              <div className={`mt-5 inline-flex items-center gap-3 rounded-full border px-4 py-2 font-sans text-sm transition-colors duration-500 ${isNightMode ? 'border-white/15 bg-[#334155]/70' : 'border-[#8A817A]/20 bg-[#EDE2D3]/70'}`}>
+                <span className={isNightMode ? 'text-[#94A3B8]' : 'text-[#8A817A]'}>
+                  Role
+                </span>
+                <strong className="font-semibold">{project.role}</strong>
+              </div>
+            )}
+
+            {detailPoints ? (
+              <ul
+                id="project-detail-description"
+                className={`mt-5 max-w-3xl space-y-3 font-sans text-base leading-relaxed transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
+              >
+                {detailPoints.map((highlight) => (
+                  <li key={highlight} className="flex gap-3">
+                    <span
+                      className="mt-[0.65em] size-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: project.accent }}
+                      aria-hidden="true"
+                    />
+                    <span>{highlight}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p
+                id="project-detail-description"
+                className={`mt-4 max-w-3xl font-sans text-base leading-relaxed transition-colors duration-500 ${isNightMode ? 'text-[#F8FAFC]' : 'text-[#3E2723]'}`}
+              >
+                {project.description}
+              </p>
+            )}
 
             <div className="mt-7 flex flex-wrap gap-2" aria-label="Technologies">
               {project.stack.map((technology) => (
@@ -83,6 +119,35 @@ export default function ProjectDetailModal({ project, onClose = () => {} }) {
                 </span>
               ))}
             </div>
+
+            {(project.liveUrl || project.repositoryUrl) && (
+              <div className="mt-7 flex flex-wrap gap-3" aria-label="Project links">
+                {project.liveUrl && (
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2.5 font-sans text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'bg-[#F8FAFC] text-[#1E293B] hover:bg-white' : 'bg-[#3E2723] text-[#FFF9F4] hover:bg-[#8A817A]'}`}
+                    aria-label={`Open ${project.title} live site in a new tab`}
+                  >
+                    Visit live site
+                    <FaExternalLinkAlt aria-hidden="true" size={13} />
+                  </a>
+                )}
+                {project.repositoryUrl && (
+                  <a
+                    href={project.repositoryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-5 py-2.5 font-sans text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/20 bg-[#334155] text-[#F8FAFC] hover:bg-[#475569]' : 'border-[#3E2723]/15 bg-white text-[#3E2723] hover:bg-[#EDE2D3]'}`}
+                    aria-label={`Open ${project.title} GitHub repository in a new tab`}
+                  >
+                    <FaGithub aria-hidden="true" size={16} />
+                    View source
+                  </a>
+                )}
+              </div>
+            )}
 
             <div className="mt-9 grid gap-4 md:grid-cols-2" aria-label="Project screenshots">
               {project.screenshots.map((screenshot) => (

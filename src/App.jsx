@@ -165,6 +165,8 @@ function App() {
               <Mountain
                 position={scenePosition('mountain')}
                 onProjectProximityChange={handleProjectProximityChange}
+                onProjectSelect={handleProjectSelect}
+                htmlPortal={sceneHtmlPortalRef}
               />
 
               {/* Scene 4: The Summit (Future & Contact) */}
@@ -179,7 +181,6 @@ function App() {
         <div
           ref={sceneHtmlPortalRef}
           className="pointer-events-none absolute inset-0 z-[1] overflow-hidden"
-          aria-hidden="true"
         />
       </div>
 

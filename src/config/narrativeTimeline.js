@@ -185,6 +185,40 @@ export const MOUNTAIN_TRAIL_STONES = Object.freeze(
   }),
 )
 
+export const MOUNTAIN_PROJECT_PROGRESS = Object.freeze([0.18, 0.5, 0.82])
+
+// Shared by the rendered balloons and the camera controller so project
+// framing cannot drift away from the actual interactive landmark positions.
+export const MOUNTAIN_PROJECT_ANCHORS = Object.freeze(
+  MOUNTAIN_PROJECT_PROGRESS.map((progress, index) => {
+    const stone =
+      MOUNTAIN_TRAIL_STONES[
+        Math.round(progress * (MOUNTAIN_TRAIL_STONES.length - 1))
+      ]
+    const side = index % 2 ? 1 : -1
+    const perpendicularX = Math.cos(stone.rotationY)
+    const perpendicularZ = -Math.sin(stone.rotationY)
+    const sideOffset = 7 + (index % 3) * 0.55
+
+    return Object.freeze({
+      progress,
+      t:
+        MOUNTAIN_TRAIL_START +
+        progress * (MOUNTAIN_CLIMB_END - MOUNTAIN_TRAIL_START),
+      triggerPosition: Object.freeze([
+        stone.x,
+        stone.topY + MOUNTAIN_CHARACTER_GROUND_OFFSET,
+        stone.z,
+      ]),
+      basePosition: Object.freeze([
+        stone.x + perpendicularX * sideOffset * side,
+        stone.topY + 9.5 + (index % 2) * 0.9,
+        stone.z + perpendicularZ * sideOffset * side,
+      ]),
+    })
+  }),
+)
+
 export const CAMPUS_LANDMARKS = Object.freeze([
   Object.freeze({
     id: 'badminton',
@@ -285,10 +319,10 @@ export const MOUNTAIN_PATH = Object.freeze({
   cameraTransitionEnd: 0.53,
   climbHeight: 18,
   cameraHeight: 7.5,
-  cameraDistance: 11,
+  cameraDistance: 12.5,
   lookHeight: 1.8,
   lookDistance: 14,
-  subjectFrameHeight: -2.35,
+  subjectFrameHeight: 2.2,
   lookAheadOffset: 0.022,
 })
 
