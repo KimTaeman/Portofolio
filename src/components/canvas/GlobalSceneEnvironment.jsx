@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Stars } from '@react-three/drei'
 import * as THREE from 'three'
 import useDayNight from '../../hooks/useDayNight'
+import { getSceneOneAtmosphereStrength } from '../../config/sceneOneAtmosphere'
 
 const DAY = Object.freeze({
   sky: new THREE.Color('#FFF0E5'),
@@ -16,6 +17,7 @@ const DAY = Object.freeze({
   celestial: new THREE.Color('#FFE8A1'),
   celestialGlow: new THREE.Color('#FFD700'),
   halo: new THREE.Color('#FFE8A1'),
+  transitionFog: new THREE.Color('#FFF0DE'),
 })
 
 const NIGHT = Object.freeze({
@@ -30,10 +32,16 @@ const NIGHT = Object.freeze({
   celestial: new THREE.Color('#E5EDFF'),
   celestialGlow: new THREE.Color('#B8CBFF'),
   halo: new THREE.Color('#B8CBFF'),
+  transitionFog: new THREE.Color('#111735'),
 })
 
 const lightOffset = new THREE.Vector3(10, 14, 8)
 const CELESTIAL_POSITION = Object.freeze([80, 90, -1000])
+const GLOBAL_STARFIELD_POSITION = Object.freeze([10, 40, -90])
+const INACTIVE_FOG_NEAR = 1990
+const INACTIVE_FOG_FAR = 2000
+const TRANSITION_FOG_NEAR = 5
+const TRANSITION_FOG_FAR = 46
 // A damping factor of 2 reaches about 95% of the target after 1.5 seconds.
 const THEME_DAMPING = 2
 
@@ -96,7 +104,25 @@ const createHaloTexture = () => {
   return texture
 }
 
-export default function GlobalSceneEnvironment() {
+function GlobalNightStarfield({ starfieldRef }) {
+  return (
+    <Stars
+      ref={starfieldRef}
+      name="globalStationaryNightStarfield"
+      position={GLOBAL_STARFIELD_POSITION}
+      count={2200}
+      depth={180}
+      factor={1.35}
+      fade
+      radius={650}
+      saturation={0.08}
+      speed={0.08}
+      visible={false}
+    />
+  )
+}
+
+export default function GlobalSceneEnvironment({ scrollOffset = 0 }) {
   const { isNightMode } = useDayNight()
   const { camera } = useThree()
   const backgroundRef = useRef()
@@ -108,6 +134,8 @@ export default function GlobalSceneEnvironment() {
   const celestialMaterialRef = useRef()
   const haloMaterialRef = useRef()
   const starsRef = useRef()
+  const fogStrengthRef = useRef(0)
+  const fogTargetColorRef = useRef(new THREE.Color('#FFF0E5'))
   const haloTexture = useMemo(() => createHaloTexture(), [])
 
   useEffect(() => {
@@ -144,9 +172,27 @@ export default function GlobalSceneEnvironment() {
       dampColor(backgroundRef.current, target.sky, delta)
     }
     if (fogRef.current) {
-      dampColor(fogRef.current.color, target.sky, delta)
+      fogStrengthRef.current = THREE.MathUtils.damp(
+        fogStrengthRef.current,
+        getSceneOneAtmosphereStrength(scrollOffset),
+        8,
+        delta,
+      )
+      fogTargetColorRef.current
+        .copy(target.sky)
+        .lerp(target.transitionFog, fogStrengthRef.current)
+      dampColor(fogRef.current.color, fogTargetColorRef.current, delta)
+      fogRef.current.near = THREE.MathUtils.lerp(
+        INACTIVE_FOG_NEAR,
+        TRANSITION_FOG_NEAR,
+        fogStrengthRef.current,
+      )
+      fogRef.current.far = THREE.MathUtils.lerp(
+        INACTIVE_FOG_FAR,
+        TRANSITION_FOG_FAR,
+        fogStrengthRef.current,
+      )
     }
-
     if (ambientRef.current) {
       dampColor(ambientRef.current.color, target.ambient, delta)
       ambientRef.current.intensity = THREE.MathUtils.damp(
@@ -205,8 +251,7 @@ export default function GlobalSceneEnvironment() {
     const stars = starsRef.current
     const starOpacity = stars?.material?.uniforms?.nightOpacity
     if (stars && starOpacity) {
-      dampUniform(starOpacity, isNightMode ? 0.6 : 0, delta)
-      stars.position.copy(camera.position)
+      dampUniform(starOpacity, isNightMode ? 0.52 : 0, delta)
       stars.visible = starOpacity.value > 0.001
     }
   })
@@ -214,7 +259,11 @@ export default function GlobalSceneEnvironment() {
   return (
     <>
       <color ref={backgroundRef} attach="background" args={['#FFF0E5']} />
-      <fog ref={fogRef} attach="fog" args={['#FFF0E5', 50, 400]} />
+      <fog
+        ref={fogRef}
+        attach="fog"
+        args={['#FFF0E5', INACTIVE_FOG_NEAR, INACTIVE_FOG_FAR]}
+      />
       <ambientLight ref={ambientRef} color="#FFEDD9" intensity={0.8} />
       <hemisphereLight
         ref={hemisphereRef}
@@ -222,18 +271,7 @@ export default function GlobalSceneEnvironment() {
         groundColor="#8A817A"
         intensity={0.6}
       />
-      <Stars
-        ref={starsRef}
-        name="deepNightStarfield"
-        count={1500}
-        depth={50}
-        factor={2}
-        fade
-        radius={100}
-        saturation={0}
-        speed={0}
-        visible={false}
-      />
+      <GlobalNightStarfield starfieldRef={starsRef} />
       <object3D ref={directionalTargetRef} />
       <directionalLight
         ref={directionalRef}

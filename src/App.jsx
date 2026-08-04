@@ -5,6 +5,7 @@ import { FaMoon, FaSun } from 'react-icons/fa'
 import * as THREE from 'three'
 import CameraController from './components/canvas/CameraController'
 import GlobalSceneEnvironment from './components/canvas/GlobalSceneEnvironment'
+import PlaygroundCampusTransition from './components/canvas/PlaygroundCampusTransition'
 import JourneyCharacter from './components/canvas/JourneyCharacter'
 import Playground from './components/canvas/scenes/Playground'
 import Campus from './components/canvas/scenes/Campus'
@@ -138,13 +139,14 @@ function App() {
           }}
         >
           <Suspense fallback={null}>
-            <GlobalSceneEnvironment />
+            <GlobalSceneEnvironment scrollOffset={scrollOffset} />
             <InfiniteGround
               visible={scrollOffset < SCENE_RANGES.campus.start}
             />
 
             <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
               <CameraController onScrollOffsetChange={setScrollOffset} />
+              <PlaygroundCampusTransition />
               <JourneyCharacter outfit={outfit} />
 
               {/* Scene 1: The Playground (Introduction) */}
