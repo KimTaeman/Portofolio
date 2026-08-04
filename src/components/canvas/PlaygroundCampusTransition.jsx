@@ -209,8 +209,30 @@ export default function PlaygroundCampusTransition() {
   )
 
   useEffect(() => {
-    cloudMeshRef.current?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-    wispMeshRef.current?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    const cloudMesh = cloudMeshRef.current
+    const wispMesh = wispMeshRef.current
+    cloudMesh?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    wispMesh?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    if (cloudMesh) {
+      cloudMesh.boundingBox = new THREE.Box3(
+        new THREE.Vector3(-22, -14, -14),
+        new THREE.Vector3(22, 16, 14),
+      )
+      cloudMesh.boundingSphere = new THREE.Sphere(
+        new THREE.Vector3(0, 1, 0),
+        32,
+      )
+    }
+    if (wispMesh) {
+      wispMesh.boundingBox = new THREE.Box3(
+        new THREE.Vector3(-24, -15, -15),
+        new THREE.Vector3(24, 17, 15),
+      )
+      wispMesh.boundingSphere = new THREE.Sphere(
+        new THREE.Vector3(0, 1, 0),
+        35,
+      )
+    }
     return () => {
       cloudTexture.dispose()
       glowTexture.dispose()
@@ -343,7 +365,6 @@ export default function PlaygroundCampusTransition() {
         args={[null, null, CLOUD_PUFF_COUNT]}
         position={CLOUD_BANK_POSITION}
         visible={false}
-        frustumCulled={false}
       >
         <icosahedronGeometry args={[1, 2]} />
         <meshStandardMaterial
@@ -366,7 +387,6 @@ export default function PlaygroundCampusTransition() {
         args={[null, null, WISP_COUNT]}
         position={CLOUD_BANK_POSITION}
         visible={false}
-        frustumCulled={false}
         renderOrder={18}
       >
         <planeGeometry args={[1, 1]} />

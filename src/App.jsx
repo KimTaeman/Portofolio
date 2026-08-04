@@ -81,6 +81,9 @@ function App() {
   const isCampusSceneActive =
     scrollOffset >= SCENE_RANGES.campus.start &&
     scrollOffset < SCENE_RANGES.campus.end
+  const isMountainSceneActive =
+    scrollOffset >= SCENE_RANGES.mountain.start &&
+    scrollOffset < SCENE_RANGES.mountain.end
   const areSummitParticlesActive =
     scrollOffset >= SCENE_RANGES.summit.start - 0.04
 
@@ -129,7 +132,7 @@ function App() {
             fov: initialCamera.fov,
             far: 2000,
           }}
-          dpr={[1, 1.5]}
+          dpr={[1, 1.35]}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           shadows="soft"
           onCreated={({ gl }) => {
@@ -144,15 +147,18 @@ function App() {
               visible={scrollOffset < SCENE_RANGES.campus.start}
             />
 
-            <ScrollControls pages={SCROLL_PAGES} enabled={!isLocked}>
+            <ScrollControls
+              pages={SCROLL_PAGES}
+              enabled={!isLocked}
+              damping={0.12}
+              eps={0.0002}
+            >
               <CameraController onScrollOffsetChange={setScrollOffset} />
               <PlaygroundCampusTransition />
               <JourneyCharacter outfit={outfit} />
 
               {/* Scene 1: The Playground (Introduction) */}
-              <Playground
-                position={scenePosition('playground')}
-              />
+              <Playground position={scenePosition('playground')} />
 
               {/* Scene 2: The Campus Path (Skills & Hobbies) */}
               <Campus
@@ -168,6 +174,7 @@ function App() {
                 position={scenePosition('mountain')}
                 onProjectProximityChange={handleProjectProximityChange}
                 onProjectSelect={handleProjectSelect}
+                isSceneActive={isMountainSceneActive}
                 htmlPortal={sceneHtmlPortalRef}
               />
 

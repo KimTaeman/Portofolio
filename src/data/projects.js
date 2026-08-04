@@ -66,4 +66,41 @@ export const PROJECTS = Object.freeze([
       { label: 'Headless CMS workflow', tone: '#B9DACC' },
     ]),
   },
+  {
+    id: 'tattnsnap-photobooth',
+    number: '04',
+    title: 'Tattnsnap Photobooth',
+    shortTitle: 'Tattnsnap',
+    subtitle: 'Creator & Full-Stack Developer',
+    role: 'Creator & Full-Stack Developer',
+    description:
+      'Developed an interactive web-based photobooth application featuring custom frames, real-time image filters, and seamless snapshot downloads.',
+    accent: '#F2A6B3',
+    stack: Object.freeze([
+      'React',
+      'Node.js',
+      'Canvas API',
+      'Tailwind CSS',
+    ]),
+    screenshots: Object.freeze([
+      { label: 'Interactive photobooth', tone: '#F8D6DC' },
+      { label: 'Custom frames and filters', tone: '#F3C4CE' },
+    ]),
+  },
+  {
+    id: 'project-alpha',
+    number: '05',
+    title: 'Project Alpha',
+    shortTitle: 'Project Alpha',
+    subtitle: 'Full-Stack Developer',
+    role: 'Full-Stack Developer',
+    description:
+      'An experimental web architecture focused on high-performance data processing and clean user interface design.',
+    accent: '#88A5D8',
+    stack: Object.freeze(['Next.js', 'TypeScript', 'PostgreSQL']),
+    screenshots: Object.freeze([
+      { label: 'Architecture exploration', tone: '#DCE5F5' },
+      { label: 'Interface system', tone: '#CAD8EF' },
+    ]),
+  },
 ])

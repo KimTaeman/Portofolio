@@ -13,6 +13,7 @@ import {
   MOUNTAIN_CORNER,
   MOUNTAIN_ORIGIN_Z,
   MOUNTAIN_PATH,
+  MOUNTAIN_PROJECT_BADGE_HEIGHT,
   MOUNTAIN_PROJECT_ANCHORS,
   PLAYGROUND_MOTION_OFFSETS,
   SUMMIT_LOOK_AROUND,
@@ -46,9 +47,16 @@ const summitOrbitTarget = new THREE.Vector3()
 const fallCharacterPosition = new THREE.Vector3()
 const fallCameraPosition = new THREE.Vector3()
 const fallLookTarget = new THREE.Vector3()
+const stabilizedFallLookTarget = new THREE.Vector3()
 const campusCharacterPosition = new THREE.Vector3()
 const responsiveCameraOffset = new THREE.Vector3()
 const SCROLL_REPORT_INTERVAL_MS = 50
+const PROJECT_CAMERA_HOLD_RADIUS = 0.009
+const PROJECT_CAMERA_FALLOFF_RADIUS = 0.028
+const PROJECT_CAMERA_TARGET_LIFT = MOUNTAIN_PROJECT_BADGE_HEIGHT * 0.58
+const PROJECT_CAMERA_HEIGHT_LIFT = 1.05
+const PROJECT_CAMERA_DISTANCE_LIFT = 3.25
+const PROJECT_CAMERA_TARGET_BLEND = 0.48
 const noop = () => {}
 
 const getSegment = (offset) => {
@@ -72,6 +80,7 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
   const interactionElementRef = useRef(null)
   const lookYawRef = useRef(0)
   const lookPitchRef = useRef(0)
+  const isFallLookInitializedRef = useRef(false)
   const pointerRef = useRef({ x: 0, y: 0 })
   const dragRef = useRef({ isDragging: false, pointerId: null, x: 0, y: 0 })
 
@@ -221,6 +230,17 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
       desiredCameraPosition.copy(fallCameraPosition)
       desiredLookTarget.copy(fallLookTarget)
       desiredFov = 48 + Math.sin(fallProgress * Math.PI) * 2.5
+      if (!isFallLookInitializedRef.current) {
+        stabilizedFallLookTarget.copy(desiredLookTarget)
+        isFallLookInitializedRef.current = true
+      } else {
+        stabilizedFallLookTarget.lerp(
+          desiredLookTarget,
+          1 - Math.exp(-9 * delta),
+        )
+      }
+    } else {
+      isFallLookInitializedRef.current = false
     }
 
     const isCampusTracking =
@@ -292,7 +312,12 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
       for (const anchor of MOUNTAIN_PROJECT_ANCHORS) {
         const checkpointDistance = Math.abs(offset - anchor.t)
         const checkpointStrength =
-          1 - THREE.MathUtils.smoothstep(checkpointDistance, 0.018, 0.058)
+          1 -
+          THREE.MathUtils.smoothstep(
+            checkpointDistance,
+            PROJECT_CAMERA_HOLD_RADIUS,
+            PROJECT_CAMERA_FALLOFF_RADIUS,
+          )
         if (checkpointStrength <= 0) continue
 
         projectBalloonWorldPosition.set(
@@ -313,11 +338,18 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
 
       if (projectFramingWeight > 0) {
         projectFramingTarget.divideScalar(projectFramingWeight)
-        trailingCameraPosition.y += projectFramingStrength * 0.65
-        trailingCameraPosition.z += projectFramingStrength * 2.4
+        // The DOM badge is anchored above the balloon mesh. Frame the upper
+        // assembly instead of its sphere center so tall checkpoints retain
+        // comfortable viewport headroom.
+        projectFramingTarget.y +=
+          PROJECT_CAMERA_TARGET_LIFT * projectFramingStrength
+        trailingCameraPosition.y +=
+          projectFramingStrength * PROJECT_CAMERA_HEIGHT_LIFT
+        trailingCameraPosition.z +=
+          projectFramingStrength * PROJECT_CAMERA_DISTANCE_LIFT
         trailingLookTarget.lerp(
           projectFramingTarget,
-          projectFramingStrength * 0.3,
+          projectFramingStrength * PROJECT_CAMERA_TARGET_BLEND,
         )
         desiredFov = THREE.MathUtils.lerp(
           desiredFov,
@@ -423,14 +455,19 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
     const isCinematicCamera =
       isPlaygroundFall || isMountainClimb || isSummitCinematic
     const positionDamping =
-      1 - Math.exp(-(isCinematicCamera ? 3.08 : 7) * delta)
+      1 -
+      Math.exp(
+        -(isPlaygroundFall ? 7.2 : isCinematicCamera ? 5.2 : 9) * delta,
+      )
     const rotationDamping =
-      1 - Math.exp(-(isCinematicCamera ? 4.2 : 8) * delta)
+      1 - Math.exp(-(isCinematicCamera ? 6.6 : 10) * delta)
     camera.position.lerp(desiredCameraPosition, positionDamping)
     if (isCampusTracking) {
       camera.position.x = desiredCameraPosition.x
     }
-    if (isCinematicCamera) {
+    if (isPlaygroundFall) {
+      camera.lookAt(stabilizedFallLookTarget)
+    } else if (isCinematicCamera) {
       camera.lookAt(desiredLookTarget)
     } else {
       lookAtMatrix.lookAt(camera.position, desiredLookTarget, worldUp)

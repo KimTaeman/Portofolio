@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html, RoundedBox, useScroll } from '@react-three/drei'
 import * as THREE from 'three'
@@ -165,116 +165,129 @@ function ClayMaterial({
   )
 }
 
-function SakuraCanopyMaterial({ color, materialRef }) {
-  return (
-    <meshStandardMaterial
-      ref={materialRef}
-      color={color}
-      emissive="#C084FC"
-      emissiveIntensity={0}
-      roughness={1}
-      metalness={0}
-      flatShading
-    />
-  )
-}
-
 function CherryBlossomTree({
   position,
   scale,
   variant,
   canopyLean,
-  isNight,
+  canopyMaterials,
+  canopyGeometry,
+  trunkGeometry,
+  trunkMaterial,
 }) {
-  const canopyMaterialRefs = useRef([])
-  const canopyColors = useMemo(() => {
-    const palette =
-      variant === 1
-        ? ['#FFC0CB', '#FFB7C5']
-        : variant === 2
-          ? ['#FFD0D9', '#FFB7C5']
-          : ['#FFB7C5', '#FFC0CB']
-
-    return [palette[0], palette[1], palette[1], palette[0], palette[1]].map(
-      (color) => new THREE.Color(color),
-    )
-  }, [variant])
-
-  useFrame((_, delta) => {
-    canopyMaterialRefs.current.forEach((material, index) => {
-      if (!material) return
-      dampColor(
-        material.color,
-        isNight ? SAKURA_NIGHT_COLOR : canopyColors[index],
-        delta,
-      )
-      material.emissiveIntensity = THREE.MathUtils.damp(
-        material.emissiveIntensity,
-        isNight ? 0.22 : 0,
-        MATERIAL_DAMPING,
-        delta,
-      )
-    })
-  })
-
   return (
     <group position={position} scale={scale}>
-      <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.18, 0.28, 1.84, 8]} />
-        <ClayMaterial color="#8B5A4A" />
-      </mesh>
+      <mesh
+        geometry={trunkGeometry}
+        material={trunkMaterial}
+        position={[0, 0.92, 0]}
+        castShadow
+        receiveShadow
+      />
 
       <group
         name="cloudCanopy"
         rotation={[canopyLean, (variant - 1) * 0.055, variant % 2 ? -0.035 : 0.035]}
       >
-        <mesh position={[0, 2.2, 0]} scale={[1.2, 0.9, 1]} castShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <SakuraCanopyMaterial
-            color={canopyColors[0]}
-            materialRef={(material) => {
-              canopyMaterialRefs.current[0] = material
-            }}
-          />
-        </mesh>
-        <mesh position={[-0.82, 2.14, 0.08]} scale={[0.82, 0.7, 0.76]} castShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <SakuraCanopyMaterial
-            color={canopyColors[1]}
-            materialRef={(material) => {
-              canopyMaterialRefs.current[1] = material
-            }}
-          />
-        </mesh>
-        <mesh position={[0.82, 2.16, 0.03]} scale={[0.84, 0.72, 0.78]} castShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <SakuraCanopyMaterial
-            color={canopyColors[2]}
-            materialRef={(material) => {
-              canopyMaterialRefs.current[2] = material
-            }}
-          />
-        </mesh>
-        <mesh position={[-0.34, 2.85, -0.06]} scale={[0.74, 0.65, 0.7]} castShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <SakuraCanopyMaterial
-            color={canopyColors[3]}
-            materialRef={(material) => {
-              canopyMaterialRefs.current[3] = material
-            }}
-          />
-        </mesh>
-        <mesh position={[0.38, 2.78, 0.05]} scale={[0.76, 0.63, 0.72]} castShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <SakuraCanopyMaterial
-            color={canopyColors[4]}
-            materialRef={(material) => {
-              canopyMaterialRefs.current[4] = material
-            }}
-          />
-        </mesh>
+        <mesh geometry={canopyGeometry} material={canopyMaterials[0]} position={[0, 2.2, 0]} scale={[1.2, 0.9, 1]} castShadow />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[1]} position={[-0.82, 2.14, 0.08]} scale={[0.82, 0.7, 0.76]} castShadow />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[2]} position={[0.82, 2.16, 0.03]} scale={[0.84, 0.72, 0.78]} castShadow />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[3]} position={[-0.34, 2.85, -0.06]} scale={[0.74, 0.65, 0.7]} castShadow />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[4]} position={[0.38, 2.78, 0.05]} scale={[0.76, 0.63, 0.72]} castShadow />
       </group>
     </group>
+  )
+}
+
+function SakuraGrove({ isNight }) {
+  const resources = useMemo(() => {
+    const palettes = [
+      ['#FFB7C5', '#FFC0CB'],
+      ['#FFC0CB', '#FFB7C5'],
+      ['#FFD0D9', '#FFB7C5'],
+    ]
+    const dayColors = palettes.map(([primary, secondary]) =>
+      [primary, secondary, secondary, primary, secondary].map(
+        (color) => new THREE.Color(color),
+      ),
+    )
+    const canopyMaterials = dayColors.map((colors) =>
+      colors.map(
+        (color) =>
+          new THREE.MeshStandardMaterial({
+            color,
+            emissive: '#C084FC',
+            emissiveIntensity: 0,
+            roughness: 1,
+            metalness: 0,
+            flatShading: true,
+          }),
+      ),
+    )
+
+    const canopyGeometry = new THREE.DodecahedronGeometry(1, 0)
+    const trunkGeometry = new THREE.CylinderGeometry(0.18, 0.28, 1.84, 8)
+    canopyGeometry.computeBoundingBox()
+    canopyGeometry.computeBoundingSphere()
+    trunkGeometry.computeBoundingBox()
+    trunkGeometry.computeBoundingSphere()
+
+    return {
+      dayColors,
+      canopyMaterials,
+      canopyGeometry,
+      trunkGeometry,
+      trunkMaterial: new THREE.MeshStandardMaterial({
+        color: '#8B5A4A',
+        roughness: 1,
+        metalness: 0,
+        flatShading: true,
+      }),
+    }
+  }, [])
+
+  useEffect(
+    () => () => {
+      resources.canopyGeometry.dispose()
+      resources.trunkGeometry.dispose()
+      resources.trunkMaterial.dispose()
+      resources.canopyMaterials.flat().forEach((material) => material.dispose())
+    },
+    [resources],
+  )
+
+  useFrame((_, delta) => {
+    resources.canopyMaterials.forEach((materials, variant) => {
+      materials.forEach((material, index) => {
+        dampColor(
+          material.color,
+          isNight ? SAKURA_NIGHT_COLOR : resources.dayColors[variant][index],
+          delta,
+        )
+        material.emissiveIntensity = THREE.MathUtils.damp(
+          material.emissiveIntensity,
+          isNight ? 0.22 : 0,
+          MATERIAL_DAMPING,
+          delta,
+        )
+      })
+    })
+  })
+
+  return CHERRY_TREE_LAYOUT.map(
+    ([x, y, z, scale, variant, canopyLean]) => (
+      <CherryBlossomTree
+        key={`${x}-${z}`}
+        position={[x, y, z]}
+        scale={scale}
+        variant={variant}
+        canopyLean={canopyLean}
+        canopyMaterials={resources.canopyMaterials[variant]}
+        canopyGeometry={resources.canopyGeometry}
+        trunkGeometry={resources.trunkGeometry}
+        trunkMaterial={resources.trunkMaterial}
+      />
+    ),
   )
 }
 
@@ -323,7 +336,28 @@ function FallingPetals({ isNight }) {
   }, [])
 
   useEffect(() => {
-    petalsRef.current?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    const petals = petalsRef.current
+    petals?.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    if (petals) {
+      const center = new THREE.Vector3(
+        (PETAL_BOUNDS.minX + PETAL_BOUNDS.maxX) * 0.5,
+        (PETAL_BOUNDS.minY + PETAL_BOUNDS.maxY) * 0.5,
+        (PETAL_BOUNDS.minZ + PETAL_BOUNDS.maxZ) * 0.5,
+      )
+      petals.boundingBox = new THREE.Box3(
+        new THREE.Vector3(
+          PETAL_BOUNDS.minX,
+          PETAL_BOUNDS.minY,
+          PETAL_BOUNDS.minZ,
+        ),
+        new THREE.Vector3(
+          PETAL_BOUNDS.maxX,
+          PETAL_BOUNDS.maxY,
+          PETAL_BOUNDS.maxZ,
+        ),
+      )
+      petals.boundingSphere = new THREE.Sphere(center, 16)
+    }
   }, [])
 
   useFrame((state, delta) => {
@@ -388,7 +422,6 @@ function FallingPetals({ isNight }) {
     <instancedMesh
       ref={petalsRef}
       args={[null, null, PETAL_COUNT]}
-      frustumCulled={false}
     >
       <circleGeometry args={[0.085, 5]} />
       <meshStandardMaterial
@@ -500,6 +533,7 @@ function ClickableLandmark({
   const badgeRef = useRef()
   const badgeElementRef = useRef()
   const badgeVisibilityRef = useRef(0)
+  const appliedBadgeVisibilityRef = useRef(-1)
   const scroll = useScroll()
   const { isNightMode } = useDayNight()
 
@@ -518,6 +552,18 @@ function ClickableLandmark({
   useFrame((state, delta) => {
     if (!floatingRef.current) return
 
+    if (!isSceneActive) {
+      badgeVisibilityRef.current = 0
+      if (badgeElementRef.current && appliedBadgeVisibilityRef.current !== 0) {
+        badgeElementRef.current.style.opacity = '0'
+        badgeElementRef.current.style.visibility = 'hidden'
+        badgeElementRef.current.style.transform =
+          'translate3d(0, 8px, 0) scale(0.96)'
+        appliedBadgeVisibilityRef.current = 0
+      }
+      return
+    }
+
     const elapsed = state.clock.elapsedTime
     floatingRef.current.position.y =
       Math.sin(elapsed * landmark.bobSpeed + landmark.bobPhase) * bobAmount
@@ -531,10 +577,6 @@ function ClickableLandmark({
     floatingRef.current.scale.z +=
       (targetScale - floatingRef.current.scale.z) * damping
 
-    if (!isSceneActive) {
-      badgeVisibilityRef.current = 0
-      return
-    }
     if (!hotspotRef.current || !badgeRef.current) return
 
     const characterX = getCharacterXAtOffset(scroll.offset)
@@ -551,13 +593,19 @@ function ClickableLandmark({
     )
 
     const badgeVisibility = badgeVisibilityRef.current
-    if (badgeElementRef.current) {
+    if (
+      badgeElementRef.current &&
+      (Math.abs(badgeVisibility - appliedBadgeVisibilityRef.current) > 0.005 ||
+        badgeVisibility === 0 ||
+        badgeVisibility === 1)
+    ) {
       badgeElementRef.current.style.opacity = `${badgeVisibility}`
       badgeElementRef.current.style.visibility =
         badgeVisibility > 0.01 ? 'visible' : 'hidden'
       badgeElementRef.current.style.transform = `translate3d(0, ${
         (1 - badgeVisibility) * 8
       }px, 0) scale(${0.96 + badgeVisibility * 0.04})`
+      appliedBadgeVisibilityRef.current = badgeVisibility
     }
 
     const pulseWave = Math.sin(elapsed * 2.8 + landmark.bobPhase)
@@ -652,6 +700,7 @@ function ClickableLandmark({
             <Html
               center
               occlude={false}
+              eps={0.75}
               portal={htmlPortal}
               zIndexRange={[30, 0]}
               style={{ pointerEvents: 'none', userSelect: 'none' }}
@@ -982,7 +1031,7 @@ function CampusSpringLights({ isNight }) {
   )
 }
 
-export default function Campus({
+function Campus({
   position = [0, 0, 0],
   onSelect = () => {},
   areParticlesActive = true,
@@ -1022,16 +1071,7 @@ export default function Campus({
         ))}
       </group>
 
-      {CHERRY_TREE_LAYOUT.map(([x, y, z, scale, variant, canopyLean]) => (
-        <CherryBlossomTree
-          key={`${x}-${z}`}
-          position={[x, y, z]}
-          scale={scale}
-          variant={variant}
-          canopyLean={canopyLean}
-          isNight={isNight}
-        />
-      ))}
+      <SakuraGrove isNight={isNight} />
 
       {LAMP_LAYOUT.map(([x, z]) => (
         <VintageLampPost key={`${x}-${z}`} position={[x, 0, z]} isNight={isNight} />
@@ -1057,3 +1097,5 @@ export default function Campus({
     </group>
   )
 }
+
+export default memo(Campus)

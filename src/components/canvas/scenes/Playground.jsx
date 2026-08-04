@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   Box,
@@ -7,7 +7,6 @@ import {
   Cylinder,
   Dodecahedron,
   RoundedBox,
-  Sphere,
   useScroll,
 } from '@react-three/drei'
 import * as THREE from 'three'
@@ -140,44 +139,76 @@ function ClayMaterial({ color }) {
   )
 }
 
-function CloudMaterial() {
+function PlaygroundClouds() {
   const { isNightMode } = useDayNight()
-  const materialRef = useRef()
+  const cloudRefs = useRef([])
+  const geometry = useMemo(() => {
+    const sharedGeometry = new THREE.SphereGeometry(1, 12, 8)
+    sharedGeometry.computeBoundingBox()
+    sharedGeometry.computeBoundingSphere()
+    return sharedGeometry
+  }, [])
+  const material = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: DAY_CLOUD_COLOR,
+        roughness: 1,
+        metalness: 0,
+        emissive: DAY_CLOUD_GLOW,
+        emissiveIntensity: 0.1,
+        flatShading: true,
+      }),
+    [],
+  )
 
-  useFrame((_, delta) => {
+  useEffect(
+    () => () => {
+      geometry.dispose()
+      material.dispose()
+    },
+    [geometry, material],
+  )
+
+  useFrame((state, delta) => {
     const alpha = 1 - Math.exp(-delta / 0.65)
-    materialRef.current?.color.lerp(
+    material.color.lerp(
       isNightMode ? NIGHT_CLOUD_COLOR : DAY_CLOUD_COLOR,
       alpha,
     )
-    materialRef.current?.emissive.lerp(
+    material.emissive.lerp(
       isNightMode ? NIGHT_CLOUD_GLOW : DAY_CLOUD_GLOW,
       alpha,
     )
+
+    const elapsed = state.clock.elapsedTime
+    CLOUD_LAYOUT.forEach(({ position, speed, phase }, index) => {
+      const cloud = cloudRefs.current[index]
+      if (cloud) {
+        cloud.position.x =
+          position[0] + Math.sin(elapsed * speed + phase) * 1.15
+      }
+    })
   })
 
   return (
-    <meshStandardMaterial
-      ref={materialRef}
-      color="#FFFFFF"
-      roughness={1}
-      metalness={0}
-      emissive="#FFFFFF"
-      emissiveIntensity={0.1}
-      flatShading
-    />
+    <>
+      {CLOUD_LAYOUT.map(({ position, scale }, index) => (
+        <Cloud
+          key={position.join('-')}
+          cloudRef={(cloud) => {
+            cloudRefs.current[index] = cloud
+          }}
+          geometry={geometry}
+          material={material}
+          position={position}
+          scale={scale}
+        />
+      ))}
+    </>
   )
 }
 
-function Cloud({ position, scale, speed, phase }) {
-  const cloudRef = useRef()
-
-  useFrame((state) => {
-    if (!cloudRef.current) return
-    cloudRef.current.position.x =
-      position[0] + Math.sin(state.clock.elapsedTime * speed + phase) * 1.15
-  })
-
+function Cloud({ cloudRef, geometry, material, position, scale }) {
   return (
     <group
       ref={cloudRef}
@@ -185,37 +216,31 @@ function Cloud({ position, scale, speed, phase }) {
       position={position}
       scale={scale}
     >
-      <Sphere args={[1, 12, 8]} scale={[1.15, 0.56, 0.62]}>
-        <CloudMaterial />
-      </Sphere>
-      <Sphere
-        args={[1, 12, 8]}
+      <mesh geometry={geometry} material={material} scale={[1.15, 0.56, 0.62]} />
+      <mesh
+        geometry={geometry}
+        material={material}
         position={[-0.86, -0.03, 0.02]}
         scale={[0.72, 0.46, 0.5]}
-      >
-        <CloudMaterial />
-      </Sphere>
-      <Sphere
-        args={[1, 12, 8]}
+      />
+      <mesh
+        geometry={geometry}
+        material={material}
         position={[0.86, -0.02, 0]}
         scale={[0.7, 0.45, 0.48]}
-      >
-        <CloudMaterial />
-      </Sphere>
-      <Sphere
-        args={[1, 12, 8]}
+      />
+      <mesh
+        geometry={geometry}
+        material={material}
         position={[-0.34, 0.38, -0.03]}
         scale={[0.62, 0.58, 0.54]}
-      >
-        <CloudMaterial />
-      </Sphere>
-      <Sphere
-        args={[1, 12, 8]}
+      />
+      <mesh
+        geometry={geometry}
+        material={material}
         position={[0.38, 0.33, 0]}
         scale={[0.68, 0.62, 0.56]}
-      >
-        <CloudMaterial />
-      </Sphere>
+      />
     </group>
   )
 }
@@ -491,8 +516,29 @@ function LandingPetalBurst() {
 
   useEffect(() => {
     if (!meshRef.current) return
-    meshRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-    meshRef.current.visible = false
+    const mesh = meshRef.current
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    mesh.boundingBox = new THREE.Box3(
+      new THREE.Vector3(
+        CAMPUS_PATH.startX - 12,
+        CAMPUS_PATH.surfaceY - 3,
+        CAMPUS_PATH.characterZ - 12,
+      ),
+      new THREE.Vector3(
+        CAMPUS_PATH.startX + 12,
+        CAMPUS_PATH.surfaceY + 12,
+        CAMPUS_PATH.characterZ + 12,
+      ),
+    )
+    mesh.boundingSphere = new THREE.Sphere(
+      new THREE.Vector3(
+        CAMPUS_PATH.startX,
+        CAMPUS_PATH.surfaceY + 4,
+        CAMPUS_PATH.characterZ,
+      ),
+      18,
+    )
+    mesh.visible = false
   }, [])
 
   useFrame((state) => {
@@ -552,7 +598,6 @@ function LandingPetalBurst() {
       ref={meshRef}
       name="landingCherryBlossomBurst"
       args={[null, null, LANDING_BURST_COUNT]}
-      frustumCulled={false}
     >
       <circleGeometry args={[1, 5]} />
       <meshStandardMaterial
@@ -569,22 +614,14 @@ function LandingPetalBurst() {
   )
 }
 
-export default function Playground({
+function Playground({
   position = [0, 20, 0],
 }) {
   const slidePosition = { x: -2, y: 1.1, z: -1.5 }
 
   return (
     <>
-      {CLOUD_LAYOUT.map(({ position, scale, speed, phase }) => (
-        <Cloud
-          key={position.join('-')}
-          position={position}
-          scale={scale}
-          speed={speed}
-          phase={phase}
-        />
-      ))}
+      <PlaygroundClouds />
 
       <group name="elevatedPlaygroundPlateau" position={position}>
         <LowPolyPlateauTerrain />
@@ -653,3 +690,5 @@ export default function Playground({
     </>
   )
 }
+
+export default memo(Playground)

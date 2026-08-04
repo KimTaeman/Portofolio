@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   Cone,
@@ -583,12 +583,19 @@ function BirdFlock() {
   const rightWingDummyRef = useRef(new THREE.Object3D())
 
   useEffect(() => {
-    if (leftWingsRef.current) {
-      leftWingsRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-    }
-    if (rightWingsRef.current) {
-      rightWingsRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-    }
+    const wingMeshes = [leftWingsRef.current, rightWingsRef.current]
+    wingMeshes.forEach((mesh) => {
+      if (!mesh) return
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+      mesh.boundingBox = new THREE.Box3(
+        new THREE.Vector3(-24, 20, -130),
+        new THREE.Vector3(24, 33, -90),
+      )
+      mesh.boundingSphere = new THREE.Sphere(
+        new THREE.Vector3(0, 26, -110),
+        32,
+      )
+    })
   }, [])
 
   useFrame((state) => {
@@ -643,7 +650,6 @@ function BirdFlock() {
       <instancedMesh
         ref={leftWingsRef}
         args={[undefined, undefined, BIRD_FLOCK.length]}
-        frustumCulled={false}
       >
         <boxGeometry args={[0.9, 0.08, 0.24]} />
         <meshStandardMaterial
@@ -656,7 +662,6 @@ function BirdFlock() {
       <instancedMesh
         ref={rightWingsRef}
         args={[undefined, undefined, BIRD_FLOCK.length]}
-        frustumCulled={false}
       >
         <boxGeometry args={[0.9, 0.08, 0.24]} />
         <meshStandardMaterial
@@ -892,7 +897,7 @@ function RollingMist({ isNight }) {
   )
 }
 
-export default function Summit({
+function Summit({
   position = [0, 0, 0],
   areParticlesActive = true,
 }) {
@@ -936,3 +941,5 @@ export default function Summit({
     </group>
   )
 }
+
+export default memo(Summit)

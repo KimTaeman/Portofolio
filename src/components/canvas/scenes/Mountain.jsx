@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   Box,
@@ -19,6 +19,7 @@ import {
   MOUNTAIN_ORIGIN_Z,
   MOUNTAIN_PATH,
   MOUNTAIN_PROJECT_ANCHORS,
+  MOUNTAIN_PROJECT_BADGE_HEIGHT,
   MOUNTAIN_TRANSITION,
   MOUNTAIN_TRANSITION_STONES,
   MOUNTAIN_TRAIL_STONES,
@@ -738,6 +739,7 @@ function ProjectBalloons({
   worldOrigin,
   onProjectProximityChange = () => {},
   onProjectSelect = () => {},
+  isSceneActive = false,
   htmlPortal,
 }) {
   const { isNightMode } = useDayNight()
@@ -746,6 +748,7 @@ function ProjectBalloons({
   const balloonMaterialRefs = useRef([])
   const badgeRefs = useRef([])
   const badgeVisibilityRefs = useRef([])
+  const appliedBadgeVisibilityRefs = useRef([])
   const activeIndexRef = useRef(-1)
   const activeProjectIdRef = useRef(null)
   const reportedProjectIdRef = useRef(undefined)
@@ -773,6 +776,7 @@ function ProjectBalloons({
     getCharacterPositionAtOffset(scroll.offset, balloonCharacterPosition)
     mountainWorldOrigin.fromArray(worldOrigin)
     const isOnTrail =
+      isSceneActive &&
       scroll.offset >= MOUNTAIN_PATH.trailStart &&
       scroll.offset <= MOUNTAIN_PATH.end
     let nextActiveIndex = -1
@@ -836,7 +840,13 @@ function ProjectBalloons({
         delta,
       )
       badgeVisibilityRefs.current[index] = badgeVisibility
-      if (badge) {
+      const appliedVisibility = appliedBadgeVisibilityRefs.current[index] ?? -1
+      if (
+        badge &&
+        (Math.abs(badgeVisibility - appliedVisibility) > 0.005 ||
+          badgeVisibility === 0 ||
+          badgeVisibility === 1)
+      ) {
         badge.style.opacity = `${badgeVisibility}`
         badge.style.visibility =
           badgeVisibility > 0.01 ? 'visible' : 'hidden'
@@ -845,6 +855,7 @@ function ProjectBalloons({
         badge.style.transform = `translate3d(0, ${
           (1 - badgeVisibility) * 8
         }px, 0) scale(${0.96 + badgeVisibility * 0.04})`
+        appliedBadgeVisibilityRefs.current[index] = badgeVisibility
       }
     })
   })
@@ -861,11 +872,13 @@ function ProjectBalloons({
           position={balloon.basePosition}
           userData={{ projectId: balloon.id }}
           onClick={(event) => {
+            if (!isSceneActive) return
             event.stopPropagation()
             document.body.style.cursor = ''
             onProjectSelect(balloon.id)
           }}
           onPointerEnter={(event) => {
+            if (!isSceneActive) return
             event.stopPropagation()
             document.body.style.cursor = 'pointer'
           }}
@@ -905,43 +918,48 @@ function ProjectBalloons({
           <Box args={[1.3, 0.8, 1]} position={[0, -4.75, 0]} castShadow>
             <FlatMaterial color="#8B5A2B" />
           </Box>
-          <Html
-            center
-            position={[0, 4.15, 0]}
-            occlude={false}
-            portal={htmlPortal}
-            zIndexRange={[24, 0]}
-            style={{ pointerEvents: 'auto', userSelect: 'none' }}
-          >
-            <button
-              ref={(element) => {
-                badgeRefs.current[index] = element
-              }}
-              type="button"
-              onClick={() => onProjectSelect(balloon.id)}
-              className={`pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border px-4 py-2 font-sans text-xs font-semibold shadow-[0_10px_30px_rgba(15,23,42,0.24)] backdrop-blur-xl transition-[background-color,color,border-color,box-shadow] duration-500 hover:shadow-[0_14px_38px_rgba(15,23,42,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/20 bg-[#1E293B]/90 text-[#F8FAFC] hover:bg-[#334155]' : 'border-white/90 bg-[#FFF9F4]/90 text-[#3E2723] hover:bg-white'}`}
-              style={{
-                opacity: 0,
-                visibility: 'hidden',
-                transform: 'translate3d(0, 8px, 0) scale(0.96)',
-                transformOrigin: 'center',
-                willChange: 'opacity, transform',
-              }}
-              aria-label={`View ${balloon.title} project details`}
+          {isSceneActive && (
+            <Html
+              center
+              position={[0, MOUNTAIN_PROJECT_BADGE_HEIGHT, 0]}
+              occlude={false}
+              eps={0.75}
+              portal={htmlPortal}
+              zIndexRange={[24, 0]}
+              style={{ pointerEvents: 'auto', userSelect: 'none' }}
             >
-              {balloon.shortTitle}
-            </button>
-          </Html>
+              <button
+                ref={(element) => {
+                  badgeRefs.current[index] = element
+                  if (element) appliedBadgeVisibilityRefs.current[index] = -1
+                }}
+                type="button"
+                onClick={() => onProjectSelect(balloon.id)}
+                className={`pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border px-4 py-2 font-sans text-xs font-semibold shadow-[0_10px_30px_rgba(15,23,42,0.24)] backdrop-blur-xl transition-[background-color,color,border-color,box-shadow] duration-500 hover:shadow-[0_14px_38px_rgba(15,23,42,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/20 bg-[#1E293B]/90 text-[#F8FAFC] hover:bg-[#334155]' : 'border-white/90 bg-[#FFF9F4]/90 text-[#3E2723] hover:bg-white'}`}
+                style={{
+                  opacity: 0,
+                  visibility: 'hidden',
+                  transform: 'translate3d(0, 8px, 0) scale(0.96)',
+                  transformOrigin: 'center',
+                  willChange: 'opacity, transform',
+                }}
+                aria-label={`View ${balloon.title} project details`}
+              >
+                {balloon.shortTitle}
+              </button>
+            </Html>
+          )}
         </group>
       ))}
     </group>
   )
 }
 
-export default function Mountain({
+function Mountain({
   position = [0, 0, MOUNTAIN_ORIGIN_Z],
   onProjectProximityChange = () => {},
   onProjectSelect = () => {},
+  isSceneActive = false,
   htmlPortal,
 }) {
   return (
@@ -993,8 +1011,11 @@ export default function Mountain({
         worldOrigin={position}
         onProjectProximityChange={onProjectProximityChange}
         onProjectSelect={onProjectSelect}
+        isSceneActive={isSceneActive}
         htmlPortal={htmlPortal}
       />
     </group>
   )
 }
+
+export default memo(Mountain)

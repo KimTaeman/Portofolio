@@ -50,6 +50,7 @@ const TRAIL_END_TOP = 19.85
 const TRAIL_POINT_COUNT = 49
 const smootherStep = (value) =>
   value * value * value * (value * (value * 6 - 15) + 10)
+const smoothStep = (value) => value * value * (3 - 2 * value)
 
 const TRANSITION_START_LOCAL_Z = MOUNTAIN_CORNER.z - MOUNTAIN_ORIGIN_Z
 const TRANSITION_DISTANCE =
@@ -185,7 +186,33 @@ export const MOUNTAIN_TRAIL_STONES = Object.freeze(
   }),
 )
 
-export const MOUNTAIN_PROJECT_PROGRESS = Object.freeze([0.18, 0.5, 0.82])
+// Five evenly spaced discoveries leave breathing room at the trail entrance
+// and summit while distributing projects consistently across the ascent.
+export const MOUNTAIN_PROJECT_PROGRESS = Object.freeze([
+  0.1,
+  0.3,
+  0.5,
+  0.7,
+  0.9,
+])
+export const MOUNTAIN_PROJECT_BADGE_HEIGHT = 4.15
+const MOUNTAIN_PROJECT_PACING_POINTS = Object.freeze([
+  0,
+  ...MOUNTAIN_PROJECT_PROGRESS,
+  1,
+])
+
+const getCheckpointEasedProgress = (progress, checkpoints) => {
+  const clampedProgress = Math.max(0, Math.min(1, progress))
+  for (let index = 0; index < checkpoints.length - 1; index += 1) {
+    const start = checkpoints[index]
+    const end = checkpoints[index + 1]
+    if (clampedProgress > end) continue
+    const localProgress = (clampedProgress - start) / (end - start)
+    return start + (end - start) * smootherStep(localProgress)
+  }
+  return 1
+}
 
 // Shared by the rendered balloons and the camera controller so project
 // framing cannot drift away from the actual interactive landmark positions.
@@ -560,20 +587,65 @@ export const getPlaygroundFallProgress = (offset) =>
     ),
   )
 
-export const getPlaygroundFallPositionAtOffset = (offset, target) => {
-  const progress = getPlaygroundFallProgress(offset)
-  const arc = Math.sin(progress * Math.PI)
+// This value nearly cancels the initial downward slope, so the character
+// leaves the slide gently before constant gravity visibly takes over.
+const PLAYGROUND_FALL_ARC_HEIGHT = 7.5
+const PLAYGROUND_LANDING_CUSHION_START = 0.82
+
+const getBallisticFallY = (progress) => {
+  const startY = PLAYGROUND_SLIDE_EXIT[1]
+  const endY = CAMPUS_PATH.surfaceY
+  return (
+    startY +
+    (endY - startY) * progress +
+    4 * PLAYGROUND_FALL_ARC_HEIGHT * progress * (1 - progress)
+  )
+}
+
+const getBallisticFallSlope = (progress) =>
+  CAMPUS_PATH.surfaceY -
+  PLAYGROUND_SLIDE_EXIT[1] +
+  4 * PLAYGROUND_FALL_ARC_HEIGHT * (1 - 2 * progress)
+
+const getCushionedFallY = (progress) => {
+  if (progress <= PLAYGROUND_LANDING_CUSHION_START) {
+    return getBallisticFallY(progress)
+  }
+
+  // Cubic Hermite interpolation preserves the incoming downward velocity,
+  // then eases it to zero exactly at the campus path surface.
+  const start = PLAYGROUND_LANDING_CUSHION_START
+  const duration = 1 - start
+  const landingProgress = (progress - start) / duration
+  const landingProgressSquared = landingProgress * landingProgress
+  const landingProgressCubed = landingProgressSquared * landingProgress
+  const startY = getBallisticFallY(start)
+  const startSlope = getBallisticFallSlope(start) * duration
+  const h00 = 2 * landingProgressCubed - 3 * landingProgressSquared + 1
+  const h10 = landingProgressCubed - 2 * landingProgressSquared + landingProgress
+  const h01 = -2 * landingProgressCubed + 3 * landingProgressSquared
+
+  return h00 * startY + h10 * startSlope + h01 * CAMPUS_PATH.surfaceY
+}
+
+export const getPlaygroundFallPositionAtProgress = (progress, target) => {
+  const clampedProgress = Math.max(0, Math.min(1, progress))
+  const travelProgress = smootherStep(clampedProgress)
 
   return target.set(
     PLAYGROUND_SLIDE_EXIT[0] +
-      (CAMPUS_PATH.startX - PLAYGROUND_SLIDE_EXIT[0]) * progress,
-    PLAYGROUND_SLIDE_EXIT[1] +
-      (CAMPUS_PATH.surfaceY - PLAYGROUND_SLIDE_EXIT[1]) * progress +
-      arc * 11.5,
+      (CAMPUS_PATH.startX - PLAYGROUND_SLIDE_EXIT[0]) * travelProgress,
+    getCushionedFallY(clampedProgress),
     PLAYGROUND_SLIDE_EXIT[2] +
-      (CAMPUS_PATH.characterZ - PLAYGROUND_SLIDE_EXIT[2]) * progress,
+      (CAMPUS_PATH.characterZ - PLAYGROUND_SLIDE_EXIT[2]) * travelProgress,
   )
 }
+
+export const getPlaygroundFallPositionAtOffset = (offset, target) =>
+  getPlaygroundFallPositionAtProgress(
+    getPlaygroundFallProgress(offset),
+    target,
+  )
 
 export const OUTFIT_TRANSITION_OFFSETS = Object.freeze({
   university: PLAYGROUND_MOTION_OFFSETS.groundContact,
@@ -592,14 +664,42 @@ export const getCharacterXAtOffset = (offset) => {
     const end = CHARACTER_KEYFRAMES[index + 1]
     if (offset > end.t) continue
 
-    const range = end.t - start.t
-    const progress = range
-      ? Math.max(0, Math.min(1, (offset - start.t) / range))
-      : 0
+    const progress = getCharacterKeyframeProgress(offset, start, end)
     return start.position[0] + (end.position[0] - start.position[0]) * progress
   }
 
   return CHARACTER_KEYFRAMES[CHARACTER_KEYFRAMES.length - 1].position[0]
+}
+
+export const getCharacterKeyframeProgress = (offset, start, end) => {
+  const range = end.t - start.t
+  let progress = range
+    ? Math.max(0, Math.min(1, (offset - start.t) / range))
+    : 0
+  if (start.t === 0 && end.t === PLAYGROUND_MOTION_OFFSETS.slideEnd) {
+    progress =
+      offset <= PLAYGROUND_MOTION_OFFSETS.waveEnd
+        ? 0
+        : smootherStep(
+            (offset - PLAYGROUND_MOTION_OFFSETS.waveEnd) /
+              (PLAYGROUND_MOTION_OFFSETS.slideEnd -
+                PLAYGROUND_MOTION_OFFSETS.waveEnd),
+          )
+  } else if (
+    start.t >= CAMPUS_PATH.walkStart &&
+    end.t <= CAMPUS_PATH.walkEnd
+  ) {
+    // Each campus segment eases to zero velocity at its landmark. The next
+    // segment accelerates from rest, creating a readable pause without a
+    // hard stop or a discontinuity in position.
+    progress = smootherStep(progress)
+  } else if (
+    start.t === SUMMIT_SEQUENCE.haltStart &&
+    end.t === SUMMIT_SEQUENCE.haltEnd
+  ) {
+    progress = smootherStep(progress)
+  }
+  return progress
 }
 
 export const getCharacterPositionAtOffset = (offset, target) => {
@@ -619,16 +719,7 @@ export const getCharacterPositionAtOffset = (offset, target) => {
     const end = CHARACTER_KEYFRAMES[index + 1]
     if (offset > end.t) continue
 
-    const range = end.t - start.t
-    let progress = range
-      ? Math.max(0, Math.min(1, (offset - start.t) / range))
-      : 0
-    if (
-      start.t === SUMMIT_SEQUENCE.haltStart &&
-      end.t === SUMMIT_SEQUENCE.haltEnd
-    ) {
-      progress = smootherStep(progress)
-    }
+    const progress = getCharacterKeyframeProgress(offset, start, end)
     target.set(
       start.position[0] + (end.position[0] - start.position[0]) * progress,
       start.position[1] + (end.position[1] - start.position[1]) * progress,
@@ -665,7 +756,9 @@ export const getMountainTrailPositionAtOffset = (offset, target) => {
           (MOUNTAIN_TRAIL_START - MOUNTAIN_APPROACH_START),
       ),
     )
-    const easedApproach = smootherStep(approachProgress)
+    // Cubic easing lowers the peak velocity on this long approach compared
+    // with the previous quintic curve while retaining soft endpoints.
+    const easedApproach = smoothStep(approachProgress)
     const transitionTopY = getMountainTransitionTopY(easedApproach)
     target.set(
       MOUNTAIN_CORNER.x + getMountainTransitionX(easedApproach),
@@ -678,13 +771,17 @@ export const getMountainTrailPositionAtOffset = (offset, target) => {
     return target
   }
 
-  const trailProgress = Math.max(
+  const rawTrailProgress = Math.max(
     0,
     Math.min(
       1,
       (offset - MOUNTAIN_TRAIL_START) /
         (MOUNTAIN_CLIMB_END - MOUNTAIN_TRAIL_START),
     ),
+  )
+  const trailProgress = getCheckpointEasedProgress(
+    rawTrailProgress,
+    MOUNTAIN_PROJECT_PACING_POINTS,
   )
   return target.set(
     MOUNTAIN_CORNER.x + getSCurveX(trailProgress),
@@ -700,10 +797,14 @@ export const getMountainTrailPositionAtOffset = (offset, target) => {
 export const getMountainTrailHeadingAtOffset = (offset) => {
   if (offset < MOUNTAIN_TRAIL_START) return Math.PI
 
-  const trailProgress = Math.max(0, Math.min(1,
+  const rawTrailProgress = Math.max(0, Math.min(1,
     (offset - MOUNTAIN_TRAIL_START) /
       (MOUNTAIN_CLIMB_END - MOUNTAIN_TRAIL_START),
   ))
+  const trailProgress = getCheckpointEasedProgress(
+    rawTrailProgress,
+    MOUNTAIN_PROJECT_PACING_POINTS,
+  )
   const sampleBefore = Math.max(0, trailProgress - 0.002)
   const sampleAfter = Math.min(1, trailProgress + 0.002)
   const tangentX = getSCurveX(sampleAfter) - getSCurveX(sampleBefore)
@@ -730,6 +831,36 @@ export const getNearestCampusProximity = (offset) => {
     strength = Math.max(strength, getCampusLandmarkProximity(offset, landmark))
   }
   return strength
+}
+
+export const getNearestMountainProjectLook = (offset) => {
+  if (offset < MOUNTAIN_TRAIL_START || offset > MOUNTAIN_CLIMB_END) return 0
+
+  const rawProgress = Math.max(
+    0,
+    Math.min(
+      1,
+      (offset - MOUNTAIN_TRAIL_START) /
+        (MOUNTAIN_CLIMB_END - MOUNTAIN_TRAIL_START),
+    ),
+  )
+  const trailProgress = getCheckpointEasedProgress(
+    rawProgress,
+    MOUNTAIN_PROJECT_PACING_POINTS,
+  )
+  let strongestLook = 0
+  let strongestMagnitude = 0
+
+  MOUNTAIN_PROJECT_PROGRESS.forEach((projectProgress, index) => {
+    const distance = Math.abs(trailProgress - projectProgress)
+    const linearStrength = Math.max(0, Math.min(1, 1 - distance / 0.065))
+    const strength = smoothStep(linearStrength)
+    if (strength <= strongestMagnitude) return
+    strongestMagnitude = strength
+    strongestLook = (index % 2 ? 1 : -1) * strength
+  })
+
+  return strongestLook
 }
 
 export const CAMPUS_CAMERA_TRACKING = Object.freeze({

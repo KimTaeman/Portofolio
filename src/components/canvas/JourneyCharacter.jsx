@@ -7,10 +7,13 @@ import useDayNight from '../../hooks/useDayNight'
 import {
   CAMPUS_PATH,
   CHARACTER_KEYFRAMES,
-  getPlaygroundFallPositionAtOffset,
+  getCharacterKeyframeProgress,
+  getPlaygroundFallPositionAtProgress,
+  getPlaygroundFallProgress,
   getMountainTrailHeadingAtOffset,
   getMountainTrailPositionAtOffset,
   getNearestCampusProximity,
+  getNearestMountainProjectLook,
   MOUNTAIN_PATH,
   PLAYGROUND_MOTION_OFFSETS,
   PLAYGROUND_SLIDE_ROTATION_X,
@@ -26,6 +29,11 @@ const SLIDE_SURFACE_CLEARANCE_Y = 0.36
 const SLIDE_SEATED_POSE_Y =
   BASE_SEATED_POSE_Y + SLIDE_SURFACE_CLEARANCE_Y
 const SEATED_LEG_ROTATION_X = -1.22
+const FALL_FOLLOW_DAMPING = 12
+const LANDING_FOLLOW_DAMPING = 18
+const CAMPUS_GAIT_CYCLE_LENGTH = 2.2
+const MOUNTAIN_APPROACH_GAIT_CYCLE_LENGTH = 3.4
+const MOUNTAIN_CLIMB_GAIT_CYCLE_LENGTH = 2.4
 
 const getSegment = (offset) => {
   for (let index = 0; index < CHARACTER_KEYFRAMES.length - 1; index += 1) {
@@ -53,6 +61,13 @@ export default function JourneyCharacter({ outfit = 'school' }) {
   const leftLegRef = useRef()
   const rightLegRef = useRef()
   const summitArrivalTimeRef = useRef(null)
+  const fallMotionProgressRef = useRef(0)
+  const fallMotionInitializedRef = useRef(false)
+  const gaitPhaseRef = useRef(0)
+  const gaitMotionBlendRef = useRef(0)
+  const gaitPreviousPositionRef = useRef(new THREE.Vector3())
+  const gaitPreviousOffsetRef = useRef(0)
+  const gaitInitializedRef = useRef(false)
   const scroll = useScroll()
 
   useFrame((state, delta) => {
@@ -71,22 +86,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
 
     const offset = scroll.offset
     const { start, end } = getSegment(offset)
-    const range = end.t - start.t
-    let progress = range
-      ? THREE.MathUtils.clamp((offset - start.t) / range, 0, 1)
-      : 0
-    if (
-      start.t === PLAYGROUND_MOTION_OFFSETS.slideEnd &&
-      end.t === PLAYGROUND_MOTION_OFFSETS.groundContact
-    ) {
-      progress = THREE.MathUtils.smootherstep(progress, 0, 1)
-    }
-    if (
-      start.t === SUMMIT_SEQUENCE.haltStart &&
-      end.t === SUMMIT_SEQUENCE.haltEnd
-    ) {
-      progress = THREE.MathUtils.smootherstep(progress, 0, 1)
-    }
+    const progress = getCharacterKeyframeProgress(offset, start, end)
 
     currentPosition.fromArray(start.position)
     nextPosition.fromArray(end.position)
@@ -95,8 +95,26 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       offset >= PLAYGROUND_MOTION_OFFSETS.slideEnd &&
       offset <= PLAYGROUND_MOTION_OFFSETS.groundContact
     if (isPlaygroundFall) {
-      getPlaygroundFallPositionAtOffset(offset, currentPosition)
+      const targetFallProgress = getPlaygroundFallProgress(offset)
+      if (!fallMotionInitializedRef.current) {
+        fallMotionProgressRef.current = targetFallProgress
+        fallMotionInitializedRef.current = true
+      } else {
+        fallMotionProgressRef.current = THREE.MathUtils.damp(
+          fallMotionProgressRef.current,
+          targetFallProgress,
+          FALL_FOLLOW_DAMPING,
+          delta,
+        )
+      }
+      getPlaygroundFallPositionAtProgress(
+        fallMotionProgressRef.current,
+        currentPosition,
+      )
       characterRef.current.position.copy(currentPosition)
+    } else if (offset < PLAYGROUND_MOTION_OFFSETS.slideEnd) {
+      fallMotionProgressRef.current = 0
+      fallMotionInitializedRef.current = false
     }
     const isOnMountainPath =
       offset >= MOUNTAIN_PATH.start && offset <= MOUNTAIN_PATH.end
@@ -127,6 +145,8 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     let rightForearmY = -0.32
     let leftLegX
     let rightLegX
+    let leftLegLift = 0
+    let rightLegLift = 0
     let summitHeadTargetY = null
     let torsoBreathScale = 1
 
@@ -186,11 +206,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       )
       rightLegX = leftLegX
     } else if (offset < PLAYGROUND_MOTION_OFFSETS.groundContact) {
-      const fallProgress = THREE.MathUtils.smootherstep(
-        offset,
-        PLAYGROUND_MOTION_OFFSETS.slideEnd,
-        PLAYGROUND_MOTION_OFFSETS.groundContact,
-      )
+      const fallProgress = fallMotionProgressRef.current
       posePositionY = THREE.MathUtils.lerp(
         SLIDE_SEATED_POSE_Y,
         0,
@@ -214,12 +230,26 @@ export default function JourneyCharacter({ outfit = 'school' }) {
         PLAYGROUND_MOTION_OFFSETS.groundContact,
         PLAYGROUND_MOTION_OFFSETS.landingEnd,
       )
-      const impact = (1 - landingProgress) ** 3
+      const impact = Math.sin(landingProgress * Math.PI)
 
-      characterRef.current.position.y = CAMPUS_PATH.surfaceY
-      poseScaleX = 1 + impact * 0.16
-      poseScaleY = 1 - impact * 0.28
-      poseScaleZ = 1 + impact * 0.12
+      if (fallMotionInitializedRef.current) {
+        fallMotionProgressRef.current = THREE.MathUtils.damp(
+          fallMotionProgressRef.current,
+          1,
+          LANDING_FOLLOW_DAMPING,
+          delta,
+        )
+        getPlaygroundFallPositionAtProgress(
+          fallMotionProgressRef.current,
+          currentPosition,
+        )
+        characterRef.current.position.copy(currentPosition)
+      }
+
+      posePositionY = Math.sin(landingProgress * Math.PI) * 0.04
+      poseScaleX = 1 + impact * 0.1
+      poseScaleY = 1 - impact * 0.16
+      poseScaleZ = 1 + impact * 0.08
       poseRotationX = THREE.MathUtils.lerp(0.16, 0, landingProgress)
       leftArmZ = THREE.MathUtils.lerp(-2.25, -0.08, landingProgress)
       rightArmZ = THREE.MathUtils.lerp(2.25, 0.08, landingProgress)
@@ -231,11 +261,53 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       const isHiking =
         offset >= MOUNTAIN_PATH.start && offset < SUMMIT_SEQUENCE.haltEnd
       const isMoving = isWalking || isHiking
-      const stride = isHiking ? 0.72 : 0.38
-      const motionOffset = isHiking
-        ? offset - MOUNTAIN_PATH.start
-        : offset - CAMPUS_PATH.walkStart
-      const walkCycle = Math.sin(motionOffset * (isHiking ? 170 : 52))
+      const isMountainApproach =
+        isHiking && offset < MOUNTAIN_PATH.slopeStart
+      const gaitCycleLength = isWalking
+        ? CAMPUS_GAIT_CYCLE_LENGTH
+        : isMountainApproach
+          ? MOUNTAIN_APPROACH_GAIT_CYCLE_LENGTH
+          : MOUNTAIN_CLIMB_GAIT_CYCLE_LENGTH
+      let movementTarget = 0
+
+      if (isMoving) {
+        if (!gaitInitializedRef.current) {
+          gaitPreviousPositionRef.current.copy(characterRef.current.position)
+          gaitPreviousOffsetRef.current = offset
+          gaitInitializedRef.current = true
+        } else {
+          const travelledDistance = characterRef.current.position.distanceTo(
+            gaitPreviousPositionRef.current,
+          )
+          const scrollDirection = Math.sign(
+            offset - gaitPreviousOffsetRef.current,
+          )
+          if (scrollDirection !== 0 && travelledDistance > 0.00001) {
+            gaitPhaseRef.current +=
+              scrollDirection *
+              travelledDistance *
+              ((Math.PI * 2) / gaitCycleLength)
+          }
+          const worldSpeed = travelledDistance / Math.max(delta, 1 / 120)
+          movementTarget = THREE.MathUtils.smoothstep(
+            worldSpeed,
+            0.04,
+            0.5,
+          )
+          gaitPreviousPositionRef.current.copy(characterRef.current.position)
+          gaitPreviousOffsetRef.current = offset
+        }
+      } else {
+        gaitInitializedRef.current = false
+      }
+
+      gaitMotionBlendRef.current = THREE.MathUtils.damp(
+        gaitMotionBlendRef.current,
+        movementTarget,
+        movementTarget > gaitMotionBlendRef.current ? 10 : 7,
+        delta,
+      )
+      const walkCycle = Math.sin(gaitPhaseRef.current)
       const summitWalkFade = isHiking
         ? 1 -
           THREE.MathUtils.smoothstep(
@@ -244,16 +316,22 @@ export default function JourneyCharacter({ outfit = 'school' }) {
             SUMMIT_SEQUENCE.haltEnd,
           )
         : 1
-      const limbSwing = isMoving ? walkCycle * stride * summitWalkFade : 0
+      const movementBlend = gaitMotionBlendRef.current * summitWalkFade
+      const stride = isWalking ? 0.38 : isMountainApproach ? 0.44 : 0.52
+      const limbSwing = isMoving ? walkCycle * stride * movementBlend : 0
+      const legLift = isWalking ? 0.11 : isMountainApproach ? 0.13 : 0.16
 
       leftArmX = limbSwing
       rightArmX = -limbSwing
       leftLegX = -limbSwing
       rightLegX = limbSwing
+      leftLegLift = Math.max(0, -walkCycle) * legLift * movementBlend
+      rightLegLift = Math.max(0, walkCycle) * legLift * movementBlend
       if (isWalking) {
-        characterRef.current.position.y += Math.abs(walkCycle) * 0.045
+        characterRef.current.position.y +=
+          Math.abs(walkCycle) * 0.035 * movementBlend
       } else if (isHiking) {
-        posePositionY = Math.abs(walkCycle) * 0.045 * summitWalkFade
+        posePositionY = Math.abs(walkCycle) * 0.045 * movementBlend
       } else if (offset >= SUMMIT_SEQUENCE.haltEnd) {
         const summitElapsed =
           state.clock.elapsedTime - summitArrivalTimeRef.current
@@ -301,16 +379,17 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     poseRef.current.rotation.x = poseRotationX
     poseRef.current.rotation.z = poseRotationZ
     const landmarkProximity = getNearestCampusProximity(offset)
+    const mountainProjectLook = getNearestMountainProjectLook(offset)
     poseRef.current.rotation.y = THREE.MathUtils.damp(
       poseRef.current.rotation.y,
-      landmarkProximity * 0.12,
+      landmarkProximity * 0.12 + mountainProjectLook * 0.1,
       7,
       delta,
     )
     const isSummitIdle = offset >= SUMMIT_SEQUENCE.haltEnd
     const headTargetY = isSummitIdle
       ? (summitHeadTargetY ?? 0)
-      : landmarkProximity * 0.34
+      : landmarkProximity * 0.34 + mountainProjectLook * 0.42
     headRef.current.rotation.y = THREE.MathUtils.damp(
       headRef.current.rotation.y,
       headTargetY,
@@ -338,6 +417,9 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     }
     leftLegRef.current.rotation.x = leftLegX
     rightLegRef.current.rotation.x = rightLegX
+    const legBaseY = outfit === 'hiker' ? 1.55 : 1.15
+    leftLegRef.current.position.y = legBaseY + leftLegLift
+    rightLegRef.current.position.y = legBaseY + rightLegLift
 
     if (characterLightRef.current) {
       characterLightRef.current.intensity = THREE.MathUtils.damp(
