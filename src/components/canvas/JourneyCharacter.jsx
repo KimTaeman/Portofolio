@@ -23,6 +23,7 @@ import {
 
 const currentPosition = new THREE.Vector3()
 const nextPosition = new THREE.Vector3()
+const horizontalMovement = new THREE.Vector3()
 // Keep the volumetric skirt and rotated legs above the wooden surface for the
 // full seated sequence. A single contact height prevents the character from
 // rising or sinking when the wave transitions into the slide.
@@ -33,9 +34,17 @@ const WAVE_ELBOW_BEND_Z = 1.62
 const WAVE_ELBOW_SWING_Z = 0.34
 const FALL_FOLLOW_DAMPING = 12
 const LANDING_FOLLOW_DAMPING = 18
-const CAMPUS_GAIT_CYCLE_LENGTH = 2.2
-const MOUNTAIN_APPROACH_GAIT_CYCLE_LENGTH = 3.4
-const MOUNTAIN_CLIMB_GAIT_CYCLE_LENGTH = 2.4
+const CAMPUS_GAIT_CYCLE_LENGTH = 2.55
+const MOUNTAIN_APPROACH_GAIT_CYCLE_LENGTH = 6.2
+const MOUNTAIN_CLIMB_GAIT_CYCLE_LENGTH = 4.6
+
+const dampAngle = (current, target, damping, delta) => {
+  const shortestDelta = Math.atan2(
+    Math.sin(target - current),
+    Math.cos(target - current),
+  )
+  return current + shortestDelta * (1 - Math.exp(-damping * delta))
+}
 
 const getSegment = (offset) => {
   for (let index = 0; index < CHARACTER_KEYFRAMES.length - 1; index += 1) {
@@ -70,6 +79,8 @@ export default function JourneyCharacter({ outfit = 'school' }) {
   const gaitPreviousPositionRef = useRef(new THREE.Vector3())
   const gaitPreviousOffsetRef = useRef(0)
   const gaitInitializedRef = useRef(false)
+  const headingPreviousPositionRef = useRef(new THREE.Vector3())
+  const headingInitializedRef = useRef(false)
   const scroll = useScroll()
 
   useFrame((state, delta) => {
@@ -129,13 +140,47 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       characterRef.current.position.copy(currentPosition)
     }
 
+    const isWalking =
+      offset >= CAMPUS_PATH.walkStart && offset < MOUNTAIN_PATH.start
+    const isHiking =
+      offset >= MOUNTAIN_PATH.start && offset < SUMMIT_SEQUENCE.haltEnd
+    const isMoving = isWalking || isHiking
+    const isMountainApproach =
+      isHiking && offset < MOUNTAIN_PATH.slopeStart
     const isApproachingMountainTurn =
       end.t === MOUNTAIN_PATH.start && offset < MOUNTAIN_PATH.start
-    characterRef.current.rotation.y = isOnMountainPath
+    let targetHeading = isOnMountainPath
       ? getMountainTrailHeadingAtOffset(offset)
       : isApproachingMountainTurn
         ? start.rotationY
         : THREE.MathUtils.lerp(start.rotationY, end.rotationY, progress)
+
+    if (isMoving) {
+      if (headingInitializedRef.current) {
+        horizontalMovement.subVectors(
+          characterRef.current.position,
+          headingPreviousPositionRef.current,
+        )
+        horizontalMovement.y = 0
+        if (horizontalMovement.lengthSq() > 0.0000001) {
+          targetHeading = Math.atan2(
+            horizontalMovement.x,
+            horizontalMovement.z,
+          )
+        }
+      } else {
+        headingInitializedRef.current = true
+      }
+    } else {
+      headingInitializedRef.current = false
+    }
+    headingPreviousPositionRef.current.copy(characterRef.current.position)
+    characterRef.current.rotation.y = dampAngle(
+      characterRef.current.rotation.y,
+      targetHeading,
+      12,
+      delta,
+    )
 
     let poseRotationX = 0
     let poseRotationZ = 0
@@ -276,13 +321,6 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       leftLegX = THREE.MathUtils.lerp(0.38, 0, landingProgress)
       rightLegX = THREE.MathUtils.lerp(-0.38, 0, landingProgress)
     } else {
-      const isWalking =
-        offset >= CAMPUS_PATH.walkStart && offset < MOUNTAIN_PATH.start
-      const isHiking =
-        offset >= MOUNTAIN_PATH.start && offset < SUMMIT_SEQUENCE.haltEnd
-      const isMoving = isWalking || isHiking
-      const isMountainApproach =
-        isHiking && offset < MOUNTAIN_PATH.slopeStart
       const gaitCycleLength = isWalking
         ? CAMPUS_GAIT_CYCLE_LENGTH
         : isMountainApproach
@@ -337,9 +375,9 @@ export default function JourneyCharacter({ outfit = 'school' }) {
           )
         : 1
       const movementBlend = gaitMotionBlendRef.current * summitWalkFade
-      const stride = isWalking ? 0.38 : isMountainApproach ? 0.44 : 0.52
+      const stride = isWalking ? 0.34 : isMountainApproach ? 0.34 : 0.4
       const limbSwing = isMoving ? walkCycle * stride * movementBlend : 0
-      const legLift = isWalking ? 0.11 : isMountainApproach ? 0.13 : 0.16
+      const legLift = isWalking ? 0.1 : isMountainApproach ? 0.11 : 0.14
 
       leftArmX = limbSwing
       rightArmX = -limbSwing

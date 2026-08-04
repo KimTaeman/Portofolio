@@ -50,7 +50,9 @@ const fallLookTarget = new THREE.Vector3()
 const stabilizedFallLookTarget = new THREE.Vector3()
 const campusCharacterPosition = new THREE.Vector3()
 const responsiveCameraOffset = new THREE.Vector3()
-const SCROLL_REPORT_INTERVAL_MS = 50
+// Canvas transforms remain ref-driven every frame; React only receives a
+// coarse UI snapshot so DOM overlays do not reconcile at render frequency.
+const SCROLL_REPORT_INTERVAL_MS = 80
 const PROJECT_CAMERA_HOLD_RADIUS = 0.009
 const PROJECT_CAMERA_FALLOFF_RADIUS = 0.028
 const PROJECT_CAMERA_TARGET_LIFT = MOUNTAIN_PROJECT_BADGE_HEIGHT * 0.58

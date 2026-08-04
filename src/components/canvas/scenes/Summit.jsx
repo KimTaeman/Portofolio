@@ -681,8 +681,6 @@ function AlpinePine({ position, scale }) {
       <Cylinder
         args={[0.12, 0.18, 1.05, 14]}
         position={[0, 0.52, 0]}
-        castShadow
-        receiveShadow
       >
         <ClayMaterial color="#6B4B35" />
       </Cylinder>
@@ -696,8 +694,6 @@ function AlpinePine({ position, scale }) {
           args={[radius, height, 20]}
           position={[0, y, 0]}
           rotation={[0, index * 0.24, 0]}
-          castShadow
-          receiveShadow
         >
           <ClayMaterial color="#2D4C3B" />
         </Cone>
@@ -760,7 +756,6 @@ function MountainRangeLayer({ layer, isNight }) {
       name={layer.name}
       geometry={geometry}
       position={[0, layer.baseY, layer.z]}
-      receiveShadow
     >
       <AnimatedClayMaterial
         isNight={isNight}
@@ -797,7 +792,6 @@ function ValleyFloorAndRiver({ isNight }) {
         name="lowPolyValleyFloor"
         position={[0, -38, -120]}
         rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
       >
         <planeGeometry args={[190, 300, 1, 1]} />
         <AnimatedClayMaterial
@@ -811,7 +805,6 @@ function ValleyFloorAndRiver({ isNight }) {
         name="windingValleyRiver"
         geometry={riverGeometry}
         position={[0, -37.92, 0]}
-        receiveShadow
       >
         <ClayMaterial
           color="#43C6CE"

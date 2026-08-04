@@ -474,7 +474,6 @@ function ValleyFloor() {
       name="scene3ValleyFloor"
       args={[160, 4, 230]}
       position={[0, VALLEY_FLOOR_TOP_Y - 2, 60]}
-      receiveShadow
     >
       <FlatMaterial color="#3F4937" />
     </Box>
@@ -491,7 +490,6 @@ function TrailFoundations() {
           position={mass.position}
           scale={mass.scale}
           rotation={mass.rotation}
-          castShadow
           receiveShadow
         >
           <FlatMaterial color={mass.color} />
@@ -508,7 +506,6 @@ function ChasmAndWaterfall() {
         name="chasmWater"
         position={WATERFALL_LAYOUT.riverPosition}
         rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
       >
         <planeGeometry args={WATERFALL_LAYOUT.riverSize} />
         <FlatMaterial color="#5BC0BE" side={THREE.DoubleSide} />
@@ -519,8 +516,6 @@ function ChasmAndWaterfall() {
         args={[WATERFALL_LAYOUT.width, WATERFALL_LAYOUT.height, 0.48]}
         position={WATERFALL_LAYOUT.position}
         rotation={WATERFALL_LAYOUT.rotation}
-        castShadow
-        receiveShadow
       >
         <FlatMaterial color="#5BC0BE" />
       </Box>
@@ -549,8 +544,6 @@ function ChasmAndWaterfall() {
             position={rock.position}
             scale={rock.scale}
             rotation={[0.06 * index, index * 0.47, -0.04]}
-            castShadow
-            receiveShadow
           >
             <FlatMaterial color={index % 2 ? '#7C736B' : '#8A8782'} />
           </Dodecahedron>
@@ -601,32 +594,24 @@ function LowPolyPine({ position, scale }) {
       <Cylinder
         args={[0.3, 0.3, 2.5, 6]}
         position={[0, -0.25, 0]}
-        castShadow
-        receiveShadow
       >
         <FlatMaterial color="#6A4632" />
       </Cylinder>
       <Cone
         args={[2, 3, 5]}
         position={[0, 2.25, 0]}
-        castShadow
-        receiveShadow
       >
         <FlatMaterial color="#2D4C3B" />
       </Cone>
       <Cone
         args={[1.5, 2.5, 5]}
         position={[0, 3.55, 0]}
-        castShadow
-        receiveShadow
       >
         <FlatMaterial color="#2D4C3B" />
       </Cone>
       <Cone
         args={[1, 2, 5]}
         position={[0, 4.65, 0]}
-        castShadow
-        receiveShadow
       >
         <FlatMaterial color="#2D4C3B" />
       </Cone>
@@ -642,7 +627,6 @@ function TransitionCorridor() {
         args={TRANSITION_BASE_LAYOUT.size}
         position={TRANSITION_BASE_LAYOUT.position}
         rotation={TRANSITION_BASE_LAYOUT.rotation}
-        castShadow
         receiveShadow
       >
         <LowPolyGrassMaterial />
@@ -656,7 +640,6 @@ function TransitionCorridor() {
             position={hill.position}
             rotation={hill.rotation}
             scale={hill.scale}
-            castShadow
             receiveShadow
           >
             <LowPolyGrassMaterial />
@@ -698,8 +681,6 @@ function TransitionCorridor() {
             position={rock.position}
             rotation={rock.rotation}
             scale={rock.scale}
-            castShadow
-            receiveShadow
           >
             <FlatMaterial color={index % 2 ? '#7C736B' : '#8A8782'} />
           </Dodecahedron>
@@ -975,8 +956,6 @@ function Mountain({
             position={[x, y, z]}
             scale={[sx, sy, sz]}
             rotation={[0.08 * (index % 2), index * 0.38, -0.04]}
-            castShadow
-            receiveShadow
           >
             <FlatMaterial color={color} />
           </Dodecahedron>

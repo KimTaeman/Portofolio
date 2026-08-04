@@ -4,7 +4,6 @@ import {
   Box,
   Capsule,
   Cone,
-  ContactShadows,
   Cylinder,
   Dodecahedron,
   RoundedBox,
@@ -278,15 +277,14 @@ function PastelFence() {
           key={x}
           args={[0.16, 0.82, 0.16]}
           position={[x, 0.41, 0]}
-          castShadow
         >
           <ClayMaterial color={COLORS.fence} />
         </Box>
       ))}
-      <Box args={[10.2, 0.12, 0.12]} position={[0, 0.28, 0]} castShadow>
+      <Box args={[10.2, 0.12, 0.12]} position={[0, 0.28, 0]}>
         <ClayMaterial color={COLORS.fence} />
       </Box>
-      <Box args={[10.2, 0.12, 0.12]} position={[0, 0.62, 0]} castShadow>
+      <Box args={[10.2, 0.12, 0.12]} position={[0, 0.62, 0]}>
         <ClayMaterial color={COLORS.fence} />
       </Box>
     </group>
@@ -299,17 +297,16 @@ function LowPolyPlaygroundTree({ position, scale = 1 }) {
       <Cylinder
         args={[0.22, 0.28, 1.5, 7]}
         position={[0, 0.75, 0]}
-        castShadow
       >
         <ClayMaterial color={COLORS.trunk} />
       </Cylinder>
-      <Cone args={[1.35, 2.15, 6]} position={[0, 1.75, 0]} castShadow>
+      <Cone args={[1.35, 2.15, 6]} position={[0, 1.75, 0]}>
         <ClayMaterial color="#4F8A45" />
       </Cone>
-      <Cone args={[1.05, 1.8, 6]} position={[0, 2.65, 0]} castShadow>
+      <Cone args={[1.05, 1.8, 6]} position={[0, 2.65, 0]}>
         <ClayMaterial color="#5E9E50" />
       </Cone>
-      <Cone args={[0.72, 1.4, 6]} position={[0, 3.4, 0]} castShadow>
+      <Cone args={[0.72, 1.4, 6]} position={[0, 3.4, 0]}>
         <ClayMaterial color={COLORS.leaves} />
       </Cone>
     </group>
@@ -450,7 +447,6 @@ function LowPolyPlateauTerrain() {
           args={[1, 0]}
           position={position}
           scale={scale}
-          castShadow
           receiveShadow
         >
           {color ? <ClayMaterial color={color} /> : <LowPolyGrassMaterial />}
@@ -466,7 +462,6 @@ function LowPolyPlateauTerrain() {
         ]}
         position={BACKGROUND_MOUNTAIN.position}
         rotation={[0, 0.18, -0.025]}
-        receiveShadow
       >
         <ClayMaterial color={BACKGROUND_MOUNTAIN.color} />
       </Cone>
@@ -682,14 +677,6 @@ function Playground({
           ))}
         </group>
 
-        <ContactShadows
-          position={[0, 0.08, 0]}
-          scale={16}
-          blur={2.4}
-          far={7}
-          opacity={0.34}
-          resolution={512}
-        />
       </group>
 
       <LandingPetalBurst />

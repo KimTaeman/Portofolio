@@ -181,19 +181,17 @@ function CherryBlossomTree({
         geometry={trunkGeometry}
         material={trunkMaterial}
         position={[0, 0.92, 0]}
-        castShadow
-        receiveShadow
       />
 
       <group
         name="cloudCanopy"
         rotation={[canopyLean, (variant - 1) * 0.055, variant % 2 ? -0.035 : 0.035]}
       >
-        <mesh geometry={canopyGeometry} material={canopyMaterials[0]} position={[0, 2.2, 0]} scale={[1.2, 0.9, 1]} castShadow />
-        <mesh geometry={canopyGeometry} material={canopyMaterials[1]} position={[-0.82, 2.14, 0.08]} scale={[0.82, 0.7, 0.76]} castShadow />
-        <mesh geometry={canopyGeometry} material={canopyMaterials[2]} position={[0.82, 2.16, 0.03]} scale={[0.84, 0.72, 0.78]} castShadow />
-        <mesh geometry={canopyGeometry} material={canopyMaterials[3]} position={[-0.34, 2.85, -0.06]} scale={[0.74, 0.65, 0.7]} castShadow />
-        <mesh geometry={canopyGeometry} material={canopyMaterials[4]} position={[0.38, 2.78, 0.05]} scale={[0.76, 0.63, 0.72]} castShadow />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[0]} position={[0, 2.2, 0]} scale={[1.2, 0.9, 1]} />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[1]} position={[-0.82, 2.14, 0.08]} scale={[0.82, 0.7, 0.76]} />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[2]} position={[0.82, 2.16, 0.03]} scale={[0.84, 0.72, 0.78]} />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[3]} position={[-0.34, 2.85, -0.06]} scale={[0.74, 0.65, 0.7]} />
+        <mesh geometry={canopyGeometry} material={canopyMaterials[4]} position={[0.38, 2.78, 0.05]} scale={[0.76, 0.63, 0.72]} />
       </group>
     </group>
   )
@@ -1007,11 +1005,6 @@ function CampusSpringLights({ isNight }) {
         distance={18}
         decay={2}
         position={[-6, 7, 2]}
-        castShadow
-        shadow-mapSize={[512, 512]}
-        shadow-bias={-0.0015}
-        shadow-normalBias={0.03}
-        shadow-radius={6}
       />
       <pointLight
         ref={morningLightRef}
@@ -1021,11 +1014,6 @@ function CampusSpringLights({ isNight }) {
         distance={20}
         decay={2}
         position={[7, 8, 3]}
-        castShadow
-        shadow-mapSize={[512, 512]}
-        shadow-bias={-0.0015}
-        shadow-normalBias={0.03}
-        shadow-radius={6}
       />
     </group>
   )

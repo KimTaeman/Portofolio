@@ -26,7 +26,7 @@ export default function Sun({
 }) {
   return (
     <group name="sun" position={position} scale={scale}>
-      <Sphere args={[0.62, 28, 22]} scale={1.2} castShadow>
+      <Sphere args={[0.62, 28, 22]} scale={1.2}>
         <SunMaterial />
       </Sphere>
 
@@ -36,7 +36,6 @@ export default function Sun({
           args={[0.3, 0.6, 4]}
           position={rayPosition}
           rotation={[0, 0, rotationZ]}
-          castShadow
         >
           <SunMaterial />
         </Cone>

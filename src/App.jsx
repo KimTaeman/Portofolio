@@ -132,7 +132,7 @@ function App() {
             fov: initialCamera.fov,
             far: 2000,
           }}
-          dpr={[1, 1.35]}
+          dpr={[1, 1.5]}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           shadows="soft"
           onCreated={({ gl }) => {
