@@ -3,17 +3,70 @@
 export const SCROLL_PAGES = 16
 
 export const PLAYGROUND_PLATEAU_Y = 20
-export const PLAYGROUND_SLIDE_START = Object.freeze([
-  2,
-  PLAYGROUND_PLATEAU_Y + 2.28,
-  -0.34,
-])
-export const PLAYGROUND_SLIDE_EXIT = Object.freeze([
-  2,
-  PLAYGROUND_PLATEAU_Y + 0.91,
-  3.42,
-])
 export const PLAYGROUND_SLIDE_ROTATION_X = -0.35
+export const PLAYGROUND_SLIDE = Object.freeze({
+  width: 1.18,
+  thickness: 0.24,
+  length: 4.15,
+  radius: 0.1,
+  travelInset: 0.08,
+  // Distance from the wooden surface to the procedural character's root while
+  // its skirt and legs are held in the seated pose.
+  seatedRootClearance: 0.10,
+  exitTravelStart: 0.62,
+  exitTravelExtension: 0.32,
+  localPosition: Object.freeze([-2, 1.1, -1.5]),
+  worldCenter: Object.freeze([2, PLAYGROUND_PLATEAU_Y + 1.1, 1.5]),
+})
+
+export const getPlaygroundSlideSeatPoint = (progress, target) => {
+  const clampedProgress = Math.max(0, Math.min(1, progress))
+  const exitTravelProgress = Math.max(
+    0,
+    Math.min(
+      1,
+      (clampedProgress - PLAYGROUND_SLIDE.exitTravelStart) /
+        (1 - PLAYGROUND_SLIDE.exitTravelStart),
+    ),
+  )
+  const exitTravelBlend =
+    exitTravelProgress *
+    exitTravelProgress *
+    (3 - 2 * exitTravelProgress)
+  const downhillY = Math.sin(PLAYGROUND_SLIDE_ROTATION_X)
+  const downhillZ = Math.cos(PLAYGROUND_SLIDE_ROTATION_X)
+  const surfaceNormalY = Math.cos(PLAYGROUND_SLIDE_ROTATION_X)
+  const surfaceNormalZ = -Math.sin(PLAYGROUND_SLIDE_ROTATION_X)
+  const halfLength = PLAYGROUND_SLIDE.length / 2
+  const longitudinalPosition =
+    -halfLength +
+    PLAYGROUND_SLIDE.travelInset +
+    (PLAYGROUND_SLIDE.length - PLAYGROUND_SLIDE.travelInset * 2) *
+      clampedProgress +
+    PLAYGROUND_SLIDE.exitTravelExtension * exitTravelBlend
+  const surfaceDistance =
+    PLAYGROUND_SLIDE.thickness / 2 +
+    PLAYGROUND_SLIDE.seatedRootClearance
+
+  const x = PLAYGROUND_SLIDE.worldCenter[0]
+  const y =
+    PLAYGROUND_SLIDE.worldCenter[1] +
+      downhillY * longitudinalPosition +
+    surfaceNormalY * surfaceDistance
+  const z =
+    PLAYGROUND_SLIDE.worldCenter[2] +
+      downhillZ * longitudinalPosition +
+    surfaceNormalZ * surfaceDistance
+
+  return target ? target.set(x, y, z) : [x, y, z]
+}
+
+export const PLAYGROUND_SLIDE_START = Object.freeze(
+  getPlaygroundSlideSeatPoint(0),
+)
+export const PLAYGROUND_SLIDE_EXIT = Object.freeze(
+  getPlaygroundSlideSeatPoint(1),
+)
 
 export const CAMPUS_PATH = Object.freeze({
   centerX: 8,
@@ -429,9 +482,9 @@ export const CHARACTER_KEYFRAMES = [
 export const CAMERA_KEYFRAMES = [
   {
     t: 0,
-    position: [1.5, PLAYGROUND_PLATEAU_Y + 2.5, 6],
-    target: [2, PLAYGROUND_PLATEAU_Y + 1.55, 0.5],
-    fov: 40,
+    position: [1.5, PLAYGROUND_PLATEAU_Y + 2.5, 6.7],
+    target: [2, PLAYGROUND_PLATEAU_Y + 2.05, 0.5],
+    fov: 42,
   },
   {
     t: 0.08,

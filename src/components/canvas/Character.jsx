@@ -211,28 +211,53 @@ function DetailedChibiFace({ colors }) {
   )
 }
 
-function SchoolArm({ armRef, name, position, rotation, colors }) {
+function SchoolArm({
+  armRef,
+  forearmRef,
+  name,
+  position,
+  rotation,
+  colors,
+}) {
   return (
     <group ref={armRef} name={name} position={position} rotation={rotation}>
       <Capsule
-        args={[0.15, 0.48, 5, 9]}
-        position={[0, -0.33, 0]}
+        args={[0.15, 0.18, 5, 9]}
+        position={[0, -0.18, 0]}
         castShadow
         receiveShadow
       >
         <ClayMaterial color={colors.white} />
       </Capsule>
-      <Cylinder args={[0.17, 0.155, 0.1, 8]} position={[0, -0.59, 0]} castShadow>
-        <ClayMaterial color={colors.white} />
-      </Cylinder>
-      <Sphere
-        args={[0.17, 10, 8]}
-        position={[0, -0.71, 0.02]}
-        castShadow
-        receiveShadow
+      <group
+        ref={forearmRef}
+        name={`${name}Forearm`}
+        position={[0, -0.32, 0]}
       >
-        <ClayMaterial color={colors.skin} />
-      </Sphere>
+        <Capsule
+          args={[0.14, 0.18, 5, 9]}
+          position={[0, -0.16, 0]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.white} />
+        </Capsule>
+        <Cylinder
+          args={[0.16, 0.145, 0.1, 8]}
+          position={[0, -0.38, 0]}
+          castShadow
+        >
+          <ClayMaterial color={colors.white} />
+        </Cylinder>
+        <Sphere
+          args={[0.17, 10, 8]}
+          position={[0, -0.51, 0.02]}
+          castShadow
+          receiveShadow
+        >
+          <ClayMaterial color={colors.skin} />
+        </Sphere>
+      </group>
     </group>
   )
 }
@@ -289,7 +314,7 @@ function SchoolLeg({ legRef, name, position, colors }) {
 }
 
 function SchoolUniform({ partRefs, colors }) {
-  const { torso, leftArm, rightArm, leftLeg, rightLeg } = partRefs
+  const { torso, leftArm, rightArm, rightForearm, leftLeg, rightLeg } = partRefs
 
   return (
     <group name="schoolUniform">
@@ -430,6 +455,7 @@ function SchoolUniform({ partRefs, colors }) {
       />
       <SchoolArm
         armRef={rightArm}
+        forearmRef={rightForearm}
         name="rightArm"
         position={[0.57, 2.22, 0]}
         rotation={[0, 0, 0.12]}

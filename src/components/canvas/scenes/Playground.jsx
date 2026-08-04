@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   Box,
+  Capsule,
   Cone,
   ContactShadows,
   Cylinder,
@@ -15,6 +16,7 @@ import useDayNight from '../../../hooks/useDayNight'
 import {
   CAMPUS_PATH,
   PLAYGROUND_MOTION_OFFSETS,
+  PLAYGROUND_SLIDE,
   PLAYGROUND_SLIDE_ROTATION_X,
 } from '../../../config/narrativeTimeline'
 
@@ -128,13 +130,13 @@ const DAISY_LAYOUT = [
 
 const FENCE_POSTS = [-5, -3.75, -2.5, -1.25, 0, 1.25, 2.5, 3.75, 5]
 
-function ClayMaterial({ color }) {
+function ClayMaterial({ color, flatShading = true }) {
   return (
     <meshStandardMaterial
       color={color}
       roughness={1}
       metalness={0}
-      flatShading
+      flatShading={flatShading}
     />
   )
 }
@@ -617,8 +619,6 @@ function LandingPetalBurst() {
 function Playground({
   position = [0, 20, 0],
 }) {
-  const slidePosition = { x: -2, y: 1.1, z: -1.5 }
-
   return (
     <>
       <PlaygroundClouds />
@@ -627,32 +627,38 @@ function Playground({
         <LowPolyPlateauTerrain />
 
         <group rotation={[0, Math.PI, 0]}>
-          <Box
-            args={[1.18, 0.38, 4.15]}
-            position={[slidePosition.x, slidePosition.y, slidePosition.z]}
+          <RoundedBox
+            args={[
+              PLAYGROUND_SLIDE.width,
+              PLAYGROUND_SLIDE.thickness,
+              PLAYGROUND_SLIDE.length,
+            ]}
+            radius={PLAYGROUND_SLIDE.radius}
+            smoothness={6}
+            position={PLAYGROUND_SLIDE.localPosition}
             rotation={[PLAYGROUND_SLIDE_ROTATION_X, 0, 0]}
             castShadow
             receiveShadow
           >
-            <ClayMaterial color={COLORS.slide} />
-          </Box>
+            <ClayMaterial color={COLORS.slide} flatShading={false} />
+          </RoundedBox>
 
-          <Cylinder
-            args={[0.1, 0.1, 4.15, 8]}
+          <Capsule
+            args={[0.1, PLAYGROUND_SLIDE.length - 0.2, 6, 12]}
             position={[-2.48, 1.42, -1.5]}
             rotation={[Math.PI / 2 + PLAYGROUND_SLIDE_ROTATION_X, 0, 0]}
             castShadow
           >
-            <ClayMaterial color={COLORS.slideRail} />
-          </Cylinder>
-          <Cylinder
-            args={[0.1, 0.1, 4.15, 8]}
+            <ClayMaterial color={COLORS.slideRail} flatShading={false} />
+          </Capsule>
+          <Capsule
+            args={[0.1, PLAYGROUND_SLIDE.length - 0.2, 6, 12]}
             position={[-1.52, 1.42, -1.5]}
             rotation={[Math.PI / 2 + PLAYGROUND_SLIDE_ROTATION_X, 0, 0]}
             castShadow
           >
-            <ClayMaterial color={COLORS.slideRail} />
-          </Cylinder>
+            <ClayMaterial color={COLORS.slideRail} flatShading={false} />
+          </Capsule>
 
           <SlideLadder />
           <SteppingStonePath />

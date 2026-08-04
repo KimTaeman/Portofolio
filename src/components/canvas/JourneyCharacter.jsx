@@ -8,6 +8,7 @@ import {
   CAMPUS_PATH,
   CHARACTER_KEYFRAMES,
   getCharacterKeyframeProgress,
+  getPlaygroundSlideSeatPoint,
   getPlaygroundFallPositionAtProgress,
   getPlaygroundFallProgress,
   getMountainTrailHeadingAtOffset,
@@ -22,13 +23,14 @@ import {
 
 const currentPosition = new THREE.Vector3()
 const nextPosition = new THREE.Vector3()
-// The original seated offset was tuned for the thinner placeholder. The
-// volumetric skirt and legs need this extra clearance above the slide surface.
-const BASE_SEATED_POSE_Y = -0.65
-const SLIDE_SURFACE_CLEARANCE_Y = 0.36
-const SLIDE_SEATED_POSE_Y =
-  BASE_SEATED_POSE_Y + SLIDE_SURFACE_CLEARANCE_Y
+// Keep the volumetric skirt and rotated legs above the wooden surface for the
+// full seated sequence. A single contact height prevents the character from
+// rising or sinking when the wave transitions into the slide.
+const SLIDE_SEATED_POSE_Y = -0.24
 const SEATED_LEG_ROTATION_X = -1.22
+const WAVE_SHOULDER_ROTATION_Z = 1.28
+const WAVE_ELBOW_BEND_Z = 1.62
+const WAVE_ELBOW_SWING_Z = 0.34
 const FALL_FOLLOW_DAMPING = 12
 const LANDING_FOLLOW_DAMPING = 18
 const CAMPUS_GAIT_CYCLE_LENGTH = 2.2
@@ -91,6 +93,10 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     currentPosition.fromArray(start.position)
     nextPosition.fromArray(end.position)
     characterRef.current.position.copy(currentPosition.lerp(nextPosition, progress))
+    if (offset < PLAYGROUND_MOTION_OFFSETS.slideEnd) {
+      getPlaygroundSlideSeatPoint(progress, currentPosition)
+      characterRef.current.position.copy(currentPosition)
+    }
     const isPlaygroundFall =
       offset >= PLAYGROUND_MOTION_OFFSETS.slideEnd &&
       offset <= PLAYGROUND_MOTION_OFFSETS.groundContact
@@ -122,6 +128,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       getMountainTrailPositionAtOffset(offset, currentPosition)
       characterRef.current.position.copy(currentPosition)
     }
+
     const isApproachingMountainTurn =
       end.t === MOUNTAIN_PATH.start && offset < MOUNTAIN_PATH.start
     characterRef.current.rotation.y = isOnMountainPath
@@ -159,11 +166,17 @@ export default function JourneyCharacter({ outfit = 'school' }) {
     if (offset < PLAYGROUND_MOTION_OFFSETS.waveEnd) {
       // Hold the hips low and the legs forward: this is the dedicated seated
       // pose at the slide entrance, not the standing idle pose.
-      posePositionY = BASE_SEATED_POSE_Y
+      posePositionY = SLIDE_SEATED_POSE_Y
       leftLegX = SEATED_LEG_ROTATION_X
       rightLegX = SEATED_LEG_ROTATION_X
-      rightArmX = Math.sin(state.clock.elapsedTime * 7) * 0.42
-      rightArmZ = 2.42
+      // Hold the upper arm beside the head and wave laterally from the elbow.
+      // Keeping rotation.x nearly fixed removes the old lucky-cat depth swing.
+      rightArmX = -0.08
+      rightArmZ = WAVE_SHOULDER_ROTATION_Z
+      rightForearmX = -0.12
+      rightForearmZ =
+        WAVE_ELBOW_BEND_Z +
+        Math.sin(state.clock.elapsedTime * 6.4) * WAVE_ELBOW_SWING_Z
       poseRotationZ = Math.sin(state.clock.elapsedTime * 2.4) * 0.025
     } else if (offset < PLAYGROUND_MOTION_OFFSETS.slideEnd) {
       const slideProgress = THREE.MathUtils.smoothstep(
@@ -181,11 +194,7 @@ export default function JourneyCharacter({ outfit = 'school' }) {
         0,
         1,
       )
-      posePositionY = THREE.MathUtils.lerp(
-        BASE_SEATED_POSE_Y,
-        SLIDE_SEATED_POSE_Y,
-        slideContactBlend,
-      )
+      posePositionY = SLIDE_SEATED_POSE_Y
       poseRotationX = THREE.MathUtils.lerp(
         0,
         PLAYGROUND_SLIDE_ROTATION_X,
@@ -193,12 +202,23 @@ export default function JourneyCharacter({ outfit = 'school' }) {
       )
       leftArmX = THREE.MathUtils.lerp(0, -0.72, slideProgress)
       rightArmX = THREE.MathUtils.lerp(
-        Math.sin(state.clock.elapsedTime * 7) * 0.42,
+        -0.08,
         -0.72,
         waveRelease,
       )
       leftArmZ = THREE.MathUtils.lerp(-0.08, -0.3, slideProgress)
-      rightArmZ = THREE.MathUtils.lerp(2.42, 0.3, waveRelease)
+      rightArmZ = THREE.MathUtils.lerp(
+        WAVE_SHOULDER_ROTATION_Z,
+        0.3,
+        waveRelease,
+      )
+      rightForearmX = THREE.MathUtils.lerp(-0.12, 0, waveRelease)
+      rightForearmZ = THREE.MathUtils.lerp(
+        WAVE_ELBOW_BEND_Z +
+          Math.sin(state.clock.elapsedTime * 6.4) * WAVE_ELBOW_SWING_Z,
+        0,
+        waveRelease,
+      )
       leftLegX = THREE.MathUtils.lerp(
         SEATED_LEG_ROTATION_X,
         -1.05,
