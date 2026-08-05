@@ -9,7 +9,7 @@ export default function ProjectTeaserCard({ project, onViewDetails }) {
       aria-live="polite"
     >
       <div
-        className={`absolute bottom-3 left-3 right-3 w-auto transition-[opacity,transform,visibility] duration-300 sm:bottom-auto sm:left-auto sm:right-[5%] sm:top-[22%] sm:w-[min(360px,calc(100vw-2rem))] ${
+        className={`absolute left-[5vw] right-[5vw] top-16 w-auto transition-[opacity,transform,visibility] duration-300 sm:bottom-auto sm:left-auto sm:right-[5%] sm:top-[22%] sm:w-[min(360px,calc(100vw-2rem))] ${
           project
             ? 'pointer-events-auto visible translate-x-0 scale-100 opacity-100'
             : 'pointer-events-none invisible translate-x-[18px] scale-95 opacity-0'

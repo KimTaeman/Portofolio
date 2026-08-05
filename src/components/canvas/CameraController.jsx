@@ -15,6 +15,8 @@ import {
   MOUNTAIN_PATH,
   MOUNTAIN_PROJECT_BADGE_HEIGHT,
   MOUNTAIN_PROJECT_ANCHORS,
+  MOUNTAIN_PROJECT_MOBILE_DEPTH_STAGGER,
+  MOUNTAIN_PROJECT_MOBILE_LATERAL_SPREAD,
   PLAYGROUND_MOTION_OFFSETS,
   SUMMIT_LOOK_AROUND,
   SUMMIT_SEQUENCE,
@@ -202,6 +204,12 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
     const { camera } = state
     const offset = scroll.offset
     latestScrollOffsetRef.current = offset
+    const viewportAspect = state.size.width / Math.max(state.size.height, 1)
+    const isMobilePortrait =
+      state.size.width < 768 && viewportAspect < 1
+    const mobilePortraitAmount = isMobilePortrait
+      ? THREE.MathUtils.clamp((1 - viewportAspect) / 0.5, 0.45, 1)
+      : 0
 
     const { start, end } = getSegment(offset)
     const range = end.t - start.t
@@ -311,7 +319,7 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
       projectFramingTarget.set(0, 0, 0)
       let projectFramingWeight = 0
       let projectFramingStrength = 0
-      for (const anchor of MOUNTAIN_PROJECT_ANCHORS) {
+      for (const [anchorIndex, anchor] of MOUNTAIN_PROJECT_ANCHORS.entries()) {
         const checkpointDistance = Math.abs(offset - anchor.t)
         const checkpointStrength =
           1 -
@@ -322,10 +330,26 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
           )
         if (checkpointStrength <= 0) continue
 
+        const balloonLateralSpread = THREE.MathUtils.lerp(
+          1,
+          MOUNTAIN_PROJECT_MOBILE_LATERAL_SPREAD,
+          mobilePortraitAmount,
+        )
+        const balloonDepthStagger =
+          (anchorIndex % 2 ? -1 : 1) *
+          MOUNTAIN_PROJECT_MOBILE_DEPTH_STAGGER *
+          mobilePortraitAmount
         projectBalloonWorldPosition.set(
-          MOUNTAIN_CORNER.x + anchor.basePosition[0],
+          MOUNTAIN_CORNER.x +
+            anchor.triggerPosition[0] +
+            (anchor.basePosition[0] - anchor.triggerPosition[0]) *
+              balloonLateralSpread,
           MOUNTAIN_CORNER.y + anchor.basePosition[1],
-          MOUNTAIN_ORIGIN_Z + anchor.basePosition[2],
+          MOUNTAIN_ORIGIN_Z +
+            anchor.triggerPosition[2] +
+            (anchor.basePosition[2] - anchor.triggerPosition[2]) *
+              balloonLateralSpread +
+            balloonDepthStagger,
         )
         projectFramingTarget.addScaledVector(
           projectBalloonWorldPosition,
@@ -433,20 +457,23 @@ export default function CameraController({ onScrollOffsetChange = noop }) {
       desiredCameraPosition.z -= getNearestCampusProximity(offset) * 0.65
     }
 
-    const aspect = state.size.width / Math.max(state.size.height, 1)
     const portraitAmount = THREE.MathUtils.clamp(
-      (0.9 - aspect) / 0.45,
+      (0.9 - viewportAspect) / 0.45,
       0,
       1,
     )
-    if (portraitAmount > 0) {
+    const responsiveAmount = Math.max(
+      portraitAmount,
+      mobilePortraitAmount,
+    )
+    if (responsiveAmount > 0) {
       responsiveCameraOffset
         .subVectors(desiredCameraPosition, desiredLookTarget)
-        .multiplyScalar(1 + portraitAmount * 0.38)
+        .multiplyScalar(1 + responsiveAmount * 0.48)
       desiredCameraPosition
         .copy(desiredLookTarget)
         .add(responsiveCameraOffset)
-      desiredFov += portraitAmount * 9
+      desiredFov += responsiveAmount * 10
     }
 
     const isMountainClimb =

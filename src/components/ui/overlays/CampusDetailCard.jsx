@@ -59,7 +59,7 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
             aria-modal="true"
             aria-labelledby="campus-detail-title"
             aria-describedby="campus-detail-description"
-            className={`max-h-[min(34rem,calc(100dvh-1.5rem))] w-full max-w-[390px] overflow-y-auto rounded-[1.5rem] border p-5 shadow-[0_24px_80px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-colors duration-500 sm:rounded-[1.75rem] sm:p-7 ${isNightMode ? 'border-white/15 bg-[#1E293B]/90 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4]/90 text-[#3E2723]'}`}
+            className={`max-h-[min(34rem,calc(100dvh-1.5rem))] w-[90vw] max-w-[390px] overflow-y-auto rounded-[1.5rem] border p-5 shadow-[0_24px_80px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-colors duration-500 sm:rounded-[1.75rem] sm:p-7 ${isNightMode ? 'border-white/15 bg-[#1E293B]/90 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4]/90 text-[#3E2723]'}`}
             initial={{ opacity: 0, scale: 0.96, x: 24, y: 14 }}
             animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, x: 18, y: 10 }}
@@ -74,7 +74,7 @@ export default function CampusDetailCard({ detailId, onClose = () => {} }) {
                 ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
-                className={`-mr-2 -mt-2 grid size-10 shrink-0 place-items-center rounded-full border text-lg font-semibold transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-[#94A3B8] focus:ring-offset-2 ${isNightMode ? 'border-white/15 bg-[#334155] text-[#F8FAFC] hover:bg-[#475569]' : 'border-[#3E2723]/10 bg-white text-[#3E2723] hover:bg-[#3E2723] hover:text-white'}`}
+                className={`-mr-2 -mt-2 grid size-12 shrink-0 place-items-center rounded-full border text-lg font-semibold transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-[#94A3B8] focus:ring-offset-2 sm:size-10 ${isNightMode ? 'border-white/15 bg-[#334155] text-[#F8FAFC] hover:bg-[#475569]' : 'border-[#3E2723]/10 bg-white text-[#3E2723] hover:bg-[#3E2723] hover:text-white'}`}
                 aria-label="Close Campus detail"
               >
                 ×

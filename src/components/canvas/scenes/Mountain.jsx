@@ -1,5 +1,5 @@
-import { memo, useEffect, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { memo, useEffect, useMemo, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import {
   Box,
   Cone,
@@ -20,6 +20,8 @@ import {
   MOUNTAIN_PATH,
   MOUNTAIN_PROJECT_ANCHORS,
   MOUNTAIN_PROJECT_BADGE_HEIGHT,
+  MOUNTAIN_PROJECT_MOBILE_DEPTH_STAGGER,
+  MOUNTAIN_PROJECT_MOBILE_LATERAL_SPREAD,
   MOUNTAIN_TRANSITION,
   MOUNTAIN_TRANSITION_STONES,
   MOUNTAIN_TRAIL_STONES,
@@ -725,6 +727,38 @@ function ProjectBalloons({
 }) {
   const { isNightMode } = useDayNight()
   const scroll = useScroll()
+  const viewportSize = useThree((state) => state.size)
+  const viewportAspect =
+    viewportSize.width / Math.max(viewportSize.height, 1)
+  const mobilePortraitAmount =
+    viewportSize.width < 768 && viewportAspect < 1
+      ? THREE.MathUtils.clamp((1 - viewportAspect) / 0.5, 0.45, 1)
+      : 0
+  const responsiveBalloonPositions = useMemo(
+    () =>
+      PROJECT_BALLOONS.map((balloon, index) => {
+        const lateralSpread = THREE.MathUtils.lerp(
+          1,
+          MOUNTAIN_PROJECT_MOBILE_LATERAL_SPREAD,
+          mobilePortraitAmount,
+        )
+        const depthStagger =
+          (index % 2 ? -1 : 1) *
+          MOUNTAIN_PROJECT_MOBILE_DEPTH_STAGGER *
+          mobilePortraitAmount
+        return [
+          balloon.triggerPosition[0] +
+            (balloon.basePosition[0] - balloon.triggerPosition[0]) *
+              lateralSpread,
+          balloon.basePosition[1],
+          balloon.triggerPosition[2] +
+            (balloon.basePosition[2] - balloon.triggerPosition[2]) *
+              lateralSpread +
+            depthStagger,
+        ]
+      }),
+    [mobilePortraitAmount],
+  )
   const balloonRefs = useRef([])
   const balloonMaterialRefs = useRef([])
   const badgeRefs = useRef([])
@@ -850,7 +884,7 @@ function ProjectBalloons({
           }}
           key={balloon.number}
           name={`projectBalloon${balloon.number}`}
-          position={balloon.basePosition}
+          position={responsiveBalloonPositions[index]}
           userData={{ projectId: balloon.id }}
           onClick={(event) => {
             if (!isSceneActive) return
@@ -909,25 +943,27 @@ function ProjectBalloons({
               zIndexRange={[24, 0]}
               style={{ pointerEvents: 'auto', userSelect: 'none' }}
             >
-              <button
-                ref={(element) => {
-                  badgeRefs.current[index] = element
-                  if (element) appliedBadgeVisibilityRefs.current[index] = -1
-                }}
-                type="button"
-                onClick={() => onProjectSelect(balloon.id)}
-                className={`pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border px-4 py-2 font-sans text-xs font-semibold shadow-[0_10px_30px_rgba(15,23,42,0.24)] backdrop-blur-xl transition-[background-color,color,border-color,box-shadow] duration-500 hover:shadow-[0_14px_38px_rgba(15,23,42,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/20 bg-[#1E293B]/90 text-[#F8FAFC] hover:bg-[#334155]' : 'border-white/90 bg-[#FFF9F4]/90 text-[#3E2723] hover:bg-white'}`}
-                style={{
-                  opacity: 0,
-                  visibility: 'hidden',
-                  transform: 'translate3d(0, 8px, 0) scale(0.96)',
-                  transformOrigin: 'center',
-                  willChange: 'opacity, transform',
-                }}
-                aria-label={`View ${balloon.title} project details`}
-              >
-                {balloon.shortTitle}
-              </button>
+              <div className="project-balloon-badge-scale">
+                <button
+                  ref={(element) => {
+                    badgeRefs.current[index] = element
+                    if (element) appliedBadgeVisibilityRefs.current[index] = -1
+                  }}
+                  type="button"
+                  onClick={() => onProjectSelect(balloon.id)}
+                  className={`pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border px-4 py-2 font-sans text-xs font-semibold shadow-[0_10px_30px_rgba(15,23,42,0.24)] backdrop-blur-xl transition-[background-color,color,border-color,box-shadow] duration-500 hover:shadow-[0_14px_38px_rgba(15,23,42,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94A3B8] focus-visible:ring-offset-2 ${isNightMode ? 'border-white/20 bg-[#1E293B]/90 text-[#F8FAFC] hover:bg-[#334155]' : 'border-white/90 bg-[#FFF9F4]/90 text-[#3E2723] hover:bg-white'}`}
+                  style={{
+                    opacity: 0,
+                    visibility: 'hidden',
+                    transform: 'translate3d(0, 8px, 0) scale(0.96)',
+                    transformOrigin: 'center',
+                    willChange: 'opacity, transform',
+                  }}
+                  aria-label={`View ${balloon.title} project details`}
+                >
+                  {balloon.shortTitle}
+                </button>
+              </div>
             </Html>
           )}
         </group>

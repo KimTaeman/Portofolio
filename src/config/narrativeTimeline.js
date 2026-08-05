@@ -249,6 +249,10 @@ export const MOUNTAIN_PROJECT_PROGRESS = Object.freeze([
   0.9,
 ])
 export const MOUNTAIN_PROJECT_BADGE_HEIGHT = 4.15
+// Portrait screens need more separation between projected DOM badges. The
+// meshes move away from the trail laterally and alternate slightly in depth.
+export const MOUNTAIN_PROJECT_MOBILE_LATERAL_SPREAD = 1.18
+export const MOUNTAIN_PROJECT_MOBILE_DEPTH_STAGGER = 1.5
 const MOUNTAIN_PROJECT_PACING_POINTS = Object.freeze([
   0,
   ...MOUNTAIN_PROJECT_PROGRESS,

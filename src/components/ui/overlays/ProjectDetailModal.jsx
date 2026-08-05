@@ -39,7 +39,7 @@ export default function ProjectDetailModal({ project, onClose = () => {} }) {
             aria-modal="true"
             aria-labelledby="project-detail-title"
             aria-describedby="project-detail-description"
-            className={`my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl overflow-y-auto rounded-[1.5rem] border p-5 shadow-[0_32px_100px_rgba(15,23,42,0.42)] transition-colors duration-500 sm:rounded-[2rem] sm:p-6 md:p-10 ${isNightMode ? 'border-white/15 bg-[#1E293B]/95 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4] text-[#3E2723]'}`}
+            className={`my-auto max-h-[calc(100dvh-1.5rem)] w-[90vw] max-w-4xl overflow-y-auto rounded-[1.5rem] border p-5 shadow-[0_32px_100px_rgba(15,23,42,0.42)] transition-colors duration-500 sm:rounded-[2rem] sm:p-6 md:p-10 ${isNightMode ? 'border-white/15 bg-[#1E293B]/95 text-[#F8FAFC]' : 'border-white/80 bg-[#FFF9F4] text-[#3E2723]'}`}
             initial={{ opacity: 0, scale: 0.94, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 16 }}
@@ -62,7 +62,7 @@ export default function ProjectDetailModal({ project, onClose = () => {} }) {
                 ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
-                className={`grid size-11 shrink-0 place-items-center rounded-full border text-xl transition-all duration-500 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#94A3B8] focus:ring-offset-2 ${isNightMode ? 'border-white/15 bg-[#334155] text-[#F8FAFC] hover:bg-[#475569]' : 'border-[#3E2723]/10 bg-white text-[#3E2723] hover:bg-[#3E2723] hover:text-white'}`}
+                className={`sticky top-0 z-10 grid size-12 shrink-0 place-items-center rounded-full border text-xl transition-all duration-500 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#94A3B8] focus:ring-offset-2 sm:size-11 ${isNightMode ? 'border-white/15 bg-[#334155] text-[#F8FAFC] hover:bg-[#475569]' : 'border-[#3E2723]/10 bg-white text-[#3E2723] hover:bg-[#3E2723] hover:text-white'}`}
                 aria-label="Close project details"
               >
                 ×

@@ -82,3 +82,55 @@ button {
 .scene-copy-scrim--night::after {
   opacity: 1;
 }
+
+/* Portrait layouts reserve the center of the viewport for the 3D journey.
+   The copy becomes a compact bottom HUD instead of covering the subject. */
+@media (max-width: 767px) {
+  .scene-copy-shell {
+    right: 0.75rem !important;
+    bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    left: 0.75rem !important;
+    top: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+  }
+
+  .scene-copy-scrim {
+    width: 100%;
+    overflow: hidden;
+    padding: 0.8rem 1rem 0.9rem;
+    border-radius: 1.15rem;
+  }
+
+  .scene-copy-scrim::before,
+  .scene-copy-scrim::after {
+    inset: 0;
+    border-radius: inherit;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .scene-copy-scrim::before {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 249, 244, 0.92) 0%,
+      rgba(255, 249, 244, 0.76) 72%,
+      rgba(255, 249, 244, 0.42) 100%
+    );
+  }
+
+  .scene-copy-scrim::after {
+    background: linear-gradient(
+      90deg,
+      rgba(30, 41, 59, 0.94) 0%,
+      rgba(30, 41, 59, 0.82) 72%,
+      rgba(30, 41, 59, 0.5) 100%
+    );
+  }
+
+  .project-balloon-badge-scale {
+    transform: scale(0.68);
+    transform-origin: center;
+  }
+}
